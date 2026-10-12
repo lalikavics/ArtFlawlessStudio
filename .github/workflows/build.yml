@@ -1,0 +1,66 @@
+# Builds the Windows setup on GitHub's servers.
+# - every push / pull request: build check, the setup is kept as a downloadable "artifact" for 14 days
+# - publishing a GitHub Release (tag vX.Y.Z): the setup is attached to that release
+name: Build setup
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Read version
+        shell: pwsh
+        run: |
+          $v = (Get-Content VERSION -Raw).Trim()
+          if ($v -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION must look like 1.2.3, found '$v'" }
+          if ('${{ github.event_name }}' -eq 'release' -and '${{ github.event.release.tag_name }}' -ne "v$v") {
+            throw "The release tag (${{ github.event.release.tag_name }}) does not match the VERSION file (v$v)."
+          }
+          "APP_VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Generate the Studio files
+        run: |
+          python make_studio_files.py
+          python make_families.py
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Build the setup
+        shell: pwsh
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" ArtFlawlessStudio.iss'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArtFlawlessStudio-Setup-${{ env.APP_VERSION }}
+          path: Output/*.exe
+          retention-days: 14
+
+      - name: Release notes
+        if: github.event_name == 'release'
+        run: python tools/release_notes.py ${{ env.APP_VERSION }} > release-notes.md
+
+      - name: Attach the setup to the release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Output/*.exe
+          body_path: release-notes.md

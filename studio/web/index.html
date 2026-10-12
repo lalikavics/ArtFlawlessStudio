@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ArtFlow Studio</title>
+<style>
+:root{--bg:#0d0f13;--panel:#15181f;--panel2:#1b1f28;--line:#272c38;--line2:#343a49;--text:#e8eaf0;--muted:#8d95a8;--acc:#f2b84b;--accText:#1a1305;--ok:#4ade80;--err:#f87171;--r:10px}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+header{flex:0 0 58px;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header .brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:16px;letter-spacing:.2px;white-space:nowrap}
+header .brand img{height:34px;width:34px;border-radius:8px;object-fit:cover}
+header .brand small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);letter-spacing:0}
+#byline{flex:1;text-align:center;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#byline b{color:var(--text);font-weight:600}
+.conn{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--err)}
+.dot.on{background:var(--ok)}
+.btn{background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:8px 13px;cursor:pointer;white-space:nowrap;color:var(--text);text-decoration:none;display:inline-block}
+.btn:hover{border-color:#4a5266}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+.btn.go{background:var(--acc);border-color:var(--acc);color:var(--accText);font-weight:700;padding:9px 26px;font-size:15px}
+.btn.go:hover{filter:brightness(1.07)}
+.btn.stop{border-color:#6b2f2f;color:#ffb4b4}
+.lang{display:flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.lang button{background:none;border:0;padding:6px 9px;cursor:pointer;font-size:12px;color:var(--muted)}
+.lang button.act{background:var(--acc);color:var(--accText);font-weight:700}
+.runs{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.runs input{width:58px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:400px minmax(0,1fr) 400px;grid-template-areas:"l c r"}
+#colL{grid-area:l}#colC{grid-area:c}#colR{grid-area:r}
+.col{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px;min-height:0}
+#colL{border-right:1px solid var(--line)}#colR{border-left:1px solid var(--line)}
+@media (max-width:1320px){main{grid-template-columns:400px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"l c" "r c"}#colR{border-left:0;border-right:1px solid var(--line);border-top:1px solid var(--line)}#byline{display:none}}
+details.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+details.card>summary{list-style:none;cursor:pointer;padding:11px 14px;font-weight:650;font-size:14.5px;display:flex;align-items:center;gap:8px;user-select:none}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .15s}
+details.card:not([open])>summary::after{transform:rotate(-90deg)}
+details.card>summary .n{color:var(--acc);font-weight:700}
+.cbody{padding:2px 14px 14px;display:flex;flex-direction:column;gap:11px}
+.f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.f.inline{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+.f[hidden],.gbody[hidden]{display:none}
+.lab{font-size:12.5px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row{display:flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap}
+input[type=text],input[type=number],select,textarea{background:var(--bg);border:1px solid var(--line2);border-radius:7px;padding:7px 9px;width:100%;min-width:0;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{resize:vertical;line-height:1.4}
+textarea.mono{font:12px/1.45 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto}
+.num{display:flex;gap:8px;align-items:center}
+.num input[type=number]{width:84px;flex:0 0 84px}
+.num input[type=range]{flex:1;min-width:0;accent-color:var(--acc)}
+.sw{position:relative;display:inline-block;width:38px;height:22px;flex:0 0 38px;cursor:pointer}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#394052;border-radius:22px;transition:.15s}
+.sw span::before{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#cfd4e0;transition:.15s}
+.sw input:checked+span{background:var(--acc)}
+.sw input:checked+span::before{transform:translateX(16px);background:#1a1305}
+.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.chk input{accent-color:var(--acc)}
+.sub{border:1px solid var(--line);border-radius:9px;padding:11px;display:flex;flex-direction:column;gap:10px;background:var(--panel2)}
+.subhead{display:flex;align-items:center;gap:10px}
+.muted{color:var(--muted);font-size:12.5px}
+.loras{display:flex;flex-direction:column;gap:7px}
+.lora{display:grid;grid-template-columns:38px minmax(0,1fr) 26px;grid-template-areas:"s f x" ". n n";gap:6px 8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
+.lora>.sw{grid-area:s}.lora>select{grid-area:f}.lora>.num{grid-area:n}.lora>.x{grid-area:x}
+.lora.off select,.lora.off .num{opacity:.45}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px;padding:2px}
+.x:hover{color:var(--err)}
+.gcard{border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
+.gcard.on{border-color:#6b5524}
+.ghead{display:flex;align-items:center;gap:11px;padding:10px 11px}
+.gt{display:flex;flex-direction:column;min-width:0}
+.gt b{font-weight:600}
+.gt span{font-size:12px;color:var(--muted)}
+.gbody{padding:2px 11px 12px;display:flex;flex-direction:column;gap:10px}
+.imgpick{display:flex;flex-direction:column;gap:7px}
+.drop{position:relative;height:150px;border:1px dashed var(--line2);border-radius:9px;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden}
+.drop.over{border-color:var(--acc)}
+.drop img{max-width:100%;max-height:100%;object-fit:contain}
+.dropmsg{position:absolute;left:0;right:0;bottom:0;padding:4px;text-align:center;font-size:11.5px;color:#cfd4e0;background:rgba(0,0,0,.55)}
+details.mini>summary{cursor:pointer;color:var(--muted);font-size:12.5px;user-select:none}
+details.mini[open]>summary{margin-bottom:8px}
+details.mini>div{display:flex;flex-direction:column;gap:10px}
+.note{font-size:12.5px;background:#2a2412;border:1px solid #5c4a18;color:#f3dfa6;border-radius:8px;padding:8px 10px}
+.note[hidden]{display:none}
+#colC{display:flex;flex-direction:column;min-height:0;min-width:0}
+#miss{flex:0 0 auto;margin:10px 14px 0;max-height:26vh;overflow:auto}
+#miss ul{margin:6px 0 0;padding-left:18px}
+#miss .row{justify-content:space-between}
+#stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;background:#090a0d}
+#stage img{max-width:100%;max-height:100%;object-fit:contain}
+#empty{color:var(--muted);text-align:center;padding:30px;max-width:440px}
+#badge{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.6);border:1px solid var(--line2);border-radius:20px;padding:3px 10px;font-size:12px}
+#badge[hidden]{display:none}
+#prog{flex:0 0 auto;padding:8px 14px;border-top:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:12px;font-size:12.5px}
+#progText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;color:var(--muted)}
+#bar{flex:0 0 220px;height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .15s}
+#steps{flex:0 0 auto;display:flex;gap:8px;padding:8px 14px;overflow-x:auto;background:var(--panel);border-top:1px solid var(--line);align-items:center;min-height:50px}
+.chip{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:4px 9px 4px 4px;cursor:pointer;white-space:nowrap;font-size:12.5px}
+.chip img{width:34px;height:34px;object-fit:cover;border-radius:5px}
+.chip.act{border-color:var(--acc)}
+#steps .sp{flex:1}
+#infoWrap{flex:0 0 auto;border-top:1px solid var(--line);background:var(--panel)}
+#infoWrap>summary{cursor:pointer;padding:7px 14px;font-size:12px;color:var(--muted);user-select:none}
+#info{max-height:24vh;overflow:auto;padding:2px 14px 10px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#info h4{margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600;display:flex;gap:8px;align-items:center}
+#info pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Consolas,monospace;color:#cdd2df}
+#hist{flex:0 0 auto;display:flex;gap:6px;padding:8px 14px;overflow-x:auto;border-top:1px solid var(--line);background:var(--panel)}
+#hist:empty{display:none}
+#hist img{width:54px;height:54px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--line2);flex:0 0 auto}
+#hist img:hover{border-color:var(--acc)}
+#toasts{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:70;max-width:520px}
+.toast{background:var(--panel2);border:1px solid var(--line2);border-left:4px solid var(--acc);border-radius:8px;padding:10px 12px;white-space:pre-wrap;box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:13px}
+.toast.err{border-left-color:var(--err)}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--panel);border-left:1px solid var(--line2);box-shadow:-20px 0 60px rgba(0,0,0,.55);transform:translateX(105%);transition:transform .2s;z-index:40;display:flex;flex-direction:column}
+#drawer.open{transform:none}
+#drawer .dh{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:650}
+#drawer .db{flex:1;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+#drawer h3{margin:12px 0 2px;font-size:13px;color:var(--acc)}
+details.node{border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+details.node>summary{cursor:pointer;padding:7px 10px;font-size:13px}
+details.node>div{padding:4px 10px 10px;display:flex;flex-direction:column;gap:9px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:60;display:none;align-items:center;justify-content:center;padding:24px}
+#modal.open{display:flex}
+#modal .box{background:var(--panel);border:1px solid var(--line2);border-radius:12px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+#modal .mh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);font-weight:650;font-size:16px}
+#modal .mb{padding:6px 18px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+#modal h3{margin:16px 0 6px;font-size:13px;color:var(--acc);text-transform:uppercase;letter-spacing:.5px}
+#modal p{margin:0 0 8px}
+#modal ul{margin:0 0 8px;padding-left:18px}
+#modal li{margin:2px 0}
+#modal a{color:var(--acc)}
+#boot{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:80;color:var(--muted);text-align:center;padding:30px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img id="logo" alt=""><div>ArtFlow Studio<small data-t="brandSub"></small></div></div>
+  <div class="conn"><span class="dot" id="dot"></span><span id="connText"></span></div>
+  <div id="byline">Workflow &amp; Studio created by <b>Lalikavics</b> · <span id="ver"></span></div>
+  <div class="lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="hu">HU</button></div>
+  <button class="btn sm" id="aboutBtn" type="button" data-t="about"></button>
+  <button class="btn sm" id="advBtn" type="button" data-t="adv"></button>
+  <label class="runs"><span data-t="runs"></span> <input type="number" id="runs" min="1" max="50" step="1" value="1"></label>
+  <button class="btn stop" id="stopBtn" type="button" disabled data-t="stop"></button>
+  <button class="btn go" id="goBtn" type="button" title="Ctrl+Enter"></button>
+</header>
+<main>
+  <section class="col" id="colL"></section>
+  <section id="colC">
+    <div class="note" id="miss" hidden></div>
+    <div id="stage"><div id="empty" data-t="empty"></div><img id="view" alt="" hidden><div id="badge" hidden></div></div>
+    <div id="prog"><span id="progText"></span><div id="bar"><i></i></div><span id="seedInfo" class="muted"></span></div>
+    <div id="steps"></div>
+    <details id="infoWrap" open><summary data-t="infoSummary"></summary><div id="info">
+      <div><h4 data-t="applied"></h4><pre id="applied">–</pre></div>
+      <div><h4><span data-t="final"></span> <button class="btn sm" id="copyBtn" type="button" data-t="copy"></button></h4><pre id="final">–</pre><div id="moreTexts"></div></div>
+    </div></details>
+    <div id="hist"></div>
+  </section>
+  <section class="col" id="colR"></section>
+</main>
+<aside id="drawer"><div class="dh"><span data-t="advTitle"></span><span style="flex:1"></span><button class="btn sm" id="advClose" type="button" data-t="close"></button></div><div class="db" id="advBody"></div></aside>
+<div id="modal"><div class="box"><div class="mh"><span id="modalTitle"></span><span style="flex:1"></span><button class="btn sm" id="modalClose" type="button" data-t="close"></button></div><div class="mb" id="modalBody"></div></div></div>
+<div id="toasts"></div>
+<div id="boot">Loading…</div>
+<script>
+'use strict';
+const VERSION = '1.0.0';
+const API = (location.origin && location.origin !== 'null') ? location.origin : self.origin;
+const API_URL = new URL(API);
+const LS_LANG = 'artflow.studio.lang', LS_HIST = 'artflow.studio.history.v1', LS_OLD = 'artflow.studio.state.v1';
+let LS_KEY = 'artflow.studio.state.v2';
+const CLIENT = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'af' + Date.now() + Math.random().toString(16).slice(2);
+const $ = (s, r) => (r || document).querySelector(s);
+const STEP_ORDER = ['8', '19', '26', '31', '60', '34', '35'];
+const GROUP_ORDER = ['1e', '1b', '1c', '1a', '1d', '2', '3', '3b', '3c', '4', '5'];
+const FOLDER = {CheckpointLoaderSimple: 'models\\checkpoints', CLIPLoader: 'models\\text_encoders', VAELoader: 'models\\vae', LoraLoaderModelOnly: 'models\\loras', 'Power Lora Loader (rgthree)': 'models\\loras',
+  UltralyticsDetectorProvider: 'models\\ultralytics', SAMLoader: 'models\\sams', UpscaleModelLoader: 'models\\upscale_models', ModelPatchLoader: 'models\\model_patches'};
+
+/* ---------- nyelvek / languages ---------- */
+const I18N = {
+en: {
+  brandSub: 'based on ComfyUI node graphs', about: 'About', adv: 'Advanced settings', runs: 'runs', stop: 'Cancel', go: 'Generate', goQ: 'Generate (+{0} queued)', close: 'Close',
+  connecting: 'connecting…', connected: 'connected', queue: 'queue: {0}', offline: 'no connection to ComfyUI – retrying',
+  empty: 'Set what you want on the left, the image inputs and post-processing on the right, then press Generate.',
+  ready: 'Ready.', starting: 'Starting…', done: 'Done – {0} s', moreQ: ' · {0} more queued', stopped: 'Stopped because of an error.', cancelled: 'Cancelled.', seed: 'seed: {0}',
+  infoSummary: 'Applied settings and final prompt', applied: 'Applied settings', final: 'Final prompt', copy: 'Copy', copied: 'The final prompt is on the clipboard.',
+  open: 'Open', download: 'Download', useStart: 'Use as start image', useStartT: 'Loads it as the 1e start image and switches 1e on', useStartOk: 'Set as start image, 1e switched on.', useStartErr: 'Could not set it: {0}',
+  live: 'live preview', earlier: 'earlier image',
+  s8: 'Base image', s19: 'Refined', s26: 'Face fixed', s31: 'Hands fixed', s60: 'Feet fixed', s34: 'Upscaled', s35: 'Saved', s75: 'Depth map', s56: 'Foot mask',
+  t42: '1a – image description', t49: '1d – extracted positive prompt', t50: '1d – extracted negative prompt', t80: '1c – style description',
+  c1: 'What are you generating?', theme: 'Theme', ratio: 'Aspect ratio', prompt: 'Your prompt – what you want to see (in English)', neg: 'Negative prompt', negHint: 'Has almost no effect at CFG 1',
+  look: 'Default European look for people themes', lookHint: 'Z-Image Turbo tends to draw East Asian faces by default. When ON, the Portrait and People themes add a European look to the prompt. If your prompt names another origin, it is left out automatically. OFF = nothing is added.',
+  seedL: 'Seed', random: 'random', fixLast: 'Lock last', fixLastT: 'Locks the seed of the latest image, so the next steps build on the same image', noRun: 'No run yet.',
+  hint1a: '1a (describe image) is on: the image description is sent instead of your own prompt.', hint1d: '1d (read embedded prompt) is on: the prompt read from the image is sent instead of your own prompt.',
+  c2: 'LoRAs', baseLora: 'Base LoRA', baseLoraHint: 'strength is set by the theme', file: 'File', manual: 'Manual strength instead of the theme', manualVal: 'Manual strength',
+  moreLoras: 'Additional LoRAs – as many as you like, each with its own switch and strength', addLora: '+ Add LoRA', delRow: 'Delete row', onOff: 'On / off', notFound: '  (not found)', notInList: '  (not in the list)',
+  c3: 'Model and sampling', ckpt: 'Model (checkpoint)', clip: 'Text encoder', vae: 'VAE', steps: 'Steps', cfg: 'CFG', sampler: 'Sampler', scheduler: 'Scheduler',
+  c4: 'Image inputs', image: 'Image', drop: 'Drop an image here, or click', uploadErr: 'Image upload failed: {0}',
+  g1e: 'Start image (img2img)', g1eD: 'Starts from this image instead of an empty canvas.', rewrite: 'Rewrite amount (denoise) – 0.3 slight, 0.6 medium, 0.9 strong', mp: 'Size (megapixels) – the image keeps its own ratio',
+  g1b: 'Layout reference', g1bD: 'Takes over only the spatial layout (depth map).', strength: 'Strength', start: 'Start', end: 'End',
+  g1c: 'Style reference', g1cD: 'Takes over the color palette and mood.', colorStr: 'Color transfer strength', styleInstr: 'Style-extraction instruction', styleInstrHint: 'Keep /no_think at the end',
+  g1a: 'Describe image → prompt', g1aD: 'The image description is sent instead of your own prompt.', captionType: 'Description type',
+  g1d: 'Read embedded prompt from image', g1dD: 'The original prompt saved in the image is sent instead of your own.', srcFolder: 'Source folder',
+  c5: 'Post-processing', g2: 'Refine', g2D: 'More detail, sharper texture. Denoise comes from the theme.', upBefore: 'Upscale before refine',
+  g3: 'Face detailer', g3D: 'People only.', denoise: 'Denoise', closeUp: 'Close-up faces too',
+  g3b: 'Hand detailer', g3bD: 'People only.', g3c: 'Foot detailer', g3cD: 'People only, with its own foot detector.', footLoras: 'Foot LoRAs – affect the foot detailer only',
+  g4: 'Final upscale', g4D: 'The slowest step. Denoise comes from the theme.', upModel: 'Upscale model', upBy: 'Upscale by',
+  g5: 'Save', g5D: 'Saves the final result into the output folder.', prefix: 'File name prefix',
+  detect: 'Detection fine-tuning', thr: 'Detection threshold – a lower value finds more', dil: 'Grow selection (pixels) – larger repainted area', crop: 'Context – how much it sees around the selection',
+  fixPrompts: 'Detailer prompts', pos: 'Positive', negS: 'Negative',
+  advTitle: 'Advanced settings – every parameter of the workflow', refresh: 'Refresh lists (new LoRA, model, image)', refreshed: 'Lists refreshed.', reset: 'Reset everything to the workflow values', resetSure: 'Sure? Click again to reset',
+  advHint: 'Every value of every node can be edited here. The theme table is the "code" field of the Preset table node. Template: {0}', baseSec: 'Base – always runs',
+  buildErr: 'Could not build the request: {0}', unreachable: 'ComfyUI is not reachable: {0}', rejected: 'ComfyUI rejected the request.', runErr: 'Error while running – {0}:\n{1}',
+  missTitle: 'Some components are missing on this computer', missModel: 'Model file not found: {0} → put it into ComfyUI\\{1}', missNode: 'Node type not installed: {0}', missFor: ' (needed for: {0})', missAlways: ' (always needed)', hide: 'Hide', recheck: 'Check again',
+  sumSrc: 'Prompt source', srcOwn: 'your own prompt', srcImage: 'NOT your own prompt – the 1a description or the 1d embedded prompt', sumSize: 'Image size', sizeStart: 'from the start image (about 1 megapixel)',
+  sumLora: 'Base LoRA', lora_theme: 'set by the theme', lora_none: 'this theme uses none', lora_manual: 'manual', lora_off: 'switched off',
+  sumStart: 'Start image', startOn: 'on – rewrite amount {0}', startOff: 'none (empty canvas)', sumDen: 'Refine denoise: {0} · Upscale denoise: {1}',
+  sumLook: 'Default look', look_on: 'European', look_off: 'off', look_skipped: 'skipped (the prompt names another origin)', look_na: '–', sumSteps: 'Recommended steps', any: 'as you like',
+  bootErr: 'Could not start.\n\n{0}\n\nIs ComfyUI running at {1}?', noTpl: 'The workflow template was not found (artflow/template.json in the ComfyUI user folder).'
+},
+hu: {
+  brandSub: 'ComfyUI node-gráfokra épül', about: 'Névjegy', adv: 'Haladó beállítások', runs: 'futások', stop: 'Megszakítás', go: 'Generálás', goQ: 'Generálás (+{0} sorban)', close: 'Bezárás',
+  connecting: 'kapcsolódás…', connected: 'kapcsolódva', queue: 'sor: {0}', offline: 'nincs kapcsolat a ComfyUI-val – újrapróbálom',
+  empty: 'Állítsd be bal oldalt, mit szeretnél, jobb oldalt a képi bemeneteket és az utófeldolgozást, majd nyomd meg a Generálás gombot.',
+  ready: 'Készen áll.', starting: 'Indul…', done: 'Kész – {0} mp', moreQ: ' · még {0} sorban', stopped: 'Hiba miatt leállt.', cancelled: 'Megszakítva.', seed: 'mag: {0}',
+  infoSummary: 'Alkalmazott beállítások és végső prompt', applied: 'Alkalmazott beállítások', final: 'Végső prompt', copy: 'Másolás', copied: 'A végső prompt a vágólapon.',
+  open: 'Megnyitás', download: 'Letöltés', useStart: 'Legyen kiinduló kép', useStartT: 'Betölti az 1e kiinduló képnek, és bekapcsolja', useStartOk: 'Beállítva kiinduló képnek, az 1e bekapcsolva.', useStartErr: 'Nem sikerült beállítani: {0}',
+  live: 'élő előnézet', earlier: 'korábbi kép',
+  s8: 'Alapkép', s19: 'Finomított', s26: 'Arc javítva', s31: 'Kéz javítva', s60: 'Láb javítva', s34: 'Nagyított', s35: 'Mentve', s75: 'Mélységtérkép', s56: 'Láb-maszk',
+  t42: '1a – kép leírása', t49: '1d – kiolvasott pozitív prompt', t50: '1d – kiolvasott negatív prompt', t80: '1c – stílusleírás',
+  c1: 'Mit generálsz?', theme: 'Téma', ratio: 'Képarány', prompt: 'Saját prompt – amit látni szeretnél (angolul)', neg: 'Negatív prompt', negHint: '1-es CFG mellett alig van hatása',
+  look: 'Alapértelmezett európai kinézet az emberes témáknál', lookHint: 'A Z-Image Turbo magától többnyire kelet-ázsiai arcot rajzol. Bekapcsolva a Portré és az Emberek téma európai kinézetet ír a promptba. Ha a promptodban más származás szerepel, magától kimarad. Kikapcsolva semmit nem tesz hozzá.',
+  seedL: 'Mag (seed)', random: 'véletlen', fixLast: 'Utolsó rögzítése', fixLastT: 'A legutóbbi kép magját rögzíti: így a következő lépések ugyanarra a képre épülnek', noRun: 'Még nem volt futás.',
+  hint1a: 'Az 1a (kép leírása) be van kapcsolva: a saját prompt helyett a kép leírása megy.', hint1d: 'Az 1d (mentett prompt kiolvasása) be van kapcsolva: a saját prompt helyett a képből kiolvasott prompt megy.',
+  c2: 'LoRA-k', baseLora: 'Alap LoRA', baseLoraHint: 'az erősségét a téma adja', file: 'Fájl', manual: 'Kézi erősség a téma helyett', manualVal: 'Kézi erősség',
+  moreLoras: 'További LoRA-k – bármennyi, soronként kapcsolóval és erősséggel', addLora: '+ LoRA hozzáadása', delRow: 'Sor törlése', onOff: 'Be / ki', notFound: '  (nincs meg)', notInList: '  (nincs a listában)',
+  c3: 'Modell és mintavétel', ckpt: 'Modell (checkpoint)', clip: 'Szövegkódoló', vae: 'VAE', steps: 'Lépésszám', cfg: 'CFG', sampler: 'Mintavevő', scheduler: 'Ütemező',
+  c4: 'Képi bemenetek', image: 'Kép', drop: 'Húzd ide a képet, vagy kattints', uploadErr: 'A kép feltöltése nem sikerült: {0}',
+  g1e: 'Kiinduló kép (img2img)', g1eD: 'Üres vászon helyett ebből a képből indul.', rewrite: 'Átírás mértéke (denoise) – 0.3 alig, 0.6 közepes, 0.9 nagyon', mp: 'Méret (megapixel) – a kép saját aránya marad',
+  g1b: 'Elrendezés-referencia', g1bD: 'Csak a térbeli elrendezést veszi át (mélységtérkép).', strength: 'Erősség', start: 'Kezdet', end: 'Vége',
+  g1c: 'Stílus-referencia', g1cD: 'Színvilágot és hangulatot vesz át.', colorStr: 'Színátvétel erőssége', styleInstr: 'Stíluskivonat-utasítás', styleInstrHint: 'A végén a /no_think maradjon meg',
+  g1a: 'Kép leírása prompttá', g1aD: 'A kép leírása megy a saját prompt helyett.', captionType: 'Leírás típusa',
+  g1d: 'Mentett prompt kiolvasása képből', g1dD: 'A képbe mentett eredeti prompt megy a saját helyett.', srcFolder: 'Forrásmappa',
+  c5: 'Utófeldolgozás', g2: 'Finomítás', g2D: 'Több részlet, élesebb textúra. A denoise a témából jön.', upBefore: 'Nagyítás a finomítás előtt',
+  g3: 'Arc javítása', g3D: 'Csak embernél.', denoise: 'Denoise', closeUp: 'Közeli arcon is',
+  g3b: 'Kéz javítása', g3bD: 'Csak embernél.', g3c: 'Láb javítása', g3cD: 'Csak embernél, saját lábfelismerővel.', footLoras: 'Láb-LoRA-k – csak a láb javítására hatnak',
+  g4: 'Végső nagyítás', g4D: 'A leglassabb lépés. A denoise a témából jön.', upModel: 'Nagyító modell', upBy: 'Nagyítás',
+  g5: 'Mentés', g5D: 'A végeredményt az output mappába menti.', prefix: 'Fájlnév előtag',
+  detect: 'Felismerés finomhangolása', thr: 'Felismerési küszöb – kisebb értékkel többet talál meg', dil: 'Kijelölés bővítése (képpont) – nagyobb újrarajzolt terület', crop: 'Környezet – mennyit lát a kijelölés körül',
+  fixPrompts: 'Javító promptok', pos: 'Pozitív', negS: 'Negatív',
+  advTitle: 'Haladó beállítások – a workflow minden paramétere', refresh: 'Listák frissítése (új LoRA, modell, kép)', refreshed: 'A listák frissítve.', reset: 'Minden visszaállítása a workflow értékeire', resetSure: 'Biztos? Kattints újra a visszaállításhoz',
+  advHint: 'Itt a workflow minden node-jának minden értéke szerkeszthető. A téma-táblázat a Preset table node „code" mezője. Sablon: {0}', baseSec: 'Alap – mindig fut',
+  buildErr: 'A kérés összeállítása nem sikerült: {0}', unreachable: 'A ComfyUI nem érhető el: {0}', rejected: 'A ComfyUI elutasította a kérést.', runErr: 'Hiba futás közben – {0}:\n{1}',
+  missTitle: 'Néhány összetevő hiányzik erről a gépről', missModel: 'Hiányzó modellfájl: {0} → ide kell tenni: ComfyUI\\{1}', missNode: 'Nincs telepítve ez a node-típus: {0}', missFor: ' (ehhez kell: {0})', missAlways: ' (mindig kell)', hide: 'Elrejtés', recheck: 'Ellenőrzés újra',
+  sumSrc: 'Prompt forrása', srcOwn: 'a saját promptod', srcImage: 'NEM a saját prompt – az 1a képleírás vagy az 1d mentett prompt megy', sumSize: 'Képméret', sizeStart: 'a kiinduló képé (kb. 1 megapixel)',
+  sumLora: 'Alap LoRA', lora_theme: 'a téma szerint', lora_none: 'ennél a témánál nincs', lora_manual: 'kézi', lora_off: 'kikapcsolva',
+  sumStart: 'Kiinduló kép', startOn: 'be – átírás mértéke {0}', startOff: 'nincs (üres vászon)', sumDen: 'Finomítás denoise: {0} · Nagyítás denoise: {1}',
+  sumLook: 'Alapértelmezett kinézet', look_on: 'európai', look_off: 'kikapcsolva', look_skipped: 'kihagyva (a promptban más származás szerepel)', look_na: '–', sumSteps: 'Ajánlott lépések', any: 'tetszés szerint',
+  bootErr: 'Nem sikerült elindulni.\n\n{0}\n\nFut a ComfyUI ezen a címen? {1}', noTpl: 'Nem találom a workflow-sablont (artflow/template.json a ComfyUI felhasználói mappájában).'
+}};
+const HU_NAMES = {'None (own prompt only)': 'Nincs (csak a saját prompt)', 'Portrait': 'Portré', 'People – full body': 'Emberek – egész alak', 'Landscape – nature': 'Tájkép – természet',
+  'Architecture – cityscape': 'Építészet – városkép', 'Interior': 'Beltér', 'Product – object – food': 'Termék – tárgy – étel', 'Animal – macro': 'Állat – makró',
+  'Theme default': 'Téma szerinti', 'Portrait 832×1216': 'Álló 832×1216', 'Landscape 1216×832': 'Fekvő 1216×832', 'Square 1024×1024': 'Négyzet 1024×1024', 'Wide 1280×768': 'Széles 1280×768', 'Tall 768×1280': 'Magas 768×1280'};
+const HU_NODE = {2: 'Modell betöltése', 3: 'Prompt kódolása', 4: 'Negatív prompt kódolása', 6: 'Alapkép generálása', 7: 'Kép előhívása', 15: 'Nagyítás a finomítás előtt', 16: 'Kép kódolása', 17: 'Finomítás', 18: 'Kép előhívása',
+  21: 'Arcfelismerő betöltése', 22: 'SAM modell betöltése', 25: 'Arc javítása', 27: 'Kézfelismerő betöltése', 30: 'Kéz javítása', 32: 'Nagyító modell betöltése', 33: 'Végső nagyítás', 35: 'Mentés', 41: 'Kép leírása', 48: 'Mentett prompt kiolvasása',
+  61: 'Lábfelismerő betöltése', 62: 'Láb javítása', 65: 'Szövegkódoló betöltése', 66: 'VAE betöltése', 68: 'LoRA-k betöltése', 69: 'Láb-LoRA betöltése', 72: 'Elrendezés-ControlNet betöltése', 73: 'Mélységtérkép készítése', 74: 'Elrendezés alkalmazása',
+  78: 'Színvilág átvétele', 79: 'Stíluskép leírása', 83: 'Stílus kivonása', 89: 'Alap LoRA betöltése', 96: 'Kép átméretezése', 97: 'Kép kódolása'};
+const STEP_NAME = {'1a': 'g1a', '1b': 'g1b', '1c': 'g1c', '1d': 'g1d', '1e': 'g1e', '2': 'g2', '3': 'g3', '3b': 'g3b', '3c': 'g3c', '4': 'g4', '5': 'g5'};
+let LANG = 'en'; try { const l = localStorage.getItem(LS_LANG); if (l === 'hu' || l === 'en') LANG = l; } catch (_) {}
+function t(k, ...a) { let s = (I18N[LANG] && I18N[LANG][k] != null) ? I18N[LANG][k] : (I18N.en[k] != null ? I18N.en[k] : k); a.forEach((x, i) => { s = s.split('{' + i + '}').join(String(x)); }); return s; }
+const disp = x => (LANG === 'hu' && HU_NAMES[x]) ? HU_NAMES[x] : String(x);
+
+const ABOUT = {
+en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer. It arranges existing, publicly available components into one workflow and puts a simple control surface on top of it.</p>
+<p>Workflow layout and Studio interface: <b>Lalikavics</b>. Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<h3>What is mine and what is not</h3>
+<p>I made only the frame: the way the nodes are wired together and this interface. Everything that actually creates the images is the work and property of its own authors, who generously published it free of charge under their own licences. Those licences continue to apply to you; please read and respect them, and credit the authors.</p>
+<h3>Components included by default</h3>
+<ul>
+<li><b>ComfyUI</b> – Comfy Org and contributors</li>
+<li><b>Z-Image Turbo</b> model – Tongyi-MAI (Alibaba)</li>
+<li><b>Qwen3 4B</b> text encoder – Qwen team (Alibaba)</li>
+<li><b>Flux VAE</b> – Black Forest Labs</li>
+<li><b>Hands + Feet + skin perfection style</b> LoRA – its author on Civitai</li>
+<li><b>Z-Image-Turbo-Fun-Controlnet-Union</b> – Alibaba PAI</li>
+<li><b>Depth Anything V2</b> – the Depth Anything authors</li>
+<li><b>Florence-2</b> – Microsoft</li>
+<li><b>Segment Anything (SAM)</b> – Meta AI</li>
+<li><b>YOLOv8 face and hand detectors</b> – Bingsu (ADetailer models); <b>foot detector</b> – via MonetEinsley/ADetailer_CM; built on Ultralytics YOLO</li>
+<li><b>Real-ESRGAN</b> upscaler – Xintao Wang and co-authors</li>
+<li><b>Custom nodes</b>: rgthree-comfy (rgthree) · ComfyUI Impact Pack and Impact Subpack (Dr.Lt.Data) · Ultimate SD Upscale (ssitu) · ComfyUI-Florence2 (kijai) · ComfyUI-Custom-Scripts (pythongosssss) · ControlNet Auxiliary Preprocessors (Fannovel16) · ComfyUI Image Saver (alexopus) · ComfyUI-Prompt-Manager (Francky B)</li>
+</ul>
+<h3>Disclaimer</h3>
+<p><b>No warranty.</b> This software is provided "as is", without warranty of any kind, express or implied. You use it at your own risk.</p>
+<p><b>Generated content.</b> The author of ArtFlow Studio does not train, host, select, review or control the models, and does not inspect their contents or the images they produce. Everything is generated on your own computer, at your own initiative. You alone are responsible for what you create and for how you use or share it, including compliance with the laws that apply to you and with the rights of others (copyright, trademarks, privacy, personality and image rights).</p>
+<p><b>Resemblance.</b> Any resemblance of generated images to real persons, living or dead, or to existing works, brands or places is unintended by the author and outside the author's control. Do not use this tool to depict real people without their consent, or to create content that is unlawful or harms others.</p>
+<p><b>Liability.</b> To the maximum extent permitted by applicable law, the author accepts no liability for any damage, loss or claim arising from the use of this software, of the third-party components it relies on, or of the content created with them.</p>
+<p><b>Third-party components.</b> The models, LoRAs and custom nodes are downloaded from their original sources and remain subject to their own licences and terms. If you are an author and want your work removed from the default set, or credited differently, please open an issue on the project's <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> page.</p>`,
+hu: `<p>Az <b>ArtFlow Studio</b> ingyenes, kényelmi kezelőfelület egy képgeneráló workflow-hoz, amely a saját gépeden, a ComfyUI-ban fut. Meglévő, nyilvánosan elérhető összetevőket rendez egy workflow-ba, és egyszerű kezelőfelületet tesz rá.</p>
+<p>A workflow elrendezése és a Studio felülete: <b>Lalikavics</b>. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<h3>Mi az enyém, és mi nem</h3>
+<p>Én csak a vázat készítettem: azt, ahogyan a node-ok össze vannak kötve, és ezt a felületet. Minden, ami a képeket ténylegesen létrehozza, a saját készítőinek munkája és tulajdona, akik nagylelkűen, díjmentesen tették közzé a saját licencük alatt. Ezek a licencek rád is vonatkoznak: kérlek, olvasd el és tartsd be őket, és nevezd meg a készítőket.</p>
+<h3>Alapból beemelt összetevők</h3>
+<ul>
+<li><b>ComfyUI</b> – Comfy Org és közreműködők</li>
+<li><b>Z-Image Turbo</b> modell – Tongyi-MAI (Alibaba)</li>
+<li><b>Qwen3 4B</b> szövegkódoló – Qwen csapat (Alibaba)</li>
+<li><b>Flux VAE</b> – Black Forest Labs</li>
+<li><b>Hands + Feet + skin perfection style</b> LoRA – a készítője a Civitai-on</li>
+<li><b>Z-Image-Turbo-Fun-Controlnet-Union</b> – Alibaba PAI</li>
+<li><b>Depth Anything V2</b> – a Depth Anything szerzői</li>
+<li><b>Florence-2</b> – Microsoft</li>
+<li><b>Segment Anything (SAM)</b> – Meta AI</li>
+<li><b>YOLOv8 arc- és kézfelismerő</b> – Bingsu (ADetailer modellek); <b>lábfelismerő</b> – a MonetEinsley/ADetailer_CM gyűjteményből; az Ultralytics YOLO-ra épülnek</li>
+<li><b>Real-ESRGAN</b> nagyító – Xintao Wang és szerzőtársai</li>
+<li><b>Kiegészítő node-ok</b>: rgthree-comfy (rgthree) · ComfyUI Impact Pack és Impact Subpack (Dr.Lt.Data) · Ultimate SD Upscale (ssitu) · ComfyUI-Florence2 (kijai) · ComfyUI-Custom-Scripts (pythongosssss) · ControlNet Auxiliary Preprocessors (Fannovel16) · ComfyUI Image Saver (alexopus) · ComfyUI-Prompt-Manager (Francky B)</li>
+</ul>
+<h3>Jogi nyilatkozat</h3>
+<p><b>Nincs garancia.</b> A szoftvert „adott állapotában" kapod, mindenféle kifejezett vagy hallgatólagos garancia nélkül. Saját felelősségedre használod.</p>
+<p><b>Generált tartalom.</b> Az ArtFlow Studio készítője nem tanítja, nem tárolja, nem válogatja, nem ellenőrzi és nem irányítja a modelleket, és nem vizsgálja sem a tartalmukat, sem az általuk létrehozott képeket. Minden a saját gépeden, a saját kezdeményezésedre készül. Kizárólag te felelsz azért, amit létrehozol, és azért, ahogyan felhasználod vagy megosztod, beleértve a rád vonatkozó jogszabályok és mások jogainak (szerzői jog, védjegy, magánszféra, személyiségi és képmáshoz fűződő jogok) betartását.</p>
+<p><b>Hasonlóság.</b> Ha egy generált kép valós – élő vagy elhunyt – személyre, létező műre, márkára vagy helyszínre hasonlít, az a készítő szándékától független, és kívül esik az ellenőrzésén. Ne használd ezt az eszközt valós személyek ábrázolására a beleegyezésük nélkül, sem jogellenes vagy másoknak ártó tartalom készítésére.</p>
+<p><b>Felelősség.</b> Az alkalmazandó jog által megengedett legnagyobb mértékben a készítő nem vállal felelősséget semmilyen kárért, veszteségért vagy igényért, amely a szoftver, az általa használt külső összetevők vagy a velük létrehozott tartalom használatából ered.</p>
+<p><b>Külső összetevők.</b> A modellek, LoRA-k és kiegészítő node-ok az eredeti forrásukból töltődnek le, és továbbra is a saját licencük és feltételeik vonatkoznak rájuk. Ha készítő vagy, és azt szeretnéd, hogy a munkád kikerüljön az alapcsomagból, vagy másképp legyen feltüntetve, kérlek, jelezd a projekt <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a>-oldalán (Issues).</p>`
+};
+
+let T = null, OI = {}, NODEGROUP = {}, EXTRA_IMAGES = [], MISS_HIDDEN = false;
+let S = {groups: {}, vals: {}, loras: null, footLoras: null, seedRandom: true, seed: 1, runs: 1};
+const R = {job: null, jobs: new Map(), steps: {}, texts: {}, seed: null, sel: null, cur: null, curBadge: '', t0: 0, prog: ['ready']};
+let H = [];
+
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k in e) { try { e[k] = v; } catch (_) { e.setAttribute(k, v); } }
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat(3)) { if (kid == null || kid === false) continue; e.append(kid.nodeType ? kid : document.createTextNode(String(kid))); }
+  return e;
+}
+function toast(msg, kind) { const el = h('div', {class: 'toast' + (kind === 'err' ? ' err' : ''), text: msg}); $('#toasts').append(el); setTimeout(() => el.remove(), kind === 'err' ? 14000 : 4500); }
+const isLink = v => Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'number' && !!T.prompt[v[0]];
+const pretty = x => String(x).replace(/\.(safetensors|ckpt|pt|pth|sft)$/i, '');
+
+/* ---------- state ---------- */
+let saveTimer = null;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (_) {} }, 250); }
+function lorasFromTemplate(id) {
+  const n = T.prompt[id]; if (!n) return [];
+  return Object.entries(n.inputs).filter(([k, v]) => /^lora_\d+$/i.test(k) && v && typeof v === 'object' && !Array.isArray(v))
+    .sort((a, b) => parseInt(a[0].slice(5)) - parseInt(b[0].slice(5))).map(([, v]) => ({on: !!v.on, lora: v.lora, strength: Number(v.strength) || 0}));
+}
+function loadState() {
+  LS_KEY = 'artflow.studio.state.v2.' + (T.id || 'default');
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (_) {}
+  if (saved && typeof saved === 'object') S = Object.assign(S, saved);
+  else { try { const old = JSON.parse(localStorage.getItem(LS_OLD) || 'null'); if (old) { if (Array.isArray(old.loras)) S.loras = old.loras; if (Array.isArray(old.footLoras)) S.footLoras = old.footLoras; } } catch (_) {} }
+  if (!S.vals || typeof S.vals !== 'object') S.vals = {};
+  for (const k of Object.keys(S.vals)) { const i = k.indexOf('.'); const id = k.slice(0, i), name = k.slice(i + 1); if (!T.prompt[id] || !(name in T.prompt[id].inputs)) delete S.vals[k]; }
+  if (!S.groups || typeof S.groups !== 'object') S.groups = {};
+  for (const k of Object.keys(T.groups)) if (typeof S.groups[k] !== 'boolean') S.groups[k] = !!T.groups[k].on;
+  if (!Array.isArray(S.loras)) S.loras = lorasFromTemplate('68');
+  if (!Array.isArray(S.footLoras)) S.footLoras = lorasFromTemplate('69');
+  S.runs = Math.max(1, Math.min(50, S.runs | 0 || 1));
+  try { H = JSON.parse(localStorage.getItem(LS_HIST) || '[]') || []; } catch (_) { H = []; }
+}
+const val = (id, name) => { const k = id + '.' + name; return (k in S.vals) ? S.vals[k] : T.prompt[id].inputs[name]; };
+function setVal(id, name, v) { S.vals[id + '.' + name] = v; save(); }
+
+/* ---------- ComfyUI data ---------- */
+async function loadTemplate() {
+  const urls = [API + '/api/userdata/' + encodeURIComponent('artflow/template.json'), API + '/artflow/template.json'];
+  for (const u of urls) { try { const r = await fetch(u, {cache: 'no-store'}); if (r.ok) { const j = await r.json(); if (j && j.prompt && j.groups) return j; } } catch (_) {} }
+  throw new Error(t('noTpl'));
+}
+async function loadOI() {
+  const classes = [...new Set(Object.values(T.prompt).map(n => n.class_type))];
+  const res = await Promise.all(classes.map(c => fetch(API + '/object_info/' + encodeURIComponent(c), {cache: 'no-store'}).then(r => r.ok ? r.json() : {}).catch(() => ({}))));
+  OI = {}; res.forEach(j => Object.assign(OI, j));
+}
+function spec(id, name) {
+  const n = T.prompt[id]; if (!n) return null; const oi = OI[n.class_type]; const inp = (oi && oi.input) || {};
+  const s = (inp.required && inp.required[name]) || (inp.optional && inp.optional[name]); if (!s) return null;
+  let type = s[0]; const cfg = s[1] || {}; let options = null;
+  if (Array.isArray(type)) { options = type; type = 'COMBO'; } else if (type === 'COMBO') options = cfg.options || [];
+  return {type, cfg, options};
+}
+function comboOpts(id) {
+  return Object.entries(T.prompt[id].inputs).filter(([k, v]) => /^option\d+$/.test(k) && v !== '' && v != null)
+    .sort((a, b) => parseInt(a[0].slice(6)) - parseInt(b[0].slice(6))).map(([k]) => val(id, k)).filter(v => v !== '' && v != null);
+}
+function splitName(v) { const s = String(v || ''); const i = s.lastIndexOf('/'); return i < 0 ? ['', s] : [s.slice(0, i), s.slice(i + 1)]; }
+function viewUrl(v, type) { if (!v) return ''; const [sub, fn] = splitName(v); return API + '/view?filename=' + encodeURIComponent(fn) + '&subfolder=' + encodeURIComponent(sub) + '&type=' + encodeURIComponent(type || 'input'); }
+async function uploadImage(file) {
+  const fd = new FormData(); fd.append('image', file, file.name); fd.append('type', 'input');
+  const r = await fetch(API + '/upload/image', {method: 'POST', body: fd}); if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json(); const name = j.subfolder ? j.subfolder + '/' + j.name : j.name;
+  if (!EXTRA_IMAGES.includes(name)) EXTRA_IMAGES.unshift(name); return name;
+}
+function findMissing() {
+  const out = [], seen = new Set(); const add = (kind, what, folder, step) => { const k = kind + what + (step || ''); if (seen.has(k)) return; seen.add(k); out.push({kind, what, folder, step}); };
+  const isModel = v => typeof v === 'string' && /\.(safetensors|ckpt|pt|pth|bin|gguf|sft)$/i.test(v);
+  for (const [id, n] of Object.entries(T.prompt)) {
+    const step = NODEGROUP[id] || null;
+    if (!OI[n.class_type]) { add('node', n.class_type, null, step); continue; }
+    for (const k of Object.keys(n.inputs)) { const v = val(id, k); if (!isModel(v)) continue; const sp = spec(id, k); if (!sp || sp.type !== 'COMBO' || !sp.options) continue; if (!sp.options.includes(v)) add('model', v, FOLDER[n.class_type] || 'models', step); }
+  }
+  const lsp = spec('89', 'lora_name'); const lopts = (lsp && lsp.options) || null;
+  if (lopts) { S.loras.forEach(L => { if (L.on && L.lora && !lopts.includes(L.lora)) add('model', L.lora, 'models\\loras', null); }); S.footLoras.forEach(L => { if (L.on && L.lora && !lopts.includes(L.lora)) add('model', L.lora, 'models\\loras', '3c'); }); }
+  return out;
+}
+function renderMissing() {
+  const box = $('#miss'); const m = findMissing(); if (!m.length || MISS_HIDDEN) { box.hidden = true; box.replaceChildren(); return; }
+  const li = x => h('li', {text: (x.kind === 'node' ? t('missNode', x.what) : t('missModel', x.what, x.folder)) + (x.step ? t('missFor', t(STEP_NAME[x.step] || x.step)) : t('missAlways'))});
+  box.replaceChildren(h('div', {class: 'row'}, h('b', {text: t('missTitle')}), h('span', null,
+    h('button', {class: 'btn sm', type: 'button', text: t('recheck'), onclick: async () => { await loadOI(); renderControls(); }}), ' ',
+    h('button', {class: 'btn sm', type: 'button', text: t('hide'), onclick: () => { MISS_HIDDEN = true; renderMissing(); }}))), h('ul', null, m.map(li)));
+  box.hidden = false;
+}
+
+/* ---------- controls ---------- */
+function sw(checked, cb, title) { const i = h('input', {type: 'checkbox'}); i.checked = !!checked; i.onchange = () => cb(i.checked); return h('label', {class: 'sw', title: title || ''}, i, h('span')); }
+function num(v, c, cb) {
+  const wrap = h('div', {class: 'num'}); const step = c.step || (c.int ? 1 : 0.01);
+  const fire = x => { if (!isFinite(x)) return; if (c.int) x = Math.round(x); cb(x); };
+  const n = h('input', {type: 'number'}); n.step = c.int ? '1' : 'any';
+  if (isFinite(c.min) && Math.abs(c.min) < 1e9) n.min = c.min; if (isFinite(c.max) && Math.abs(c.max) < 1e9) n.max = c.max; n.value = v;
+  let r = null;
+  if (c.slider && isFinite(c.min) && isFinite(c.max)) { r = h('input', {type: 'range'}); r.min = c.min; r.max = c.max; r.step = step; r.value = v; r.oninput = () => { n.value = r.value; fire(r.valueAsNumber); }; wrap.append(r); }
+  n.oninput = () => { const x = n.valueAsNumber; if (isFinite(x)) { if (r) r.value = x; fire(x); } };
+  wrap.append(n); return wrap;
+}
+function imagePicker(id, name, o) {
+  const folder = () => (id === '48' ? (val('48', 'source_folder') || 'input') : 'input');
+  const thumb = h('img', {alt: ''}); const sel = h('select');
+  const fill = () => {
+    const cur = val(id, name); const sp = spec(id, name); let list = [...EXTRA_IMAGES, ...((sp && sp.options) || [])].filter((x, i, a) => a.indexOf(x) === i);
+    if (cur && !list.includes(cur)) list.unshift(cur);
+    sel.replaceChildren(...list.map(x => h('option', {value: x, text: x}))); sel.value = cur; thumb.src = viewUrl(cur, folder());
+  };
+  const pick = v => { setVal(id, name, v); if (o.also) o.also(v); };
+  sel.onchange = () => { pick(sel.value); thumb.src = viewUrl(sel.value, folder()); };
+  const file = h('input', {type: 'file', accept: 'image/*', hidden: true});
+  const up = async f => { try { const nm = await uploadImage(f); if (id === '48') setVal('48', 'source_folder', 'input'); pick(nm); fill(); } catch (e) { toast(t('uploadErr', e.message), 'err'); } };
+  file.onchange = () => { if (file.files[0]) up(file.files[0]); file.value = ''; };
+  const drop = h('div', {class: 'drop', title: t('drop')}, thumb, h('div', {class: 'dropmsg', text: t('drop')}));
+  drop.onclick = () => file.click();
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) up(f); };
+  fill(); return h('div', {class: 'imgpick'}, drop, sel, file);
+}
+function field(id, name, label, o) {
+  o = o || {}; id = String(id); const node = T.prompt[id]; if (!node || !(name in node.inputs)) return null;
+  const sp = spec(id, name) || {}; const cfg = sp.cfg || {}; const v = val(id, name);
+  const custom = node.class_type === 'CustomCombo' && name === 'choice';
+  let type = o.type || sp.type; if (custom) type = 'COMBO';
+  if (!type || !['COMBO', 'INT', 'FLOAT', 'BOOLEAN', 'STRING'].includes(type)) type = typeof v === 'number' ? 'FLOAT' : typeof v === 'boolean' ? 'BOOLEAN' : 'STRING';
+  const row = h('div', {class: 'f'}); const lab = h('label', {class: 'lab', text: label}); let ctl;
+  const changed = x => { setVal(id, name, x); if (o.onchange) o.onchange(x); };
+  if (o.image) ctl = imagePicker(id, name, o);
+  else if (type === 'COMBO') {
+    const opts = custom ? comboOpts(id) : (sp.options || []); const list = opts.slice(); if (!list.includes(v)) list.unshift(v);
+    ctl = h('select'); list.forEach((x, i) => ctl.append(h('option', {value: String(i), text: (custom ? disp(x) : o.pretty ? pretty(x) : String(x)) + (opts.includes(x) ? '' : t('notInList'))})));
+    ctl.value = String(list.indexOf(v)); ctl.onchange = () => changed(list[+ctl.value]);
+  } else if (type === 'BOOLEAN') { ctl = sw(!!v, changed); row.classList.add('inline'); }
+  else if (type === 'INT' || type === 'FLOAT') ctl = num(v, {int: type === 'INT', min: o.min != null ? o.min : cfg.min, max: o.max != null ? o.max : cfg.max, step: o.step != null ? o.step : cfg.step, slider: o.slider}, changed);
+  else {
+    const multi = o.rows || cfg.multiline || (typeof v === 'string' && v.length > 70);
+    ctl = multi ? h('textarea', {rows: o.rows || 4, spellcheck: false}) : h('input', {type: 'text'});
+    ctl.value = v == null ? '' : v; ctl.oninput = () => changed(ctl.value); if (o.mono) ctl.classList.add('mono');
+  }
+  if (type === 'BOOLEAN' && o.hint) { row.classList.remove('inline'); row.append(h('div', {class: 'f inline'}, lab, ctl), h('div', {class: 'hint', text: o.hint})); return row; }
+  row.append(lab, ctl); if (o.hint) row.append(h('div', {class: 'hint', text: o.hint})); return row;
+}
+function loraList(arr) {
+  const sp = spec('89', 'lora_name'); const opts = (sp && sp.options) || []; const box = h('div', {class: 'loras'});
+  const draw = () => {
+    box.replaceChildren();
+    arr.forEach((L, i) => {
+      const s = h('select'); const list = (!L.lora || opts.includes(L.lora)) ? opts : [L.lora, ...opts];
+      list.forEach(x => s.append(h('option', {value: x, text: pretty(x) + (opts.includes(x) ? '' : t('notFound'))}))); s.value = L.lora; s.onchange = () => { L.lora = s.value; save(); renderMissing(); };
+      const row = h('div', {class: 'lora' + (L.on ? '' : ' off')});
+      row.append(sw(L.on, x => { L.on = x; row.classList.toggle('off', !x); save(); renderMissing(); }, t('onOff')), s,
+        h('button', {class: 'x', type: 'button', title: t('delRow'), text: '✕', onclick: () => { arr.splice(i, 1); save(); draw(); renderMissing(); }}),
+        num(L.strength, {min: 0, max: 2, step: 0.05, slider: true}, x => { L.strength = x; save(); }));
+      box.append(row);
+    });
+    box.append(h('button', {class: 'btn sm', type: 'button', text: t('addLora'), onclick: () => { arr.push({on: true, lora: opts[0] || '', strength: 1}); save(); draw(); }}));
+  };
+  draw(); return box;
+}
+function card(n, title, kids, open) { return h('details', {class: 'card', open: open !== false}, h('summary', null, h('span', {class: 'n', text: n}), title), h('div', {class: 'cbody'}, kids)); }
+function mini(title, ...kids) { return h('details', {class: 'mini'}, h('summary', {text: title}), h('div', null, kids)); }
+function groupCard(key, kids) {
+  if (!T.groups[key]) return null; const on = !!S.groups[key]; const nm = STEP_NAME[key];
+  const body = h('div', {class: 'gbody'}, kids); body.hidden = !on;
+  const c = h('div', {class: 'gcard' + (on ? ' on' : '')});
+  c.append(h('div', {class: 'ghead'}, sw(on, x => { S.groups[key] = x; body.hidden = !x; c.classList.toggle('on', x); save(); hints(); }), h('div', {class: 'gt'}, h('b', {text: t(nm)}), h('span', {text: t(nm + 'D')}))), body);
+  return c;
+}
+function hints() {
+  const el = $('#promptHint'); if (!el) return; const a = S.groups['1a'], d = S.groups['1d'];
+  el.hidden = !(a || d); el.textContent = d ? t('hint1d') : t('hint1a');
+}
+function seedRow() {
+  const n = h('input', {type: 'number', step: '1', min: '0'}); n.value = S.seed; n.disabled = !!S.seedRandom;
+  n.oninput = () => { const x = n.valueAsNumber; if (isFinite(x)) { S.seed = Math.round(x); save(); } };
+  const cb = h('input', {type: 'checkbox'}); cb.checked = !!S.seedRandom; cb.onchange = () => { S.seedRandom = cb.checked; n.disabled = cb.checked; save(); };
+  const fix = h('button', {class: 'btn sm', type: 'button', text: t('fixLast'), title: t('fixLastT'), onclick: () => { if (R.seed == null) { toast(t('noRun')); return; } S.seed = R.seed; S.seedRandom = false; save(); renderControls(); }});
+  return h('div', {class: 'f'}, h('label', {class: 'lab', text: t('seedL')}), h('div', {class: 'row', style: 'flex-wrap:nowrap'}, n, h('label', {class: 'chk'}, cb, t('random')), fix));
+}
+function baseLora() {
+  if (!T.prompt['89']) return null; const manual = !!val('92', 'value');
+  const strength = field('94', 'float', t('manualVal'), {min: 0, max: 2, step: 0.05, slider: true}); if (strength) strength.hidden = !manual;
+  return h('div', {class: 'sub'},
+    h('div', {class: 'subhead'}, sw(!!val('100', 'value'), x => setVal('100', 'value', x)), h('b', {text: t('baseLora')}), h('span', {class: 'muted', text: t('baseLoraHint')})),
+    field('89', 'lora_name', t('file'), {pretty: true, onchange: () => renderMissing()}),
+    h('div', {class: 'f inline'}, h('label', {class: 'lab', text: t('manual')}), sw(manual, x => { setVal('92', 'value', x); if (strength) strength.hidden = !x; })),
+    strength);
+}
+function renderControls() {
+  const lookId = T.ids && T.ids.look; const again = () => renderMissing();
+  $('#colL').replaceChildren(
+    card('1', t('c1'), [
+      h('div', {class: 'two'}, field('86', 'choice', t('theme')), field('87', 'choice', t('ratio'))),
+      lookId ? field(lookId, 'value', t('look'), {hint: t('lookHint')}) : null,
+      h('div', {class: 'note', id: 'promptHint', hidden: true}),
+      field('46', 'value', t('prompt'), {rows: 9}),
+      mini(t('neg'), field('51', 'value', t('negHint'), {rows: 3})),
+      seedRow()
+    ]),
+    card('2', t('c2'), [baseLora(), h('div', {class: 'lab', text: t('moreLoras')}), loraList(S.loras)]),
+    card('3', t('c3'), [
+      field('2', 'ckpt_name', t('ckpt'), {pretty: true, onchange: again}), field('65', 'clip_name', t('clip'), {pretty: true, onchange: again}), field('66', 'vae_name', t('vae'), {pretty: true, onchange: again}),
+      h('div', {class: 'two'}, field('6', 'steps', t('steps')), field('6', 'cfg', t('cfg'))),
+      h('div', {class: 'two'}, field('6', 'sampler_name', t('sampler')), field('6', 'scheduler', t('scheduler')))
+    ], false)
+  );
+  const pr = (p, n) => mini(t('fixPrompts'), field(p, 'text', t('pos'), {rows: 3}), field(n, 'text', t('negS'), {rows: 2}));
+  const det = id => mini(t('detect'),
+    field(id, 'bbox_threshold', t('thr'), {min: 0.05, max: 1, step: 0.05, slider: true}),
+    field(id, 'bbox_dilation', t('dil'), {min: 0, max: 200, step: 1, slider: true}),
+    field(id, 'bbox_crop_factor', t('crop'), {min: 1, max: 6, step: 0.1, slider: true}));
+  $('#colR').replaceChildren(
+    card('4', t('c4'), [
+      groupCard('1e', [field('95', 'image', t('image'), {image: true}),
+        field('98', 'float', t('rewrite'), {min: 0.05, max: 1, step: 0.01, slider: true}),
+        field('96', 'megapixels', t('mp'), {min: 0.25, max: 4, step: 0.05, slider: true})]),
+      groupCard('1b', [field('71', 'image', t('image'), {image: true}),
+        field('74', 'strength', t('strength'), {min: 0, max: 1.5, step: 0.05, slider: true}),
+        h('div', {class: 'two'}, field('74', 'start_percent', t('start'), {min: 0, max: 1, step: 0.05}), field('74', 'end_percent', t('end'), {min: 0, max: 1, step: 0.05}))]),
+      groupCard('1c', [field('76', 'image', t('image'), {image: true}),
+        field('78', 'strength', t('colorStr'), {min: 0, max: 1, step: 0.05, slider: true}),
+        mini(t('styleInstr'), field('82', 'string_b', t('styleInstrHint'), {rows: 5}))]),
+      groupCard('1a', [field('39', 'image', t('image'), {image: true}), field('41', 'task', t('captionType'))]),
+      groupCard('1d', [field('48', 'source_folder', t('srcFolder'), {onchange: () => renderControls()}),
+        field('48', 'image', t('image'), {image: true, also: v => setVal('48', 'file', v)})])
+    ]),
+    card('5', t('c5'), [
+      groupCard('2', [field('15', 'scale_by', t('upBefore'), {min: 1, max: 2, step: 0.05, slider: true}), field('17', 'steps', t('steps'))]),
+      groupCard('3', [field('25', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}),
+        h('div', {class: 'two'}, field('25', 'steps', t('steps')), field('25', 'force_inpaint', t('closeUp'))), det('25'), pr('23', '24')]),
+      groupCard('3b', [field('30', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}), field('30', 'steps', t('steps')), det('30'), pr('28', '29')]),
+      groupCard('3c', [field('62', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}), field('62', 'steps', t('steps')), det('62'),
+        h('div', {class: 'lab', text: t('footLoras')}), loraList(S.footLoras), pr('57', '58')]),
+      groupCard('4', [field('32', 'model_name', t('upModel'), {pretty: true, onchange: again}),
+        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.25}), field('33', 'steps', t('steps')))]),
+      groupCard('5', [field('35', 'filename_prefix', t('prefix'))])
+    ])
+  );
+  hints(); renderMissing();
+}
+function renderAdvanced() {
+  const body = $('#advBody'); body.replaceChildren(); let armed = false;
+  const reset = h('button', {class: 'btn sm', type: 'button', text: t('reset'), onclick: () => {
+    if (!armed) { armed = true; reset.textContent = t('resetSure'); setTimeout(() => { armed = false; reset.textContent = t('reset'); }, 4000); return; }
+    try { localStorage.removeItem(LS_KEY); } catch (_) {} location.reload();
+  }});
+  const refresh = h('button', {class: 'btn sm', type: 'button', text: t('refresh'), onclick: async () => { await loadOI(); renderControls(); renderAdvanced(); toast(t('refreshed')); }});
+  body.append(h('div', {class: 'row'}, refresh, reset), h('div', {class: 'hint', text: t('advHint', (T.source || '') + ' · ' + (T.generated || '').slice(0, 16).replace('T', ' '))}));
+  const skipIds = new Set([T.ids && T.ids.info].filter(Boolean));
+  const sections = [['-', t('baseSec')], ...GROUP_ORDER.filter(k => T.groups[k]).map(k => [k, T.groups[k].title])];
+  for (const [key, title] of sections) {
+    const ids = Object.keys(T.prompt).filter(id => (NODEGROUP[id] || '-') === key).sort((a, b) => a - b); const items = [];
+    for (const id of ids) {
+      const n = T.prompt[id]; if (/^ShowText/.test(n.class_type) || skipIds.has(id)) continue;
+      const fs = Object.entries(n.inputs).filter(([k, v]) => !isLink(v) && (v === null || typeof v !== 'object') && k !== '➕ Add Lora' && !(n.class_type === 'CustomCombo' && k === 'index') && !(id === '1' && k === 'seed'))
+        .map(([k]) => field(id, k, k, k === 'code' ? {rows: 26, mono: true} : {})).filter(Boolean);
+      if (fs.length) items.push(h('details', {class: 'node'}, h('summary', {text: ((n._meta && n._meta.title) || n.class_type) + '  ·  #' + id}), h('div', null, fs)));
+    }
+    if (items.length) body.append(h('h3', {text: title}), ...items);
+  }
+}
+
+/* ---------- prompt building ---------- */
+function setLoras(node, arr) {
+  if (!node) return; for (const k of Object.keys(node.inputs)) if (/^lora_\d+$/i.test(k)) delete node.inputs[k];
+  const add = node.inputs['➕ Add Lora']; if (add !== undefined) delete node.inputs['➕ Add Lora'];
+  arr.forEach((L, i) => { if (L.lora) node.inputs['lora_' + (i + 1)] = {on: !!L.on, lora: L.lora, strength: Number(L.strength) || 0, strengthTwo: null}; });
+  if (add !== undefined) node.inputs['➕ Add Lora'] = add;
+}
+function buildPrompt(seed) {
+  const full = JSON.parse(JSON.stringify(T.prompt));
+  for (const [k, v] of Object.entries(S.vals)) { const i = k.indexOf('.'); const id = k.slice(0, i), name = k.slice(i + 1); if (full[id]) full[id].inputs[name] = v; }
+  for (const id of ['86', '87']) if (full[id]) { const ix = comboOpts(id).indexOf(full[id].inputs.choice); full[id].inputs.index = ix < 0 ? 0 : ix; }
+  setLoras(full['68'], S.loras); setLoras(full['69'], S.footLoras);
+  if (full['1']) full['1'].inputs.seed = seed;
+  if (full['48']) full['48'].inputs.file = full['48'].inputs.image;
+  delete full['36'];
+  const byp = id => NODEGROUP[id] && !S.groups[NODEGROUP[id]];
+  const res = (ref, d) => { const id = String(ref[0]); if (!byp(id)) return [id, ref[1]]; const nm = T.pass[id] ? T.pass[id][ref[1]] : null; if (!nm || d > 40) return null; const src = full[id].inputs[nm]; return isLink(src) ? res(src, d + 1) : null; };
+  const out = {};
+  for (const [id, nd] of Object.entries(full)) {
+    if (byp(id)) continue; const inputs = {};
+    for (const [k, v] of Object.entries(nd.inputs)) { if (isLink(v)) { if (!full[v[0]]) continue; const r = res(v, 0); if (r) inputs[k] = r; } else inputs[k] = v; }
+    out[id] = {class_type: nd.class_type, inputs, _meta: nd._meta};
+  }
+  return out;
+}
+const rndSeed = () => Math.floor(Math.random() * 281474976710655) + 1;
+function titleOf(id) { if (LANG === 'hu' && HU_NODE[id]) return HU_NODE[id]; const n = T.prompt[id]; return n ? ((n._meta && n._meta.title) || n.class_type) : '#' + id; }
+async function run() {
+  if (!T) return; const count = Math.max(1, Math.min(50, S.runs | 0 || 1));
+  for (let i = 0; i < count; i++) {
+    const seed = S.seedRandom ? rndSeed() : (Number(S.seed) || 0) + i; let prompt;
+    try { prompt = buildPrompt(seed); } catch (e) { toast(t('buildErr', e.message), 'err'); return; }
+    let r, j = {};
+    try { r = await fetch(API + '/prompt', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({prompt, client_id: CLIENT, extra_data: {extra_pnginfo: {}}})}); j = await r.json().catch(() => ({})); }
+    catch (e) { toast(t('unreachable', e.message), 'err'); return; }
+    if (!r.ok || !j.prompt_id) { promptError(j); return; }
+    R.jobs.set(j.prompt_id, {seed}); busy();
+  }
+}
+function promptError(j) {
+  let msg = (j.error && (j.error.message || j.error)) || t('rejected');
+  for (const [id, e] of Object.entries(j.node_errors || {})) msg += '\n• ' + titleOf(id) + ': ' + (e.errors || []).map(x => x.message + (x.details ? ' (' + x.details + ')' : '')).join('; ');
+  toast(String(msg), 'err');
+}
+async function stop() {
+  const pend = [...R.jobs.keys()].filter(id => id !== R.job);
+  try { if (pend.length) await fetch(API + '/queue', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({delete: pend})}); pend.forEach(id => R.jobs.delete(id)); await fetch(API + '/interrupt', {method: 'POST'}); } catch (_) {}
+  busy();
+}
+function busy() { const n = R.jobs.size; $('#stopBtn').disabled = n === 0; $('#goBtn').textContent = n ? t('goQ', n) : t('go'); }
+
+/* ---------- results ---------- */
+function setProg(key, args, frac, raw) { R.prog = [key, args || [], raw || '']; $('#progText').textContent = raw != null && raw !== '' ? raw : t(key, ...(args || [])); $('#bar i').style.width = (frac == null ? 0 : Math.max(0, Math.min(1, frac)) * 100) + '%'; }
+function show(url, badgeKey, live) { const v = $('#view'); v.src = url; v.hidden = false; $('#empty').hidden = true; if (!live) R.cur = url; R.curBadge = badgeKey || ''; const b = $('#badge'); b.hidden = !badgeKey; b.textContent = badgeKey ? t(badgeKey) : ''; }
+function curStep() { if (R.sel && R.steps[R.sel]) return R.sel; for (let i = STEP_ORDER.length - 1; i >= 0; i--) if (R.steps[STEP_ORDER[i]]) return STEP_ORDER[i]; return null; }
+function renderSteps() {
+  const box = $('#steps'); box.replaceChildren(); const cur = curStep();
+  for (const id of [...STEP_ORDER, '75', '56']) { if (!R.steps[id]) continue; box.append(h('div', {class: 'chip' + (id === cur ? ' act' : ''), onclick: () => { R.sel = id; refresh(); }}, h('img', {src: R.steps[id][0], alt: ''}), t('s' + id))); }
+  if (R.cur) box.append(h('span', {class: 'sp'}),
+    h('button', {class: 'btn sm', type: 'button', text: t('open'), onclick: () => window.open(R.cur, '_blank')}),
+    h('a', {class: 'btn sm', href: R.cur, download: 'artflow_' + (R.seed || '') + '.png', text: t('download')}),
+    T.groups['1e'] ? h('button', {class: 'btn sm', type: 'button', text: t('useStart'), title: t('useStartT'), onclick: useAsStart}) : null);
+}
+function refresh() { const id = curStep(); if (id) show(R.steps[id][0], 's' + id); renderSteps(); }
+function summaryText() {
+  const raw = T.ids && T.ids.info ? R.texts[T.ids.info] : null; if (!raw) return R.texts['90'] || '–';
+  const d = {}; raw.split('|').forEach(p => { const i = p.indexOf('='); if (i > 0) d[p.slice(0, i)] = p.slice(i + 1); });
+  const steps = (d.steps || '').split(/[ ,]+/).filter(Boolean).map(k => STEP_NAME[k] ? k + ' ' + t(STEP_NAME[k]) : k);
+  return [
+    t('sumSrc') + ': ' + (d.src === 'own' ? t('srcOwn') : t('srcImage')),
+    t('theme') + ': ' + disp(d.theme || ''),
+    t('sumSize') + ': ' + (d.i2i === '1' ? t('sizeStart') : d.w + '×' + d.h) + '  ·  Shift: ' + d.shift,
+    t('sumLora') + ': ' + d.lora + ' (' + t('lora_' + d.lora_src) + ')',
+    t('sumStart') + ': ' + (d.i2i === '1' ? t('startOn', d.denoise) : t('startOff')),
+    t('sumDen', d.refine, d.upscale),
+    t('sumLook') + ': ' + t('look_' + d.look),
+    t('sumSteps') + ': ' + (steps.length ? steps.join(', ') : t('any'))
+  ].join('\n');
+}
+function renderTexts() {
+  $('#applied').textContent = summaryText(); $('#final').textContent = R.texts['91'] || '–';
+  const m = $('#moreTexts'); m.replaceChildren();
+  for (const id of ['42', '49', '50', '80']) if (R.texts[id]) m.append(h('h4', {text: t('t' + id), style: 'margin-top:8px'}), h('pre', {text: R.texts[id]}));
+}
+function takeOutput(node, out) {
+  if (!out) return; node = String(node);
+  if (Array.isArray(out.images) && out.images.length) { R.steps[node] = out.images.map(im => API + '/view?filename=' + encodeURIComponent(im.filename) + '&subfolder=' + encodeURIComponent(im.subfolder || '') + '&type=' + encodeURIComponent(im.type || 'output')); refresh(); }
+  if (out.text != null) { R.texts[node] = Array.isArray(out.text) ? out.text.flat().join('\n') : String(out.text); renderTexts(); }
+}
+function addHistory(url) { if (!url) return; H = [{url, seed: R.seed, t: Date.now()}, ...H.filter(x => x.url !== url)].slice(0, 40); try { localStorage.setItem(LS_HIST, JSON.stringify(H)); } catch (_) {} renderHistory(); }
+function renderHistory() { const b = $('#hist'); b.replaceChildren(...H.map(x => { const i = h('img', {src: x.url, alt: '', title: t('seed', x.seed == null ? '?' : x.seed), loading: 'lazy'}); i.onclick = () => { show(x.url, 'earlier'); renderSteps(); }; i.onerror = () => { H = H.filter(y => y !== x); i.remove(); }; return i; })); }
+async function useAsStart() {
+  if (!R.cur) return;
+  try { const b = await (await fetch(R.cur)).blob(); const nm = await uploadImage(new File([b], 'artflow_start_' + Date.now() + '.png', {type: b.type || 'image/png'})); setVal('95', 'image', nm); S.groups['1e'] = true; save(); renderControls(); toast(t('useStartOk')); }
+  catch (e) { toast(t('useStartErr', e.message), 'err'); }
+}
+async function finish(id, ok) {
+  const mine = R.jobs.has(id); R.jobs.delete(id); busy(); if (!mine) return;
+  if (ok) {
+    try { const j = await (await fetch(API + '/history/' + id)).json(); const outs = (j[id] && j[id].outputs) || {}; for (const [node, out] of Object.entries(outs)) if (!R.steps[node] || out.text != null) takeOutput(node, out); } catch (_) {}
+    R.sel = null; refresh(); const st = curStep(); if (st) addHistory(R.steps[st][0]);
+    const secs = ((Date.now() - R.t0) / 1000).toFixed(1); setProg('done', [secs], R.jobs.size ? 0 : 1, t('done', secs) + (R.jobs.size ? t('moreQ', R.jobs.size) : ''));
+  }
+  if (R.job === id) R.job = null;
+}
+function onMsg(ev) {
+  if (typeof ev.data !== 'string') {
+    try { const dv = new DataView(ev.data); const type = dv.getUint32(0); let off = 8, mime = dv.getUint32(4) === 2 ? 'image/png' : 'image/jpeg';
+      if (type === 4) { off = 8 + dv.getUint32(4); mime = 'image/jpeg'; } else if (type !== 1) return;
+      if (R.job) show(URL.createObjectURL(new Blob([ev.data.slice(off)], {type: mime})), 'live', true); } catch (_) {}
+    return;
+  }
+  let m; try { m = JSON.parse(ev.data); } catch (_) { return; } const d = m.data || {};
+  if (m.type === 'status') { const q = d.status && d.status.exec_info ? d.status.exec_info.queue_remaining : null; R.queue = q; conn(true); return; }
+  if (d.prompt_id && !R.jobs.has(d.prompt_id)) return;
+  if (m.type === 'execution_start') { R.job = d.prompt_id; R.steps = {}; R.texts = {}; R.sel = null; R.t0 = Date.now(); R.seed = R.jobs.get(d.prompt_id).seed; $('#seedInfo').textContent = t('seed', R.seed); renderSteps(); renderTexts(); setProg('starting', [], 0); }
+  else if (m.type === 'executing') { if (d.node) setProg('', [], 0, titleOf(String(d.node)) + '…'); }
+  else if (m.type === 'progress') { setProg('', [], d.max ? d.value / d.max : 0, titleOf(String(d.node || '')) + ' – ' + d.value + ' / ' + d.max); }
+  else if (m.type === 'executed') takeOutput(d.node, d.output);
+  else if (m.type === 'execution_success') finish(d.prompt_id, true);
+  else if (m.type === 'execution_error') { toast(t('runErr', titleOf(String(d.node_id)), (d.exception_message || '').trim()), 'err'); setProg('stopped', [], 0); finish(d.prompt_id, false); }
+  else if (m.type === 'execution_interrupted') { setProg('cancelled', [], 0); finish(d.prompt_id, false); }
+}
+let CONN = null;
+function conn(on) { if (on != null) CONN = on; $('#dot').classList.toggle('on', !!CONN); $('#connText').textContent = CONN == null ? t('connecting') : CONN ? t('connected') + (R.queue ? ' · ' + t('queue', R.queue) : '') : t('offline'); }
+function connect() {
+  const ws = new WebSocket((API_URL.protocol === 'https:' ? 'wss://' : 'ws://') + API_URL.host + '/ws?clientId=' + CLIENT); ws.binaryType = 'arraybuffer';
+  ws.onopen = () => conn(true); ws.onclose = () => { conn(false); setTimeout(connect, 2000); }; ws.onmessage = onMsg;
+}
+
+/* ---------- language + start ---------- */
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t(e.getAttribute('data-t')); });
+  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('act', b.getAttribute('data-lang') === LANG));
+  conn(); busy(); if (R.prog && R.prog[0]) setProg(R.prog[0], R.prog[1], parseFloat($('#bar i').style.width) / 100 || 0, R.prog[0] === 'done' ? t('done', R.prog[1][0]) : null);
+  if (R.seed != null) $('#seedInfo').textContent = t('seed', R.seed);
+  const b = $('#badge'); if (R.curBadge) b.textContent = t(R.curBadge);
+  if (T) { renderControls(); renderSteps(); renderTexts(); renderHistory(); if ($('#drawer').classList.contains('open')) renderAdvanced(); if ($('#modal').classList.contains('open')) openAbout(); }
+}
+function setLang(l) { LANG = l; try { localStorage.setItem(LS_LANG, l); } catch (_) {} applyLang(); }
+function openAbout() { $('#modalTitle').textContent = 'ArtFlow Studio – ' + t('about'); $('#modalBody').innerHTML = ABOUT[LANG] || ABOUT.en; $('#modal').classList.add('open'); }
+async function boot() {
+  $('#ver').textContent = 'v' + VERSION; applyLang();
+  try {
+    T = await loadTemplate(); NODEGROUP = {}; for (const [k, g] of Object.entries(T.groups)) for (const id of g.nodes) NODEGROUP[String(id)] = k;
+    await loadOI(); loadState();
+  } catch (e) { $('#boot').textContent = t('bootErr', e.message, API); return; }
+  const logoUrl = API + '/view?filename=artflow-logo.png&subfolder=&type=input';
+  const fav = document.createElement('link'); fav.rel = 'icon'; fav.href = logoUrl; document.head.append(fav);
+  const logo = $('#logo'); logo.onerror = () => { logo.remove(); fav.href = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#111"/><path d="M32 12 54 50H10z" fill="#f2b84b"/></svg>'); };
+  logo.src = logoUrl;
+  const runs = $('#runs'); runs.value = S.runs; runs.oninput = () => { S.runs = Math.max(1, Math.min(50, runs.valueAsNumber | 0 || 1)); save(); };
+  $('#goBtn').onclick = run; $('#stopBtn').onclick = stop;
+  $('#advBtn').onclick = () => { renderAdvanced(); $('#drawer').classList.add('open'); };
+  $('#advClose').onclick = () => { $('#drawer').classList.remove('open'); renderControls(); };
+  $('#aboutBtn').onclick = openAbout; $('#modalClose').onclick = () => $('#modal').classList.remove('open');
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').classList.remove('open'); });
+  document.querySelectorAll('.lang button').forEach(b => { b.onclick = () => setLang(b.getAttribute('data-lang')); });
+  $('#copyBtn').onclick = () => { const txt = $('#final').textContent; if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast(t('copied')), () => {}); };
+  document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run(); } if (e.key === 'Escape') $('#modal').classList.remove('open'); });
+  setProg('ready', [], 0); applyLang(); connect(); $('#boot').remove();
+}
+boot();
+</script>
+</body>
+</html>

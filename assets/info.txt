@@ -1,0 +1,43 @@
+ArtFlawless Studio {VERSION}
+Workflow and Studio interface created by Lalikavics.  Questions and bug reports: {REPO}/issues
+
+WHAT THIS SETUP DOES
+ArtFlawless Studio is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer.
+During setup, ComfyUI, its add-ons and the AI models (about 25 GB in total) are downloaded from their original sources.
+Nothing is generated or sent anywhere: all images are created on your computer.
+ArtFlawless Studio is an independent interface, not affiliated with Comfy Org or the ComfyUI developers. ComfyUI is free software under the GNU GPL v3.0 and is installed unmodified.
+
+SYSTEM REQUIREMENTS
+Minimum:
+ - Windows 10 64-bit (version 1803 or newer) or Windows 11
+ - NVIDIA GeForce RTX graphics card with 8 GB video memory (for example RTX 2070, 3060 Ti, 4060), up-to-date NVIDIA driver
+ - 32 GB RAM, 64-bit processor with 4 cores
+ - 50 GB free disk space (SSD), internet connection for the setup and the model downloads
+ - Microsoft Edge (included in Windows 10 and 11); it also provides the WebView2 engine used by the Studio window
+Recommended:
+ - Windows 11, or Windows 10 22H2
+ - NVIDIA RTX card with 12 GB or more video memory (for example RTX 3060 12 GB, 4070 or better)
+ - 64 GB RAM, processor with 6 or more cores
+ - 100 GB free space on an NVMe SSD (room for all three model families)
+Tested on: RTX 3060 Ti 8 GB, 64 GB RAM, Windows 10 22H2. AMD and Intel graphics cards are not supported.
+
+WHAT IS MINE AND WHAT IS NOT
+I made only the frame: the way the nodes are wired together and the Studio interface. Everything that actually creates the
+images is the work and property of its own authors, who published it free of charge under their own licences. Those licences
+continue to apply to you; please read and respect them, and credit the authors:
+ - ComfyUI (Comfy Org); Z-Image Turbo (Tongyi-MAI / Alibaba); Qwen3 4B (Qwen team / Alibaba); Flux VAE (Black Forest Labs)
+ - "Hands + Feet + skin perfection style" LoRA (its author on Civitai)
+ - Z-Image-Turbo-Fun-Controlnet-Union (Alibaba PAI); Depth Anything V2; Florence-2 (Microsoft); Segment Anything (Meta AI)
+ - YOLOv8 face / hand detectors (Bingsu, ADetailer); foot detector (MonetEinsley/ADetailer_CM); Ultralytics YOLO
+ - Real-ESRGAN (Xintao Wang et al.); 7-Zip (Igor Pavlov, used only to unpack ComfyUI)
+ - Custom nodes: rgthree-comfy, ComfyUI Impact Pack and Subpack (Dr.Lt.Data), Ultimate SD Upscale (ssitu), ComfyUI-Florence2 (kijai),
+   ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),
+   ComfyUI-Prompt-Manager (Francky B)
+
+DISCLAIMER
+No warranty: this software is provided "as is", without warranty of any kind. You use it at your own risk.
+The author does not train, host, select, review or control the models or the images they produce. You alone are responsible for
+what you create and for how you use or share it, including compliance with the laws that apply to you and with the rights of
+others. Do not use this tool to depict real people without their consent, or to create unlawful content or content that harms
+others. To the maximum extent permitted by law, the author accepts no liability for any damage, loss or claim arising from the
+use of this software, of the third-party components it relies on, or of the content created with them.
