@@ -157,3 +157,7 @@ to create unlawful or harmful content.
 
 Questions, ideas and bug reports: please use [Issues](../../issues) on this page.
 If you are the author of a model, LoRA or node used by the setup and want it removed or credited differently, open an issue too.
+
+---
+
+*Developed by Lalikavics, with help from Claude.*

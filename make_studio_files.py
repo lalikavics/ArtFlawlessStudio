@@ -817,7 +817,7 @@ rep("</header>", """  <div class="wctl" id="wctl" hidden>
 </header>""")
 rep("</style>", """/* ---- frameless window ---- */
 html.inhost header{-webkit-app-region:drag;app-region:drag;padding-right:0}
-html.inhost header .hbox:not(.hbrand),html.inhost header button,html.inhost header input,html.inhost header label,html.inhost header a,html.inhost header .gmenu,html.inhost .wctl{-webkit-app-region:no-drag;app-region:no-drag}
+html.inhost header button,html.inhost header input,html.inhost header label,html.inhost header a,html.inhost header .gmenu,html.inhost .wctl{-webkit-app-region:no-drag;app-region:no-drag}
 .wctl{align-self:flex-start;display:flex;margin-left:2px}
 .wb{width:42px;height:30px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:#8d95a8;cursor:default;padding:0}
 .wb svg{width:11px;height:11px}.wb:hover{background:#272c38;color:#e8eaf0}
@@ -830,7 +830,7 @@ function hostMsg(m) { try { window.chrome.webview.postMessage(m); } catch (_) {}
 function initHost() {
   if (!HOST) return; document.documentElement.classList.add('inhost'); $('#wctl').hidden = false;
   $('#wMin').onclick = () => hostMsg('min'); $('#wMax').onclick = () => hostMsg('max'); $('#wClose').onclick = () => window.afHostClose();
-  const hd = document.querySelector('header'), free = e => !e.target.closest('button,input,label,select,a,textarea,.gmenu,.hbox:not(.hbrand),.wctl');
+  const hd = document.querySelector('header'), free = e => !e.target.closest('button,input,label,select,a,textarea,[role=button],.gmenu,.wctl');
   hd.addEventListener('mousedown', e => { if (e.button === 0 && e.detail === 1 && free(e)) hostMsg('drag'); });
   hd.addEventListener('dblclick', e => { if (free(e)) hostMsg('max'); });
 }
@@ -919,25 +919,34 @@ rep('<label class="mi"><span data-t="mLearn"></span><span class="sw"><input type
     '        <label class="mi"><span data-t="mNsfw"></span><span class="sw"><input type="checkbox" id="nsfwSw"><span></span></span></label>\n'
     '        <label class="mi"><span data-t="mSafe"></span><span class="sw"><input type="checkbox" id="safeSw"><span></span></span></label>')
 rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
-#stage.nsfw #view,#stage.nsfwPend #view{filter:blur(44px) saturate(.7)}
+#stage.nsfw #view{filter:blur(44px) saturate(.7)}
+#stage.nsfwPend #view{visibility:hidden}
 #stage.blocked #view{filter:blur(70px) brightness(.35)}
 #nsfwCov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:5;text-align:center;padding:20px;background:rgba(9,10,13,.35)}
-#stage.nsfw #nsfwCov,#stage.nsfwPend #nsfwCov,#stage.blocked #nsfwCov{display:flex}
-#stage.nsfw #nsfwCov,#stage.nsfwPend #nsfwCov{-webkit-backdrop-filter:blur(48px) saturate(.6);backdrop-filter:blur(48px) saturate(.6)}
+#stage.nsfw #nsfwCov,#stage.blocked #nsfwCov{display:flex}
+#stage.nsfw #nsfwCov{-webkit-backdrop-filter:blur(48px) saturate(.6);backdrop-filter:blur(48px) saturate(.6)}
 #stage.blocked #nsfwCov{-webkit-backdrop-filter:blur(80px) brightness(.35);backdrop-filter:blur(80px) brightness(.35)}
 #nsfwCov .eye{width:58px;height:58px;border-radius:50%;border:1px solid var(--line2);background:rgba(21,24,31,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);padding:0}
 #nsfwCov .eye:hover{border-color:var(--acc);color:var(--acc)}
 #nsfwCov .eye svg{width:28px;height:28px}
 #nsfwCov b{font-size:15px}
 #nsfwCov small{color:#b9c0cf;max-width:440px;line-height:1.45}
-#stage.nsfwPend #nsfwCov .eye,#stage.nsfwPend #nsfwCov small,#stage.blocked #nsfwCov .eye{display:none}
+#stage.blocked #nsfwCov .eye{display:none}
 #hist img.nsfw,#steps .chip img.nsfw,.iih img.nsfw{filter:blur(6px) saturate(.6)}
+#hist img.ckpend,#steps .chip img.ckpend,.iih img.ckpend{visibility:hidden}
+#nsfwHide{position:absolute;right:12px;bottom:12px;z-index:5;display:none;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:1px solid var(--line2);background:rgba(21,24,31,.85);color:var(--text);font-size:12.5px;cursor:pointer}
+#nsfwHide:hover{border-color:var(--acc);color:var(--acc)}
+#nsfwHide svg{width:16px;height:16px}
+#stage.nsfwRev #nsfwHide{display:inline-flex}
 .iiprev img.nsfw{filter:blur(18px) saturate(.6)}
 .adck{display:flex;gap:9px;align-items:flex-start;margin:12px 0 14px;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);cursor:pointer;font-weight:600}
 .adck input{margin-top:3px;accent-color:var(--acc)}
 .btn.go2{background:var(--acc);border-color:var(--acc);color:var(--accText);font-weight:700}
 .btn.go2:disabled{opacity:.45;cursor:not-allowed}
-#wctl[hidden]{display:none!important}""")
+#wctl[hidden]{display:none!important}
+body{-webkit-user-select:none;user-select:none}
+input,textarea,[contenteditable="true"],pre,#modalBody p,#modalBody li,#modalBody td,#modalBody h3,#modalBody code{-webkit-user-select:text;user-select:text}
+#modalBody button,#modalBody .btn,#modalBody label{-webkit-user-select:none;user-select:none}""")
 rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'safety.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
 rep("initZoom(); initHelp(); initHost(); initFold();", "initZoom(); initHelp(); initHost(); initFold(); initSafety();")
 # ---- support: "Buy me a coffee" button in the About header and a quiet link in the main header ----

@@ -1,5 +1,5 @@
 ﻿ArtFlawless Studio {VERSION}
-Workflow and Studio interface created by Lalikavics.  Questions and bug reports: {REPO}/issues
+Developed by Lalikavics, with help from Claude.  Questions and bug reports: {REPO}/issues
 
 WHAT THIS SETUP DOES
 ArtFlawless Studio is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer.

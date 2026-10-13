@@ -45,7 +45,7 @@ FLUX_PRESETS = {
                      post=" Shot on an 85mm lens with shallow depth of field, soft natural light, natural skin texture, sharp focus on the eyes. No text, no watermark."),
     "People – full body": dict(people=1, w=832, h=1216, steps=4, cfg=1.0, lora=0.0, refine=0.2, upscale=0.15, groups="2, 3, 3b",
                                pre="A photorealistic candid full-body photograph. ",
-                               post=" Natural pose, natural skin texture, 35mm lens, documentary realism, correct anatomy with five fingers on each hand. No text, no watermark."),
+                               post=" Natural pose, natural skin texture, 35mm lens, documentary realism, correct anatomy. No text, no watermark."),
     "Landscape – nature": dict(w=1216, h=832, steps=4, cfg=1.0, lora=0.0, refine=0.2, upscale=0.15, groups="2, 4",
                                pre="An ultra detailed, realistic landscape photograph. ",
                                post=" Wide-angle lens, deep depth of field, sharp foreground detail, atmospheric haze in the distance, natural colors. No text, no watermark."),

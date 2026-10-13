@@ -4,6 +4,7 @@
    - prompts with nudity / sexual words ask once for an 18+ confirmation
    - a minor together with nudity / sexual content is always refused (cannot be switched off)
    - safe mode adds "no nudity" words to the negative prompt (can be switched off)
+   - while the filter is on, a new image stays hidden (dark) until its check has finished, so nothing flashes up
    Getting around these protections, or changing the program to do so, is the user's own responsibility. */
 const LS_SAFE = 'artflow.studio.safety.v1';
 let SAFE = {filter: true, safe: true, adult: false, adultAt: ''};
@@ -57,7 +58,9 @@ function verdict(raw) {
 function userPromptText() { return [val('46', 'value'), (S.loras || []).filter(L => L && L.on).map(L => L.lora).join(' ')].join(' '); }
 
 /* image checks */
-const CK = new Map(); const REVEAL = new Set(); const BLOCKED = new Set(); let CK_NA = false;
+const CK = new Map(); const REVEAL = new Set(); const BLOCKED = new Set(); const JOB_ADULT = new Set(); let CK_NA = false;
+// images of a generation whose prompt asks for nudity / sexual content are adult, whatever the detectors see (a crop can hide it)
+const jobAdult = () => !!R.job && (JOB_ADULT.has(R.job) || (!!R.texts['91'] && verdict(R.texts['91']).adult));
 function qp(url) { try { const u = new URL(url, location.href); return {filename: u.searchParams.get('filename'), subfolder: u.searchParams.get('subfolder') || '', type: u.searchParams.get('type') || 'output'}; } catch (_) { return null; } }
 const vUrl = q => API + '/view?filename=' + encodeURIComponent(q.filename) + '&subfolder=' + encodeURIComponent(q.subfolder || '') + '&type=' + encodeURIComponent(q.type || 'output');
 function renameUrl(a, b) {
@@ -71,8 +74,8 @@ function renameUrl(a, b) {
 function checkImg(url) {
   if (!url || /^(blob|data):/.test(url) || CK.has(url)) return;
   const q = qp(url); if (!q || !q.filename || (q.type !== 'output' && q.type !== 'temp')) { CK.set(url, {st: 'ok'}); return; }
-  const e = {st: 'pend'}; CK.set(url, e);
-  fetch(API + '/artflow/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(q)})
+  const force = jobAdult(); const e = {st: force ? 'nsfw' : 'pend'}; CK.set(url, e);
+  fetch(API + '/artflow/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.assign({}, q, force ? {force: true} : {}))})
     .then(r => r.json()).then(j => {
       if (j.error || j.nsfw == null) { e.st = 'na'; if (!CK_NA && j.nsfw === null) { CK_NA = true; toast(t('ckNa'), 'err'); } }
       else e.st = (j.nsfw || SAFE_TEST) ? 'nsfw' : 'ok';
@@ -88,12 +91,16 @@ function hiddenUrl(url) {
 function applyGuard() {
   const stg = $('#stage'); if (!stg) return; const v = $('#view'); const hid = v.hidden ? false : hiddenUrl(R.shown);
   stg.classList.toggle('nsfw', hid === 'nsfw'); stg.classList.toggle('nsfwPend', hid === 'pend'); stg.classList.toggle('blocked', hid === 'blocked');
+  stg.classList.toggle('nsfwRev', !v.hidden && !hid && SAFE.filter && REVEAL.has(R.shown) && (CK.get(R.shown) || {}).st === 'nsfw');
   const cov = $('#nsfwCov'); if (cov) { cov.querySelector('b').textContent = t(hid === 'blocked' ? 'blkT' : hid === 'pend' ? 'ckPend' : 'nsfwT');
     cov.querySelector('small').textContent = hid === 'blocked' ? t('blkS') : t('nsfwS'); }
-  document.querySelectorAll('#hist img, #steps .chip img, .iih img').forEach(i => { const hh = hiddenUrl(i.getAttribute('src')); i.classList.toggle('nsfw', !!hh); });
+  const hb = $('#nsfwHide'); if (hb) { hb.title = t('nsfwHide'); hb.querySelector('span').textContent = t('nsfwHide'); }
+  document.querySelectorAll('#hist img, #steps .chip img, .iih img').forEach(i => { const hh = hiddenUrl(i.getAttribute('src')); i.classList.toggle('nsfw', hh === 'nsfw' || hh === 'blocked'); i.classList.toggle('ckpend', hh === 'pend'); });
 }
 const _show = show;
-show = function (url, badgeKey, live) { _show(url, badgeKey, live); R.shown = url; if (!live) checkImg(url); applyGuard(); };
+show = function (url, badgeKey, live) {
+  const prev = R.shown; if (!live && prev && prev !== url) REVEAL.delete(prev);   // switching to another image hides a shown adult image again
+  _show(url, badgeKey, live); R.shown = url; if (!live) checkImg(url); applyGuard(); };
 const _renderSteps = renderSteps;
 renderSteps = function () { _renderSteps(); for (const id of Object.keys(R.steps)) (R.steps[id] || []).forEach(checkImg); applyGuard(); };
 const _renderHistory = renderHistory;
@@ -147,7 +154,10 @@ run = async function () {
   if (v.block) { blockedModal(); return; }
   if (v.adult && !SAFE.adult && !(await adultModal('prompt'))) return;
   R.liveAdult = v.adult;
-  return _run();
+  REVEAL.clear(); applyGuard();   // a new generation hides every image shown with the eye again
+  const before = new Set(R.jobs.keys()); const r = await _run();
+  if (v.adult) for (const id of R.jobs.keys()) if (!before.has(id)) JOB_ADULT.add(id);
+  return r;
 };
 function blockedModal() {
   MODAL_KIND = 'blocked'; $('#modalTitle').textContent = t('blkT');
@@ -177,6 +187,9 @@ function initSafety() {
   cov.querySelector('.eye').onclick = e => { e.stopPropagation(); if (R.shown && !BLOCKED.has(R.shown)) { REVEAL.add(R.shown); applyGuard(); } };
   cov.addEventListener('wheel', e => e.stopPropagation()); cov.addEventListener('mousedown', e => e.stopPropagation());
   st.append(cov);
+  const hide = h('button', {id: 'nsfwHide', type: 'button', title: t('nsfwHide')}); hide.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-2.6 3.4M6.3 6.4C3.9 8 2.5 12 2.5 12S6 19 12 19c1.8 0 3.3-.5 4.6-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg><span></span>';
+  hide.onclick = e => { e.stopPropagation(); REVEAL.delete(R.shown); applyGuard(); };
+  hide.addEventListener('mousedown', e => e.stopPropagation()); st.append(hide);
   $('#nsfwSw').onchange = async e => { if (!e.target.checked && !SAFE.adult && !(await adultModal('filter'))) { e.target.checked = true; return; } SAFE.filter = e.target.checked; saveSafe(); };
   $('#safeSw').onchange = e => { SAFE.safe = e.target.checked; saveSafe(); };
   syncSafeUi(); loadSafe().then(() => { renderHistory(); });

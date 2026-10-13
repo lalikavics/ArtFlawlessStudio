@@ -147,3 +147,7 @@ beleegyezésük nélkül, sem jogellenes vagy ártalmas tartalom készítésére
 Kérdések, ötletek és hibajelzések: kérlek, az oldal [Issues](../../issues) részét használd.
 Ha egy, a telepítő által használt modell, LoRA vagy node szerzője vagy, és szeretnéd, hogy a munkád kikerüljön vagy másképp legyen
 feltüntetve, szintén nyiss egy issue-t.
+
+---
+
+*Fejlesztette: Lalikavics, a Claude segítségével.*

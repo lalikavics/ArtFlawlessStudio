@@ -442,9 +442,15 @@ def _check(body):
         return {"ok": True, "discarded": True}, 200
     mt = os.path.getmtime(path)
     hit = _CHECKED.get(path)
-    if hit and hit[0] == mt:
+    if hit and hit[0] == mt and (hit[1].get("nsfw") or not body.get("force")):
         return dict(hit[1]), 200
-    res = _detect(path)
+    rel0 = os.path.relpath(os.path.dirname(path), base).replace("\\", "/")
+    if kind == "output" and (rel0 == ADULT_SUB or rel0.startswith(ADULT_SUB + "/")):
+        body = dict(body, force=True)   # already sorted into output\18+ earlier: stays adult
+    if body.get("force"):   # the prompt itself asks for nudity / sexual content: adult, whatever the detectors see
+        res = {"nsfw": True, "score": 1.0, "reasons": ["prompt"], "detectors": ["prompt"]}
+    else:
+        res = _detect(path)
     if kind == "output":
         try:
             res["marked"] = _mark_png(path) if path.lower().endswith(".png") else False

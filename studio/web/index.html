@@ -200,7 +200,7 @@ en: {
   s8: 'Base image', s19: 'Refined', s26: 'Face fixed', s31: 'Hands fixed', s60: 'Feet fixed', s34: 'Upscaled', s35: 'Saved', s75: 'Depth map', s56: 'Foot mask',
   t42: '1a – image description', t49: '1d – extracted positive prompt', t50: '1d – extracted negative prompt', t80: '1c – style description',
   c1: 'What are you generating?', theme: 'Theme', ratio: 'Aspect ratio', prompt: 'Your prompt – what you want to see (in English)', neg: 'Negative prompt', negHint: 'Has almost no effect at CFG 1',
-  look: 'Default European look for people themes', lookHint: 'Z-Image Turbo tends to draw East Asian faces by default. When ON, the Portrait and People themes add a European look to the prompt. If your prompt names another origin, it is left out automatically. OFF = nothing is added.',
+  look: 'Default European look for people themes', lookHint: 'Z-Image Turbo tends to draw East Asian faces by default. When ON, the Portrait and People themes – and "None" when your own prompt describes a person – add a European look to the prompt. If your prompt names another origin, it is left out automatically. OFF = nothing is added.',
   seedL: 'Seed', random: 'random', fixLast: 'Lock last', fixLastT: 'Locks the seed of the latest image, so the next steps build on the same image', noRun: 'No run yet.',
   hint1a: '1a (describe image) is on: the image description is sent instead of your own prompt.', hint1d: '1d (read embedded prompt) is on: the prompt read from the image is sent instead of your own prompt.',
   c2: 'LoRAs', baseLora: 'Base LoRA', baseLoraHint: 'strength is set by the theme', file: 'File', manual: 'Manual strength instead of the theme', manualVal: 'Manual strength',
@@ -240,7 +240,7 @@ hu: {
   s8: 'Alapkép', s19: 'Finomított', s26: 'Arc javítva', s31: 'Kéz javítva', s60: 'Láb javítva', s34: 'Nagyított', s35: 'Mentve', s75: 'Mélységtérkép', s56: 'Láb-maszk',
   t42: '1a – kép leírása', t49: '1d – kiolvasott pozitív prompt', t50: '1d – kiolvasott negatív prompt', t80: '1c – stílusleírás',
   c1: 'Mit generálsz?', theme: 'Téma', ratio: 'Képarány', prompt: 'Saját prompt – amit látni szeretnél (angolul)', neg: 'Negatív prompt', negHint: '1-es CFG mellett alig van hatása',
-  look: 'Alapértelmezett európai kinézet az emberes témáknál', lookHint: 'A Z-Image Turbo magától többnyire kelet-ázsiai arcot rajzol. Bekapcsolva a Portré és az Emberek téma európai kinézetet ír a promptba. Ha a promptodban más származás szerepel, magától kimarad. Kikapcsolva semmit nem tesz hozzá.',
+  look: 'Alapértelmezett európai kinézet az emberes témáknál', lookHint: 'A Z-Image Turbo magától többnyire kelet-ázsiai arcot rajzol. Bekapcsolva a Portré és az Emberek téma – és a „Nincs” téma is, ha a saját promptod embert ír le – európai kinézetet ír a promptba. Ha a promptodban más származás szerepel, magától kimarad. Kikapcsolva semmit nem tesz hozzá.',
   seedL: 'Mag (seed)', random: 'véletlen', fixLast: 'Utolsó rögzítése', fixLastT: 'A legutóbbi kép magját rögzíti: így a következő lépések ugyanarra a képre épülnek', noRun: 'Még nem volt futás.',
   hint1a: 'Az 1a (kép leírása) be van kapcsolva: a saját prompt helyett a kép leírása megy.', hint1d: 'Az 1d (mentett prompt kiolvasása) be van kapcsolva: a saját prompt helyett a képből kiolvasott prompt megy.',
   c2: 'LoRA-k', baseLora: 'Alap LoRA', baseLoraHint: 'az erősségét a téma adja', file: 'Fájl', manual: 'Kézi erősség a téma helyett', manualVal: 'Kézi erősség',
@@ -283,7 +283,7 @@ const disp = x => (LANG === 'hu' && HU_NAMES[x]) ? HU_NAMES[x] : String(x);
 
 const ABOUT = {
 en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer. It arranges existing, publicly available components into one workflow and puts a simple control surface on top of it.</p>
-<p>Workflow layout and Studio interface: <b>Lalikavics</b>. Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<p>Developed by <b>Lalikavics</b>, with help from Claude. Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
 <h3>Support</h3>
 <p>I code, draw and create, just for the fun of it. I'm a bit like a Renaissance polymath, just with internet access, visual skills and more bugs. 😄<br>Enjoy my free projects? You can <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">buy me a coffee ☕ or a pizza 🍕</a>. It's never required, but always appreciated, and it keeps me creating more useful (or totally useless) things.</p>
 <p><b>Nothing changes if you do, or if you don't.</b> ArtFlawless Studio is and stays completely free: no paid version, no locked features, no extra support or priority for supporters. A coffee is a voluntary thank-you, not a purchase.</p>
@@ -322,7 +322,7 @@ en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-gener
 <p><b>Liability.</b> To the maximum extent permitted by applicable law, the author accepts no liability for any damage, loss or claim arising from the use of this software, of the third-party components it relies on, or of the content created with them.</p>
 <p><b>Third-party components.</b> The models, LoRAs and custom nodes are downloaded from their original sources and remain subject to their own licences and terms. If you are an author and want your work removed from the default set, or credited differently, please open an issue on the project's <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> page.</p>`,
 hu: `<p>Az <b>ArtFlow Studio</b> ingyenes, kényelmi kezelőfelület egy képgeneráló workflow-hoz, amely a saját gépeden, a ComfyUI-ban fut. Meglévő, nyilvánosan elérhető összetevőket rendez egy workflow-ba, és egyszerű kezelőfelületet tesz rá.</p>
-<p>A workflow elrendezése és a Studio felülete: <b>Lalikavics</b>. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<p>Fejlesztette: <b>Lalikavics</b>, a Claude segítségével. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
 <h3>Támogatás</h3>
 <p>Programozom, rajzolok és alkotok, egyszerűen a kedvemért. Kicsit olyan vagyok, mint egy reneszánsz polihisztor, csak internettel, vizuális érzékkel és több hibával. 😄<br>Tetszenek az ingyenes projektjeim? <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">Meghívhatsz egy kávéra ☕ vagy egy pizzára 🍕</a>. Sosem kötelező, de mindig jólesik, és segít abban, hogy még több hasznos (vagy teljesen haszontalan) dolgot hozzak létre.</p>
 <p><b>Semmi nem változik, akár adsz, akár nem.</b> Az ArtFlawless Studio ingyenes, és az is marad: nincs fizetős változat, nincsenek zárolt funkciók, a támogatók sem kapnak extra szolgáltatást vagy elsőbbséget. A kávé önkéntes köszönet, nem vásárlás.</p>

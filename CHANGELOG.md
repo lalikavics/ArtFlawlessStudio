@@ -3,6 +3,18 @@
 All notable changes to ArtFlawless Studio are listed here.
 The version number lives in the `VERSION` file and follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [1.3.1] - 2026-10-13
+### Changed
+- While the content filter is on, a new image stays hidden (the viewer stays dark) until its content check has finished, instead of flashing up blurred; with the filter off, images appear right away.
+- The window can now be moved by dragging any empty part of the header, also inside the dashed boxes (for example around the model family tabs); only buttons, fields and menus are excluded.
+- Text can only be selected where it makes sense (text fields, the prompt and settings boxes, the Image info and About windows), so a stray mouse drag no longer highlights buttons and labels.
+- An adult image shown with the eye button can be hidden again with the "Hide image" button in the bottom right corner; pressing Generate hides every shown adult image again.
+- The default European look also works with the theme "None (own prompt only)" when your own prompt describes a person.
+- "five fingers on each hand" was removed from the People themes: with short prompts it made people raise both hands.
+- Images of a generation whose prompt (or final prompt from an image description) asks for nudity or sexual content are treated as adult content right away, even if the detectors miss it (for example when the image is cropped just above the nudity).
+- Switching to another image (thumbnails, step chips) hides an adult image that was shown with the eye button again.
+- Credits line in the About window, the README and the release notes.
+
 ## [1.3.0] - 2026-10-13
 ### Added
 - Age requirement: the setup asks you to confirm that you are at least 18 years old.
