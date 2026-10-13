@@ -164,8 +164,21 @@ Copy-Item -Path (Join-Path $Payload 'studio\web\*') -Destination (Join-Path $stu
 & $Py -I (Join-Path $InstallDir 'launcher\configure.py') (Join-Path $studioDir 'web\template.json') $weightDtype
 $wf = Join-Path $Comfy 'user\default\workflows'
 New-Item -ItemType Directory -Force -Path $wf | Out-Null
-Copy-Item -LiteralPath (Join-Path $Payload 'studio\ArtFlow-Studio-ZImageTurbo-EN.json') -Destination $wf -Force
+Copy-Item -LiteralPath (Join-Path $Payload 'studio\ArtFlawless-Studio-ZImageTurbo-EN.json') -Destination $wf -Force
+$oldWf = Join-Path $wf 'ArtFlow-Studio-ZImageTurbo-EN.json'   # file name used by earlier versions
+if (Test-Path -LiteralPath $oldWf) { Remove-Item -LiteralPath $oldWf -Force -ErrorAction SilentlyContinue }
 Copy-Item -LiteralPath (Join-Path $Payload 'artflow-logo.png') -Destination (Join-Path $InstallDir 'input') -Force
+# local content check of generated images (NudeNet detector; the Falconsai classifier is downloaded with the models)
+try {
+    & $Py -s -m pip install --no-deps --no-warn-script-location 'nudenet==3.4.2'
+    if ($LASTEXITCODE -ne 0) { throw 'pip failed for nudenet' }
+    & $Py -s -c "import importlib.util as u, sys; sys.exit(0 if u.find_spec('onnxruntime') and u.find_spec('cv2') else 1)"
+    if ($LASTEXITCODE -ne 0) {
+        & $Py -s -m pip install --no-warn-script-location onnxruntime opencv-python-headless --constraint $constraints
+        if ($LASTEXITCODE -ne 0) { throw 'pip failed for onnxruntime' }
+    }
+    Write-Host '  content check (NudeNet) is ready.'
+} catch { Warn ('Content check (NudeNet): ' + $_.Exception.Message + ' - adult images may not be recognised.') }
 
 # ------------------------------------------------------------------ 4. models
 Step '4/7' 'Models (about 25 GB - this takes a while; you can close and re-run the installer to resume)'
@@ -186,6 +199,12 @@ $modelList = @(
     @{ Req = $false; Rel = 'sams\sam_vit_b_01ec64.pth'; Min = 360000000; Label = 'Segment Anything vit_b (Meta)';
        Url = 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth';
        Alt = "$HF/datasets/Gourieff/ReActor/resolve/main/models/sams/sam_vit_b_01ec64.pth" },
+    @{ Req = $false; Rel = 'nsfw\falconsai\config.json'; Min = 200; Label = 'Content check classifier - config (Falconsai)';
+       Url = "$HF/Falconsai/nsfw_image_detection/resolve/main/config.json" },
+    @{ Req = $false; Rel = 'nsfw\falconsai\preprocessor_config.json'; Min = 100; Label = 'Content check classifier - preprocessor (Falconsai)';
+       Url = "$HF/Falconsai/nsfw_image_detection/resolve/main/preprocessor_config.json" },
+    @{ Req = $false; Rel = 'nsfw\falconsai\model.safetensors'; Min = 300000000; Label = 'Content check classifier (Falconsai, 340 MB)';
+       Url = "$HF/Falconsai/nsfw_image_detection/resolve/main/model.safetensors" },
     @{ Req = $false; Rel = 'upscale_models\RealESRGAN_x4plus.safetensors'; Min = 64000000; Label = 'Real-ESRGAN x4plus (wkrettek/real-esrgan-models)';
        Url = "$HF/wkrettek/real-esrgan-models/resolve/main/realesrgan_x4plus.safetensors" },
     @{ Req = $false; Rel = 'model_patches\Z-Image-Turbo-Fun-Controlnet-Union-2.1-lite-2602-8steps.safetensors'; Min = 1900000000; Label = 'Layout ControlNet (alibaba-pai, 2 GB)';

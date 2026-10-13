@@ -1,7 +1,18 @@
 # ArtFlawless Studio
 
-**Local AI image generation, made simple.** ArtFlawless Studio is a free Windows setup and a simple interface on top of
-[ComfyUI](https://github.com/comfyanonymous/ComfyUI). Everything runs on your own computer: nothing is generated or sent anywhere else.
+**Local AI image generation, made simple.**
+
+ArtFlawless Studio is a free, open-source Windows application for creating images with AI on your own computer. It consists of
+a setup that installs everything you need, and a simple, friendly interface (the *Studio*) on top of
+[ComfyUI](https://github.com/comfyanonymous/ComfyUI), the popular node-based image-generation engine.
+
+ComfyUI is very powerful, but its node graphs can be overwhelming for beginners. The Studio hides that complexity: you choose a
+model family and a theme, write what you want to see, and press **Generate**. Behind the scenes a carefully wired ComfyUI workflow
+builds the image, refines it, fixes faces, hands and feet, and upscales the result. You can still open the full node graph in ComfyUI
+at any time if you want to learn how it works or tweak it yourself.
+
+Everything runs locally: no account, no subscription, no cloud service. Your prompts and images never leave your computer, and the
+models are downloaded once from their original sources.
 
 *Magyarul: lásd [OLVASSEL.md](OLVASSEL.md).*
 
@@ -32,6 +43,19 @@ Tested on an RTX 3060 Ti 8 GB with 64 GB RAM under Windows 10 22H2. AMD and Inte
 2. Run it. The setup downloads about 25 GB, so this takes a while; it can be re-run to resume.
 3. Start **ArtFlawless Studio** from the desktop shortcut.
 
+## Updating
+
+Download the new setup from the [Releases](../../releases) page and run it. It finds the existing installation, asks whether to update it
+and installs into the same folder. Your images (`input` and `output` folders), saved workflows, downloaded models and settings are kept.
+Close the Studio before updating.
+
+## Known limitations
+
+- The layout reference (ControlNet) is available for Z-Image Turbo only.
+- SDXL and Flux have no automatic skin / hand LoRAs; the face, hand and foot fix steps work with every family.
+- Flux.1 schnell tends to render skin a little "plastic"; for people Z-Image Turbo or RealVisXL work better.
+- The setup is not digitally signed yet, so Windows SmartScreen may show a warning ("More info" → "Run anyway").
+
 ## Build from source
 
 You need [Python 3](https://www.python.org/downloads/) and [Inno Setup 6.3+](https://jrsoftware.org/isdl.php). Then run:
@@ -47,11 +71,11 @@ GitHub also builds the setup automatically for every change (Actions tab → lat
 
 ## Releasing a new version
 
-1. Change the number in the `VERSION` file (for example `1.2.0` → `1.3.0`). This is the only place where the version is set;
+1. Change the number in the `VERSION` file (for example `1.3.0` → `1.3.1`). This is the only place where the version is set;
    the setup, the Studio and the About window all read it from there.
 2. Add a section for the new version at the top of `CHANGELOG.md`.
 3. Commit and push.
-4. On GitHub: **Releases → Draft a new release**, tag `v1.3.0` (the same number with a `v`), title `ArtFlawless Studio 1.3.0`, **Publish**.
+4. On GitHub: **Releases → Draft a new release**, tag `v1.3.1` (the same number with a `v`), title `ArtFlawless Studio 1.3.1`, **Publish**.
    The workflow builds the setup and attaches it to the release, with the notes from `CHANGELOG.md`.
 
 Version numbers follow [Semantic Versioning](https://semver.org): fixes raise the last number (1.2.**1**), new features the middle one
@@ -69,6 +93,31 @@ Version numbers follow [Semantic Versioning](https://semver.org): fixes raise th
 | `make_studio_files.py`, `make_families.py`, `help_texts.py` | generate the Studio page and the SDXL / Flux / Custom templates into `studio_out/` |
 | `assets/` | ComfyUI add-on of the Studio (`studio_init.py`), model catalogue, setup texts, icon and logo |
 | `tools/` | helper scripts for the release workflow |
+
+## Age requirement and content protection
+
+ArtFlawless Studio may only be used by **adults (18 years or older)**. The setup asks you to confirm this.
+
+- **Content filter**: every image is checked on your own computer (NudeNet detector and Falconsai classifier, on the processor).
+  Images recognised as adult content (nudity, sexual content) are blurred, with an eye button to show them, and saved into `output\18+`.
+  On by default; it can be switched off in Settings after confirming that you are 18 or older.
+- **Safe mode**: adds "no nudity" words to the negative prompt, so nudity does not appear by accident. On by default, can be switched off.
+- **18+ confirmation**: a prompt that asks for nudity or sexual content needs a one-time confirmation that you are an adult.
+- **Child protection**: a prompt that refers to a minor together with nudity or sexual content is always refused, and this cannot be
+  switched off. Sexual depictions of minors are illegal, including artificial and AI-generated ones ([EU Directive 2011/93/EU](https://eur-lex.europa.eu/eli/dir/2011/93/oj)).
+- **AI marking**: generated PNG images carry a machine-readable "AI-generated" mark (IPTC DigitalSourceType in XMP), in the spirit of
+  Article 50 of the [EU AI Act, Regulation (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj).
+
+The recognition is automatic and not perfect: it can miss content or flag harmless images. The AI models are not made or distributed
+by the author of ArtFlawless Studio: the setup downloads them from their original sources, and each of them is subject to its own
+licence. ArtFlawless Studio tries to reduce the risk of misuse, but as open-source software it cannot rule it out completely. Anyone who
+gets around these protections, or changes the program to do so, does it at their own responsibility; the author does not consent to
+this and accepts no liability for it.
+
+## Support
+
+ArtFlawless Studio is free and stays free: no paid version, no locked features, no priority for supporters. If you enjoy it, you can
+[buy me a coffee](https://buymeacoffee.com/lalikavics) as a voluntary thank-you. It never changes anything in the program.
 
 ## Licence
 
@@ -88,6 +137,8 @@ downloads them from their original sources, and each of them stays under its own
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL-3.0), installed unmodified.
 - Custom nodes: rgthree-comfy, ComfyUI Impact Pack and Subpack, Ultimate SD Upscale, ComfyUI-Florence2, ComfyUI-Custom-Scripts,
   ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager.
+- Content check: [NudeNet](https://github.com/notAI-tech/NudeNet) (the package states both AGPL-3.0 and MIT) and
+  [Falconsai/nsfw_image_detection](https://huggingface.co/Falconsai/nsfw_image_detection) (Apache-2.0).
 - Models: Z-Image Turbo and Flux.1 schnell (Apache-2.0), Juggernaut XL v9 (CreativeML Open RAIL-M), RealVisXL V5.0 (OpenRAIL++),
   Pony Diffusion V6 XL (Fair AI Public License 1.0-SD), and the LoRAs, detectors and upscalers listed in the setup.
 

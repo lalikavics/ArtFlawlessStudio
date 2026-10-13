@@ -64,7 +64,7 @@ Source: "assets\artflow.ico";                   DestDir: "{app}\launcher"
 Source: "assets\artflow-logo.png";              DestDir: "{app}\launcher\payload"
 Source: "studio_out\__init__.py";               DestDir: "{app}\launcher\payload\studio"
 Source: "studio_out\catalog.json";              DestDir: "{app}\launcher\payload\studio"
-Source: "studio_out\ArtFlow-Studio-ZImageTurbo-EN.json"; DestDir: "{app}\launcher\payload\studio"
+Source: "studio_out\ArtFlawless-Studio-ZImageTurbo-EN.json"; DestDir: "{app}\launcher\payload\studio"
 Source: "studio_out\web\*";                     DestDir: "{app}\launcher\payload\studio\web"; Flags: recursesubdirs
 
 [Icons]
@@ -79,11 +79,6 @@ Name: "{autoprograms}\ArtFlawless Studio"; Filename: "{sys}\WindowsPowerShell\v1
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\launcher\ArtFlow-Launcher.ps1"""; \
   Description: "Start ArtFlawless Studio"; Flags: nowait postinstall skipifsilent runhidden
-
-[InstallDelete]
-; shortcuts of the old name (ArtFlow Studio, up to 1.1.0)
-Type: files; Name: "{autodesktop}\ArtFlow Studio.lnk"
-Type: files; Name: "{autoprograms}\ArtFlow Studio.lnk"
 
 [UninstallDelete]
 ; the input and output folders (your images) are kept
@@ -137,7 +132,7 @@ end;
 const
   UninstKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{4F94F30E-317E-449D-AEF3-74743F947270}_is1';
 
-{ folder of an earlier installation (ArtFlow Studio 1.0/1.1 or ArtFlawless Studio), '' if none }
+{ folder of an earlier installation, '' if none }
 function PrevDir(): String;
 var
   S: String;
@@ -146,40 +141,88 @@ begin
   if not RegQueryStringValue(HKCU, UninstKey, 'Inno Setup: App Path', S) then
     if not RegQueryStringValue(HKLM, UninstKey, 'Inno Setup: App Path', S) then
       S := '';
-  if (S = '') and DirExists(ExpandConstant('{sd}\ArtFlowStudio')) then
-    S := ExpandConstant('{sd}\ArtFlowStudio');
   if (S <> '') and not DirExists(S) then
     S := '';
   Result := RemoveBackslashUnlessRoot(S);
 end;
 
-{ default folder: the old "ArtFlowStudio" folder gets the new name, any other earlier folder is kept }
-function DefDir(Param: String): String;
 var
-  Old: String;
+  IsUpdate: Boolean;
+  OldVer, OldDir: String;
+
+function IsHu(): Boolean;
 begin
-  Old := PrevDir();
-  if Old = '' then
-    Result := ExpandConstant('{sd}\ArtFlawlessStudio')
-  else if CompareText(ExtractFileName(Old), 'ArtFlowStudio') = 0 then
-    Result := ExtractFilePath(Old) + 'ArtFlawlessStudio'
-  else
-    Result := Old;
+  Result := ActiveLanguage = 'hu';
 end;
 
-{ moves (renames) the earlier installation into the chosen folder, so nothing has to be downloaded again }
-function PrepareToInstall(var NeedsRestart: Boolean): String;
+{ version of the earlier installation from the uninstall entry, '' if unknown (1.0 had none) }
+function PrevVersion(): String;
 var
-  Old, New: String;
+  S: String;
+begin
+  S := '';
+  if not RegQueryStringValue(HKCU, UninstKey, 'DisplayVersion', S) then
+    if not RegQueryStringValue(HKLM, UninstKey, 'DisplayVersion', S) then
+      S := '';
+  Result := Trim(S);
+end;
+
+{ next number of a dotted version string, removed from S }
+function TakeNum(var S: String): Integer;
+var
+  P: Integer;
+begin
+  P := Pos('.', S);
+  if P = 0 then begin Result := StrToIntDef(S, 0); S := ''; end
+  else begin Result := StrToIntDef(Copy(S, 1, P - 1), 0); Delete(S, 1, P); end;
+end;
+
+{ -1 if A < B, 0 if equal, 1 if A > B (MAJOR.MINOR.PATCH) }
+function VerCmp(A, B: String): Integer;
+var
+  I, X, Y: Integer;
+begin
+  Result := 0;
+  for I := 1 to 3 do
+  begin
+    X := TakeNum(A); Y := TakeNum(B);
+    if X < Y then begin Result := -1; Exit; end;
+    if X > Y then begin Result := 1; Exit; end;
+  end;
+end;
+
+{ True while the Studio (ComfyUI on port 8199) is running }
+function StudioRunning(): Boolean;
+var
+  Code: Integer;
+begin
+  Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+    '-NoProfile -Command "if (Get-NetTCPConnection -LocalPort 8199 -State Listen -ErrorAction SilentlyContinue) { exit 5 } else { exit 0 }"',
+    '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 5);
+end;
+
+{ default folder: the folder of an earlier installation, otherwise C:\ArtFlawlessStudio }
+function DefDir(Param: String): String;
+begin
+  Result := PrevDir();
+  if Result = '' then
+    Result := ExpandConstant('{sd}\ArtFlawlessStudio');
+end;
+
+{ the Studio has to be closed before its files are replaced }
+function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
-  Old := PrevDir();
-  New := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
-  if (Old <> '') and (CompareText(Old, New) <> 0) and (not DirExists(New)) and (CompareText(ExtractFileDrive(Old), ExtractFileDrive(New)) = 0) then
+  while StudioRunning() do
   begin
-    if not RenameFile(Old, New) then
-      Result := 'The earlier installation folder (' + Old + ') could not be moved to ' + New + '.' + #13#10 + #13#10 +
-        'Please close ArtFlawless Studio (and any Explorer window or program that uses that folder) and run the setup again.';
+    if IsHu() then
+    begin
+      if MsgBox('Az ArtFlawless Studio most fut.' + #13#10 + #13#10 + 'Zárd be a Studio ablakát (és várd meg, amíg a háttérben futó ComfyUI is leáll), majd kattints az OK gombra.',
+        mbInformation, MB_OKCANCEL) = IDCANCEL then begin Result := 'Az ArtFlawless Studio még fut. Zárd be, és indítsd újra a telepítőt.'; Exit; end;
+    end
+    else if MsgBox('ArtFlawless Studio is running.' + #13#10 + #13#10 + 'Please close the Studio window (and wait until ComfyUI in the background has stopped), then click OK.',
+      mbInformation, MB_OKCANCEL) = IDCANCEL then begin Result := 'ArtFlawless Studio is still running. Close it and run the setup again.'; Exit; end;
+    Sleep(1500);
   end;
 end;
 
@@ -202,6 +245,7 @@ end;
 function InitializeSetup(): Boolean;
 var
   Code: Integer;
+  Msg, Keep, Q: String;
 begin
   Result := True;
   GpuMiB := 0;
@@ -233,6 +277,48 @@ begin
     MsgBox('The Microsoft Edge WebView2 Runtime was not found.' + #13#10 + #13#10 +
       'The Studio will open in a normal Microsoft Edge window. For the frameless Studio window, install the "Evergreen" WebView2 Runtime from' + #13#10 +
       'https://developer.microsoft.com/microsoft-edge/webview2/', mbInformation, MB_OK);
+  if not Result then Exit;
+  OldDir := PrevDir();
+  IsUpdate := OldDir <> '';
+  if not IsUpdate then Exit;
+  OldVer := PrevVersion();
+  if OldVer = '' then
+    Msg := 'an earlier version'
+  else
+    Msg := 'version ' + OldVer;
+  if IsHu() then
+  begin
+    if OldVer = '' then Msg := 'egy korábbi verziója' else Msg := 'a(z) ' + OldVer + ' verziója';
+    Keep := 'A képeid (input és output mappa), a mentett munkafolyamatok, a letöltött modellek és a beállítások megmaradnak; csak a program fájljai cserélődnek ki.';
+    if (OldVer <> '') and (VerCmp(OldVer, '{#AppVersion}') = 0) then
+      Q := 'Az ArtFlawless Studio {#AppVersion} már telepítve van ide:' + #13#10 + OldDir + #13#10 + #13#10 + 'Újratelepíted (javítás)?' + #13#10 + #13#10 + Keep
+    else if (OldVer <> '') and (VerCmp(OldVer, '{#AppVersion}') > 0) then
+      Q := 'Az ArtFlawless Studio újabb verziója (' + OldVer + ') van telepítve ide:' + #13#10 + OldDir + #13#10 + #13#10 +
+        'Ez a telepítő régebbi ({#AppVersion}). Biztosan visszaállsz erre a verzióra?' + #13#10 + #13#10 + Keep
+    else
+      Q := 'Az ArtFlawless Studio ' + Msg + ' van telepítve ide:' + #13#10 + OldDir + #13#10 + #13#10 + 'Frissíted a(z) {#AppVersion} verzióra?' + #13#10 + #13#10 + Keep;
+  end
+  else
+  begin
+    Keep := 'Your images (input and output folders), saved workflows, downloaded models and settings are kept; only the program files are replaced.';
+    if (OldVer <> '') and (VerCmp(OldVer, '{#AppVersion}') = 0) then
+      Q := 'ArtFlawless Studio {#AppVersion} is already installed in:' + #13#10 + OldDir + #13#10 + #13#10 + 'Do you want to reinstall (repair) it?' + #13#10 + #13#10 + Keep
+    else if (OldVer <> '') and (VerCmp(OldVer, '{#AppVersion}') > 0) then
+      Q := 'A newer version of ArtFlawless Studio (' + OldVer + ') is installed in:' + #13#10 + OldDir + #13#10 + #13#10 +
+        'This setup is older ({#AppVersion}). Do you really want to go back to this version?' + #13#10 + #13#10 + Keep
+    else
+      Q := 'ArtFlawless Studio (' + Msg + ') is installed in:' + #13#10 + OldDir + #13#10 + #13#10 + 'Do you want to update it to version {#AppVersion}?' + #13#10 + #13#10 + Keep;
+  end;
+  if (OldVer <> '') and (VerCmp(OldVer, '{#AppVersion}') > 0) then
+    Result := MsgBox(Q, mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES
+  else
+    Result := MsgBox(Q, mbConfirmation, MB_YESNO) = IDYES;
+end;
+
+{ an update goes into the same folder: no folder, info or task pages }
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := IsUpdate and ((PageID = wpSelectDir) or (PageID = wpInfoBefore) or (PageID = wpSelectTasks));
 end;
 
 function HasNonAscii(const S: String): Boolean;
@@ -244,12 +330,92 @@ begin
     if Ord(S[I]) > 127 then Result := True;
 end;
 
+var
+  AgePage: TWizardPage;
+  AgeMemo: TNewMemo;
+  AgeCheck: TNewCheckBox;
+
+procedure AgeCheckClick(Sender: TObject);
+begin
+  WizardForm.NextButton.Enabled := AgeCheck.Checked;
+end;
+
+{ the 18+ declaration: shown on every install and update, the Next button ("I accept") works only when the box is ticked }
+procedure InitializeWizard();
+begin
+  if IsHu() then
+    AgePage := CreateCustomPage(wpWelcome, 'Korhatár és felelős használat', 'Kérlek, olvasd el, és erősítsd meg a folytatáshoz.')
+  else
+    AgePage := CreateCustomPage(wpWelcome, 'Age requirement and responsible use', 'Please read this and confirm it to continue.');
+  AgeMemo := TNewMemo.Create(AgePage);
+  AgeMemo.Parent := AgePage.Surface;
+  AgeMemo.Left := 0; AgeMemo.Top := 0;
+  AgeMemo.Width := AgePage.SurfaceWidth;
+  AgeMemo.Height := AgePage.SurfaceHeight - ScaleY(34);
+  AgeMemo.ReadOnly := True;
+  AgeMemo.ScrollBars := ssVertical;
+  AgeMemo.WordWrap := True;
+  if IsHu() then
+    AgeMemo.Text := 'Az ArtFlawless Studiót csak felnőtt (18. életévét betöltött) személy használhatja.' + #13#10 +
+    '' + #13#10 +
+    'A programba épített védelem:' + #13#10 +
+    '- Tartalomszűrő: a felnőtt tartalmúnak (meztelenség, szexuális tartalom) felismert képek homályosítva jelennek meg, és az output\18+ mappába kerülnek. Alapból be van kapcsolva; a beállításokban kikapcsolható, miután megerősítetted, hogy elmúltál 18 éves.' + #13#10 +
+    '- Biztonságos mód: a modelleket a meztelenség elkerülésére ösztönzi. Alapból be van kapcsolva, kikapcsolható.' + #13#10 +
+    '- Gyermekvédelem: ha a prompt kiskorúra utal meztelenséggel vagy szexuális tartalommal együtt, a program mindig megtagadja a generálást. Ez nem kapcsolható ki. Kiskorúak szexuális ábrázolása tilos, a mesterséges és MI-vel készített is (2011/93/EU irányelv: https://eur-lex.europa.eu/eli/dir/2011/93/oj).' + #13#10 +
+    '- MI-jelölés: a generált PNG-képek géppel olvasható „MI által készített” jelölést kapnak, az EU MI-rendelet 50. cikkének szellemében ((EU) 2024/1689 rendelet: https://eur-lex.europa.eu/eli/reg/2024/1689/oj).' + #13#10 +
+    '' + #13#10 +
+    'A felismerés automatikus, és nem tökéletes: tévedhet mindkét irányba.' + #13#10 +
+    '' + #13#10 +
+    'Az AI-modelleket nem az ArtFlawless Studio szerzője készítette, és nem ő terjeszti: a telepítő az eredeti forrásukból tölti le őket, és mindegyikre a saját licence vonatkozik. Az ArtFlawless Studio igyekszik csökkenteni a visszaélés kockázatát, de nyílt forráskódú szoftverként ezt teljesen kizárni nem tudja. Aki ezeket a védelmeket megkerüli, vagy a programot ennek érdekében átírja, a saját felelősségére teszi; ehhez a szerző nem járul hozzá, és ezért nem vállal felelősséget.' + #13#10 +
+    '' + #13#10 +
+    'Kizárólag te felelsz azért, amit létrehozol, és azért, ahogyan felhasználod, beleértve a rád vonatkozó jogszabályokat és mások jogait is. Valós személyt ne ábrázolj a beleegyezése nélkül.'
+  else
+    AgeMemo.Text := 'ArtFlawless Studio may only be used by adults (18 years or older).' + #13#10 +
+    '' + #13#10 +
+    'Protection built into the program:' + #13#10 +
+    '- Content filter: images recognised as adult content (nudity, sexual content) are blurred and saved into the output\18+ folder. It is on by default and can be switched off in the Settings after confirming that you are 18 or older.' + #13#10 +
+    '- Safe mode: steers the models away from nudity. On by default, can be switched off.' + #13#10 +
+    '- Child protection: a prompt that refers to a minor together with nudity or sexual content is always refused. This cannot be switched off. Sexual depictions of minors are illegal, including artificial and AI-generated ones (EU Directive 2011/93/EU: https://eur-lex.europa.eu/eli/dir/2011/93/oj).' + #13#10 +
+    '- AI marking: generated PNG images carry a machine-readable "AI-generated" mark, in the spirit of Article 50 of the EU AI Act (Regulation (EU) 2024/1689: https://eur-lex.europa.eu/eli/reg/2024/1689/oj).' + #13#10 +
+    '' + #13#10 +
+    'The recognition is automatic and not perfect: it can miss content or flag harmless images.' + #13#10 +
+    '' + #13#10 +
+    'The AI models are not made or distributed by the author of ArtFlawless Studio: the setup downloads them from their original sources, and each of them is subject to its own licence. ArtFlawless Studio tries to reduce the risk of misuse, but as open-source software it cannot rule it out completely. Anyone who gets around these protections, or changes the program to do so, does it at their own responsibility; the author does not consent to this and accepts no liability for it.' + #13#10 +
+    '' + #13#10 +
+    'You alone are responsible for what you create and how you use it, including the laws that apply to you and the rights of others. Do not depict real people without their consent.';
+  AgeCheck := TNewCheckBox.Create(AgePage);
+  AgeCheck.Parent := AgePage.Surface;
+  AgeCheck.Left := 0;
+  AgeCheck.Top := AgeMemo.Top + AgeMemo.Height + ScaleY(10);
+  AgeCheck.Width := AgePage.SurfaceWidth;
+  AgeCheck.Height := ScaleY(20);
+  AgeCheck.Font.Style := [fsBold];
+  if IsHu() then AgeCheck.Caption := 'Kijelentem, hogy elmúltam 18 éves, és a fentieket elfogadom.' else AgeCheck.Caption := 'I declare that I am at least 18 years old, and I accept the above.';
+  AgeCheck.OnClick := @AgeCheckClick;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = AgePage.ID then
+  begin
+    WizardForm.NextButton.Enabled := AgeCheck.Checked;
+    if IsHu() then WizardForm.NextButton.Caption := 'Elfogadom' else WizardForm.NextButton.Caption := 'I accept';
+  end
+  else
+    WizardForm.NextButton.Caption := SetupMessage(msgButtonNext);
+end;
+
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
   FreeMB, TotalMB: Cardinal;
   Drive: String;
 begin
   Result := True;
+  if (CurPageID = AgePage.ID) and not AgeCheck.Checked then
+  begin
+    Result := False;
+    Exit;
+  end;
   if CurPageID = wpSelectDir then
   begin
     if HasNonAscii(WizardDirValue) then

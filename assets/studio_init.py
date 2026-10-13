@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Lalikavics - ArtFlawless Studio
 # ArtFlawless Studio – ComfyUI add-on: serves the Studio page at /artflow, the family templates,
-# and a small model downloader (catalog.json lists what can be downloaded and where it goes).
+# a small model downloader (catalog.json lists what can be downloaded and where it goes)
+# and the local content check of generated images (adult content, AI-generated mark).
 import asyncio
 import json
 import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 
 import aiohttp
@@ -64,7 +66,7 @@ async def _download(m):
     dest = _dest(m)
     part = dest + ".part"
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    headers = {"User-Agent": "ArtFlawlessStudio/1.2"}
+    headers = {"User-Agent": "ArtFlawlessStudio/1.3"}
     token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
     if token and "huggingface.co" in m["url"]:
         headers["Authorization"] = "Bearer " + token
@@ -298,6 +300,193 @@ async def artflow_pick_image(request):
             i += 1
         shutil.copy2(chosen, os.path.join(inp, name))
     return web.json_response({"name": name})
+
+
+# ------------------------------------------------------------------ content check
+# Every image the Studio shows is checked here, locally, on the CPU (no video memory is used):
+#  - NudeNet (YOLOv8 detector of exposed body parts) and the Falconsai ViT classifier (normal / nsfw);
+#    if either of them finds adult content, the Studio blurs the image (unless the filter is switched off)
+#  - final images with adult content are moved into output\18+
+#  - final PNG images get a machine-readable "AI-generated" mark (IPTC DigitalSourceType in XMP, EU AI Act art. 50)
+NSFW_DIR = os.path.join(folder_paths.models_dir, "nsfw")
+VIT_DIR = os.path.join(NSFW_DIR, "falconsai")
+ADULT_SUB = "18+"
+NN_FLAG = {"FEMALE_BREAST_EXPOSED": 0.45, "FEMALE_GENITALIA_EXPOSED": 0.35, "MALE_GENITALIA_EXPOSED": 0.35,
+           "ANUS_EXPOSED": 0.35, "BUTTOCKS_EXPOSED": 0.55}
+VIT_FLAG = 0.75
+_DET = {"nn": None, "vit": None, "err": {}}
+_DET_LOCK = threading.Lock()
+_CHECKED = {}   # path -> (mtime, result)
+
+
+def _nudenet():
+    if _DET["nn"] is None:
+        try:
+            import onnxruntime
+            import nudenet.nudenet as nm
+            path = os.path.join(os.path.dirname(nm.__file__), "320n.onnx")
+            sess = onnxruntime.InferenceSession(path, providers=["CPUExecutionProvider"])
+            _DET["nn"] = (sess, nm)
+        except Exception as e:
+            _DET["nn"] = False
+            _DET["err"]["nudenet"] = str(e)
+    return _DET["nn"] or None
+
+
+def _falconsai():
+    if _DET["vit"] is None:
+        try:
+            if not os.path.isfile(os.path.join(VIT_DIR, "model.safetensors")):
+                raise FileNotFoundError("model not installed: " + VIT_DIR)
+            from transformers import AutoImageProcessor, AutoModelForImageClassification
+            proc = AutoImageProcessor.from_pretrained(VIT_DIR)
+            model = AutoModelForImageClassification.from_pretrained(VIT_DIR).to("cpu").eval()
+            _DET["vit"] = (proc, model)
+        except Exception as e:
+            _DET["vit"] = False
+            _DET["err"]["falconsai"] = str(e)
+    return _DET["vit"] or None
+
+
+def _detect(path):
+    """{"nsfw": bool|None, "score": 0..1, "reasons": [...], "detectors": [...]}; None = no detector available."""
+    import numpy as np
+    with open(path, "rb") as f:
+        data = f.read()
+    res = {"nsfw": False, "score": 0.0, "reasons": [], "detectors": []}
+    with _DET_LOCK:
+        nn = _nudenet()
+        if nn:
+            import cv2
+            sess, nm = nn
+            mat = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+            if mat is not None:
+                blob, xr, yr, xp, yp, w, h = nm._read_image(mat, 320)
+                out = sess.run(None, {sess.get_inputs()[0].name: blob})
+                for d in nm._postprocess(out, xp, yp, xr, yr, w, h, 320, 320):
+                    lim = NN_FLAG.get(d["class"])
+                    if lim is not None and d["score"] >= lim:
+                        res["nsfw"] = True
+                        res["reasons"].append("%s %.2f" % (d["class"], d["score"]))
+                        res["score"] = max(res["score"], float(d["score"]))
+                res["detectors"].append("nudenet")
+        vit = _falconsai()
+        if vit:
+            import io
+            import torch
+            from PIL import Image
+            proc, model = vit
+            img = Image.open(io.BytesIO(data)).convert("RGB")
+            with torch.no_grad():
+                logits = model(**proc(images=img, return_tensors="pt")).logits[0]
+            probs = torch.softmax(logits.float(), dim=-1)
+            idx = {str(k).lower(): int(v) for k, v in (model.config.label2id or {}).items()}.get("nsfw", 1)
+            p = float(probs[idx])
+            if p >= VIT_FLAG:
+                res["nsfw"] = True
+                res["reasons"].append("falconsai %.2f" % p)
+            res["score"] = max(res["score"], p if p >= VIT_FLAG else 0.0)
+            res["detectors"].append("falconsai")
+    if not res["detectors"]:
+        res["nsfw"] = None
+    return res
+
+
+XMP_AI = ('<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>'
+          '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+          '<rdf:Description rdf:about="" xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" '
+          'xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" '
+          'Iptc4xmpExt:DigitalSourceType="http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia" '
+          'xmp:CreatorTool="ArtFlawless Studio">'
+          '<dc:description><rdf:Alt><rdf:li xml:lang="x-default">AI-generated image (ArtFlawless Studio)</rdf:li></rdf:Alt></dc:description>'
+          '</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>')
+
+
+def _png_chunk(kind, payload):
+    import struct
+    import zlib
+    return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+
+
+def _mark_png(path):
+    """Adds the XMP "AI-generated" packet and a tEXt note before IEND, without re-encoding the image."""
+    with open(path, "rb") as f:
+        data = f.read()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n") or b"trainedAlgorithmicMedia" in data:
+        return False
+    end = data.rfind(b"IEND")
+    if end < 4:
+        return False
+    end -= 4
+    itxt = b"XML:com.adobe.xmp\x00\x00\x00\x00\x00" + XMP_AI.encode("utf-8")
+    note = b"AI-Generated\x00Yes - image created with generative AI (ArtFlawless Studio)"
+    tmp = path + ".mark"
+    with open(tmp, "wb") as f:
+        f.write(data[:end] + _png_chunk(b"iTXt", itxt) + _png_chunk(b"tEXt", note) + data[end:])
+    os.replace(tmp, path)
+    return True
+
+
+def _check(body):
+    kind = str(body.get("type", "output"))
+    if kind not in ("output", "temp"):
+        return {"error": "unsupported type"}, 400
+    base = os.path.abspath(_media_dir(kind))
+    sub = str(body.get("subfolder", "") or "")
+    path = os.path.abspath(os.path.join(base, sub, os.path.basename(str(body.get("filename", "")))))
+    if not path.startswith(base + os.sep) or not os.path.isfile(path):
+        return {"error": "not found"}, 404
+    if body.get("discard"):
+        os.remove(path)
+        _CHECKED.pop(path, None)
+        return {"ok": True, "discarded": True}, 200
+    mt = os.path.getmtime(path)
+    hit = _CHECKED.get(path)
+    if hit and hit[0] == mt:
+        return dict(hit[1]), 200
+    res = _detect(path)
+    if kind == "output":
+        try:
+            res["marked"] = _mark_png(path) if path.lower().endswith(".png") else False
+        except Exception as e:
+            res["marked"] = False
+            res["markError"] = str(e)
+        rel = os.path.relpath(os.path.dirname(path), base)
+        parts = [] if rel == "." else rel.replace("\\", "/").split("/")
+        if res["nsfw"] and (not parts or parts[0] != ADULT_SUB) and not body.get("noMove"):
+            dest_dir = os.path.join(base, ADULT_SUB, *parts)
+            os.makedirs(dest_dir, exist_ok=True)
+            name = os.path.basename(path)
+            stem, ext = os.path.splitext(name)
+            i = 1
+            while os.path.exists(os.path.join(dest_dir, name)):
+                name = "%s_%d%s" % (stem, i, ext)
+                i += 1
+            dest = os.path.join(dest_dir, name)
+            shutil.move(path, dest)
+            res["moved"] = {"filename": name, "subfolder": "/".join([ADULT_SUB] + parts), "type": "output"}
+            path = dest
+    _CHECKED[path] = (os.path.getmtime(path), {k: v for k, v in res.items() if k != "moved"})
+    return res, 200
+
+
+@routes.post("/artflow/check")
+async def artflow_check(request):
+    """Checks one image of the output or temp folder for adult content (see above)."""
+    body = await request.json()
+    try:
+        res, status = await asyncio.get_running_loop().run_in_executor(None, _check, body)
+    except Exception as e:
+        res, status = {"error": str(e)}, 500
+    return web.json_response(res, status=status, headers=NO_CACHE)
+
+
+@routes.get("/artflow/check-status")
+async def artflow_check_status(request):
+    def st():
+        with _DET_LOCK:
+            return {"nudenet": bool(_nudenet()), "falconsai": bool(_falconsai()), "errors": dict(_DET["err"])}
+    return web.json_response(await asyncio.get_running_loop().run_in_executor(None, st), headers=NO_CACHE)
 
 
 @routes.get("/artflow/downloads")

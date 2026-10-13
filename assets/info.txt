@@ -1,4 +1,4 @@
-ArtFlawless Studio {VERSION}
+﻿ArtFlawless Studio {VERSION}
 Workflow and Studio interface created by Lalikavics.  Questions and bug reports: {REPO}/issues
 
 WHAT THIS SETUP DOES
@@ -6,6 +6,11 @@ ArtFlawless Studio is a free convenience interface for an image-generation workf
 During setup, ComfyUI, its add-ons and the AI models (about 25 GB in total) are downloaded from their original sources.
 Nothing is generated or sent anywhere: all images are created on your computer.
 ArtFlawless Studio is an independent interface, not affiliated with Comfy Org or the ComfyUI developers. ComfyUI is free software under the GNU GPL v3.0 and is installed unmodified.
+
+AGE REQUIREMENT AND CONTENT PROTECTION
+ArtFlawless Studio may only be used by adults (18 years or older); the next page asks you to confirm this.
+Built-in protection: content filter (adult images are blurred and saved into output\18+), safe mode, a one-time 18+ confirmation,
+child protection (a minor together with nudity or sexual content is always refused) and a machine-readable "AI-generated" mark.
 
 SYSTEM REQUIREMENTS
 Minimum:
@@ -29,6 +34,7 @@ continue to apply to you; please read and respect them, and credit the authors:
  - "Hands + Feet + skin perfection style" LoRA (its author on Civitai)
  - Z-Image-Turbo-Fun-Controlnet-Union (Alibaba PAI); Depth Anything V2; Florence-2 (Microsoft); Segment Anything (Meta AI)
  - YOLOv8 face / hand detectors (Bingsu, ADetailer); foot detector (MonetEinsley/ADetailer_CM); Ultralytics YOLO
+ - NudeNet content detector (notAI-tech); nsfw_image_detection classifier (Falconsai)
  - Real-ESRGAN (Xintao Wang et al.); 7-Zip (Igor Pavlov, used only to unpack ComfyUI)
  - Custom nodes: rgthree-comfy, ComfyUI Impact Pack and Subpack (Dr.Lt.Data), Ultimate SD Upscale (ssitu), ComfyUI-Florence2 (kijai),
    ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),

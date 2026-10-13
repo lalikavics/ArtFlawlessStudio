@@ -1,36 +1,149 @@
-# ArtFlawless Studio 1.2.0 – telepítő és Studio
+# ArtFlawless Studio
 
-Fordítás: `build.bat` (Python 3 és Inno Setup 6.3+ kell) → `Output\ArtFlawlessStudio-Setup-<verzió>.exe`. A verziószám egyetlen helyen van: a `VERSION` fájlban.
-A Studio fájljait a `make_studio_files.py` és a `make_families.py` állítja elő (`studio_out\`), ezek kerülnek a telepítőbe.
+**Helyi AI-képgenerálás, egyszerűen.**
 
-ArtFlawless Studio független projekt, a ComfyUI-ra épül (GPL-3.0); nem áll kapcsolatban a Comfy Org-gal.
+Az ArtFlawless Studio ingyenes, nyílt forráskódú Windows-alkalmazás, amellyel mesterséges intelligenciával készíthetsz képeket a saját
+gépeden. Két részből áll: egy telepítőből, amely mindent feltesz, ami kell, és egy egyszerű, barátságos kezelőfelületből (a *Studióból*),
+amely a népszerű, node-alapú képgeneráló motorra, a [ComfyUI](https://github.com/comfyanonymous/ComfyUI)-ra épül.
 
-## Újdonságok az 1.2.0-ban
-- Új név: **ArtFlawless Studio**. A telepítő a régi `C:\ArtFlowStudio` mappát átnevezi `C:\ArtFlawlessStudio`-ra (a modellek és képek megmaradnak), a régi asztali ikont lecseréli. Telepítés előtt zárd be a Studiót.
-- Új fejléc: márkablokk sárga verziószámmal, szaggatott keretes csoportok, egyszínű ikonok, kapcsolat-jelző IP-címmel, fogaskerék menü (nyelv, tanuló mód, haladó beállítások).
-- **CUSTOM** fül: saját checkpoint, alapméret, opcionális VAE – témák és automatikus LoRA-k nélkül.
-- Képnéző: görgős nagyítás valódi pixelhez mért %-kal (max. 300%), húzással mozgatás, dupla katt = illesztés.
-- Tanuló mód: rámutatásos magyarázatok kezdőknek (első indításkor rákérdez).
-- Külön Mentés kártya: metaadat-kapcsoló, fájlnév-címkék.
-- Generálás közben forgó jelző a gombon és a képen.
-- "Mappa megnyitása" az Intézőt a kép helyén nyitja meg, előtérben.
-- A képbetöltő tallózás a Windows saját ablakával az input mappában indul.
-- "Másolat megnyitása a ComfyUI-ban": az eredeti elrendezéssel, csoportokkal, kapcsolókkal és útmutatóval; a Studióban kikapcsolt csoportok kikerülve (bypass) jelennek meg.
-- Keret nélküli Studio-ablak (WebView2) saját ─ □ ✕ gombokkal, széleknél átméretezhető, vékony lábléccel; ha a WebView2 nem érhető el, Edge-ablakban nyílik meg. Témához illő görgetősáv.
-- Keskeny ablaknál a fejléc fokozatosan összecsukódik (ikonok a ⋯ menübe, modellcsalád legördülő listába).
-- Licenc gomb modellenként (link + tudnivalók), általános licencinfó és felelősségkizárás a saját modellekhez.
-- Rendszerkövetelmények a telepítőben és a névjegyben; a telepítő ellenőrzi az Edge és a WebView2 meglétét.
+A ComfyUI nagyon sokoldalú, de a node-gráfjai kezdőként ijesztőek lehetnek. A Studio elrejti ezt a bonyolultságot: kiválasztod a
+modellcsaládot és egy témát, leírod, mit szeretnél látni, és megnyomod a **Generate** gombot. A háttérben egy gondosan összekötött
+ComfyUI-munkafolyamat elkészíti a képet, finomítja, kijavítja az arcot, a kezet és a lábat, majd felnagyítja az eredményt. A teljes
+node-gráfot bármikor megnyithatod a ComfyUI-ban, ha szeretnéd megérteni, hogyan működik, vagy magad alakítanád tovább.
+
+Minden a saját gépeden fut: nincs fiók, nincs előfizetés, nincs felhőszolgáltatás. A leírásaid és a képeid nem hagyják el a
+számítógépedet, a modellek pedig egyszer töltődnek le az eredeti forrásukból.
+
+*English: see [README.md](README.md).*
+
+## Funkciók
+
+- Egyetlen telepítő felteszi a ComfyUI-t, a szükséges kiegészítőket és az AI-modelleket az eredeti forrásukból.
+- Három modellcsalád kész témákkal: **Z-Image Turbo**, **SDXL** (Juggernaut XL, RealVisXL, Pony) és **Flux.1 schnell**, valamint egy **CUSTOM** fül a saját checkpointodhoz.
+- Finomítás, arc-, kéz- és lábjavítás, végső nagyítás; képbemenetek (kezdőkép, stílusreferencia, elrendezés-referencia, automatikus képleírás).
+- Civitai-kompatibilis metaadatok, képinfó ablak, mentett munkafolyamatok, tanuló mód rámutatásos magyarázatokkal (magyarul és angolul).
+- „Másolat megnyitása a ComfyUI-ban”: a teljes node-gráf, ha kíváncsi vagy, mi van a motorháztető alatt.
 
 ## Rendszerkövetelmények
-- Minimum: Windows 10 64 bit (1803+) / 11, NVIDIA RTX 8 GB VRAM, 32 GB RAM, 4 mag, 50 GB SSD, Microsoft Edge, internet.
-- Ajánlott: Windows 11 / 10 22H2, NVIDIA RTX 12 GB+ VRAM, 64 GB RAM, 6+ mag, 100 GB NVMe SSD.
 
-## A te gépeden tesztelve (RTX 3060 Ti 8 GB, 64 GB RAM)
-- Mind a 8 téma × 3 család lefutott; RealVis és Pony külön tesztelve.
-- Tipikus idők: alapkép 20–40 mp, finomítás + arcjavítás 1–3 perc, végső nagyítás 4–6 perc (Flux a leglassabb).
+| | Minimum | Ajánlott |
+|---|---|---|
+| Windows | 10 64 bites (1803 vagy újabb) vagy 11 | 11, vagy 10 22H2 |
+| Videokártya | NVIDIA GeForce RTX 8 GB videomemóriával, friss illesztőprogrammal | NVIDIA RTX 12 GB vagy több |
+| Memória | 32 GB RAM | 64 GB RAM |
+| Processzor | 4 mag, 64 bites | 6 vagy több mag |
+| Lemez | 50 GB szabad hely (SSD) | 100 GB szabad hely NVMe SSD-n |
+| Egyéb | Microsoft Edge (a Windows része), internetkapcsolat a telepítéshez | |
+
+RTX 3060 Ti 8 GB kártyával és 64 GB RAM-mal, Windows 10 22H2 alatt tesztelve. AMD és Intel videokártyákat nem támogat.
+
+## Letöltés és telepítés
+
+1. Töltsd le az `ArtFlawlessStudio-Setup-X.Y.Z.exe` fájlt a [Releases](../../releases) oldalról.
+2. Futtasd. A telepítő kb. 25 GB-ot tölt le, ez eltart egy ideig; ha megszakad, újraindítva onnan folytatja.
+3. Indítsd az **ArtFlawless Studiót** az asztali ikonról.
+
+## Frissítés
+
+Töltsd le az új telepítőt a [Releases](../../releases) oldalról, és futtasd. Felismeri a meglévő telepítést, rákérdez a frissítésre, és
+ugyanabba a mappába telepít. A képeid (`input` és `output` mappa), a mentett munkafolyamatok, a letöltött modellek és a beállítások
+megmaradnak. Frissítés előtt zárd be a Studiót.
 
 ## Ismert korlátok
-- Az elrendezés-referencia (ControlNet) csak Z-Image-nél van.
-- SDXL-hez és Fluxhoz nincs automatikus bőr/kéz LoRA; az arc/kéz/láb javító lépések mindegyiknél működnek.
-- A Flux schnell bőre kissé "műanyag" – emberekhez a Z-Image vagy a RealVis ajánlott.
-- Az exe nincs digitálisan aláírva (SmartScreen figyelmeztet).
+
+- Az elrendezés-referencia (ControlNet) csak a Z-Image Turbónál érhető el.
+- Az SDXL-hez és a Fluxhoz nincs automatikus bőr- és kéz-LoRA; az arc-, kéz- és lábjavító lépések minden családnál működnek.
+- A Flux.1 schnell bőre kissé „műanyag” hatású; emberekhez a Z-Image Turbo vagy a RealVisXL jobb.
+- A telepítő még nincs digitálisan aláírva, ezért a Windows SmartScreen figyelmeztethet („További információ” → „Futtatás mindenképp”).
+
+## Fordítás forrásból
+
+Kell hozzá [Python 3](https://www.python.org/downloads/) és [Inno Setup 6.3+](https://jrsoftware.org/isdl.php). Utána futtasd:
+
+```
+build.bat
+```
+
+A telepítő az `Output` mappában jelenik meg. A `build.bat` lefuttatja a `make_studio_files.py` és a `make_families.py` szkriptet
+(ezek állítják elő a `studio_out/` mappát), majd lefordítja az `ArtFlawlessStudio.iss` fájlt.
+
+A GitHub minden változtatás után automatikusan is elkészíti a telepítőt (Actions fül → legutóbbi futás → *Artifacts*).
+
+## Új verzió kiadása
+
+1. Írd át a számot a `VERSION` fájlban (például `1.3.0` → `1.3.1`). A verziószám csak itt van megadva; a telepítő, a Studio és a
+   névjegy is innen olvassa.
+2. Írj egy szakaszt az új verzióról a `CHANGELOG.md` elejére.
+3. Commit és push.
+4. A GitHubon: **Releases → Draft a new release**, tag: `v1.3.1` (ugyanaz a szám `v` betűvel), cím: `ArtFlawless Studio 1.3.1`, **Publish**.
+   A workflow elkészíti a telepítőt, és a `CHANGELOG.md` szövegével együtt csatolja a kiadáshoz.
+
+A verziószámok a [szemantikus verziózást](https://semver.org/lang/hu/) követik: a javítások az utolsó számot emelik (1.2.**1**), az új
+funkciók a középsőt (1.**3**.0), a mentett munkafolyamatokat vagy beállításokat érintő, nem visszafelé kompatibilis változások az elsőt (**2**.0.0).
+
+## Korhatár és tartalomvédelem
+
+Az ArtFlawless Studiót csak **felnőtt (18. életévét betöltött) személy** használhatja. A telepítő ezt megerősítteti veled.
+
+- **Tartalomszűrő**: minden kép a saját gépeden ellenőrződik (NudeNet felismerő és Falconsai osztályozó, a processzoron). A felnőtt
+  tartalmúnak (meztelenség, szexuális tartalom) felismert képek homályosítva jelennek meg, szem gombbal megjeleníthetők, és az
+  `output\18+` mappába kerülnek. Alapból be van kapcsolva; a beállításokban kikapcsolható, miután megerősítetted, hogy elmúltál 18 éves.
+- **Biztonságos mód**: „meztelenség nélkül” jellegű szavakat tesz a negatív promptba, hogy véletlenül se jelenjen meg meztelenség.
+  Alapból be van kapcsolva, kikapcsolható.
+- **18+ megerősítés**: ha a prompt meztelenséget vagy szexuális tartalmat kér, egyszer meg kell erősítened, hogy felnőtt vagy.
+- **Gyermekvédelem**: ha a prompt kiskorúra utal meztelenséggel vagy szexuális tartalommal együtt, a program mindig megtagadja a
+  generálást, és ez nem kapcsolható ki. Kiskorúak szexuális ábrázolása tilos, a mesterséges és MI-vel készített is
+  ([2011/93/EU irányelv](https://eur-lex.europa.eu/eli/dir/2011/93/oj)).
+- **MI-jelölés**: a generált PNG-képek géppel olvasható „MI által készített” jelölést kapnak (IPTC DigitalSourceType, XMP), az
+  [EU MI-rendelet, (EU) 2024/1689](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) 50. cikkének szellemében.
+
+A felismerés automatikus, és nem tökéletes: tévedhet mindkét irányba. Az AI-modelleket nem az ArtFlawless Studio szerzője készítette,
+és nem ő terjeszti: a telepítő az eredeti forrásukból tölti le őket, és mindegyikre a saját licence vonatkozik. Az ArtFlawless Studio
+igyekszik csökkenteni a visszaélés kockázatát, de nyílt forráskódú szoftverként ezt teljesen kizárni nem tudja. Aki ezeket a védelmeket
+megkerüli, vagy a programot ennek érdekében átírja, a saját felelősségére teszi; ehhez a szerző nem járul hozzá, és ezért nem vállal
+felelősséget.
+
+## Támogatás
+
+Az ArtFlawless Studio ingyenes, és az is marad: nincs fizetős változat, nincsenek zárolt funkciók, a támogatók sem kapnak elsőbbséget.
+Ha tetszik, [meghívhatsz egy kávéra](https://buymeacoffee.com/lalikavics) önkéntes köszönetként. Ez semmin nem változtat a programban.
+
+## Licenc
+
+Az ArtFlawless Studio szabad szoftver: a **GNU General Public License 3-as vagy (választásod szerint) bármely későbbi változata**
+szerint terjesztheted és módosíthatod. Lásd: [LICENSE](LICENSE).
+
+Copyright (C) 2026 Lalikavics.
+
+A programot abban a reményben terjesztjük, hogy hasznos lesz, de MINDENFÉLE GARANCIA NÉLKÜL, beleértve az eladhatóságra vagy egy adott
+célra való alkalmasságra vonatkozó hallgatólagos garanciát is. A részletekért lásd a GNU General Public License-t.
+
+### Külső összetevők
+
+Ez a tároló csak az ArtFlawless Studio kódját tartalmazza. A ComfyUI, a kiegészítő node-ok és az AI-modellek **nincsenek** benne: a
+telepítő az eredeti forrásukból tölti le őket, és mindegyikre a saját licence vonatkozik:
+
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL-3.0), módosítás nélkül telepítve.
+- Kiegészítő node-ok: rgthree-comfy, ComfyUI Impact Pack és Subpack, Ultimate SD Upscale, ComfyUI-Florence2, ComfyUI-Custom-Scripts,
+  ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager.
+- Tartalomellenőrzés: [NudeNet](https://github.com/notAI-tech/NudeNet) (a csomag AGPL-3.0 és MIT licencet is feltüntet) és
+  [Falconsai/nsfw_image_detection](https://huggingface.co/Falconsai/nsfw_image_detection) (Apache-2.0).
+- Modellek: Z-Image Turbo és Flux.1 schnell (Apache-2.0), Juggernaut XL v9 (CreativeML Open RAIL-M), RealVisXL V5.0 (OpenRAIL++),
+  Pony Diffusion V6 XL (Fair AI Public License 1.0-SD), valamint a telepítőben felsorolt LoRA-k, detektorok és nagyítók.
+
+Hogy mit tehetsz a generált képekkel, azt az általad használt modellek és LoRA-k licence határozza meg. Kérlek, olvasd el őket, főleg
+kereskedelmi felhasználás előtt. A Studio minden modell mellett mutat egy **Licenc** gombot a linkkel.
+
+Az ArtFlawless Studio független projekt. Nem áll kapcsolatban a Comfy Org-gal vagy a ComfyUI fejlesztőivel, és ők nem támogatják hivatalosan.
+
+## Felelősségkizárás
+
+A szoftvert „ahogy van” alapon, mindenféle garancia nélkül adjuk közre. Kizárólag te felelsz azért, amit vele létrehozol, és azért,
+ahogyan felhasználod, beleértve a modellek licencét és a rád vonatkozó jogszabályokat is. Ne használd valós személyek ábrázolására a
+beleegyezésük nélkül, sem jogellenes vagy ártalmas tartalom készítésére.
+
+## Kapcsolat
+
+Kérdések, ötletek és hibajelzések: kérlek, az oldal [Issues](../../issues) részét használd.
+Ha egy, a telepítő által használt modell, LoRA vagy node szerzője vagy, és szeretnéd, hogy a munkád kikerüljön vagy másképp legyen
+feltüntetve, szintén nyiss egy issue-t.

@@ -62,7 +62,7 @@ assert h.count(a) == 1; h = h.replace(a, b)
 open(os.path.join(OUT, 'web', 'index.html'), 'w', encoding='utf-8', newline='').write(h)
 
 # ---- workflow (for ComfyUI's own editor) ----------------------------------
-w = json.load(open(os.path.join(SRC, 'ArtFlow-Studio-ZImageTurbo-EN.json'), encoding='utf-8'))
+w = json.load(open(os.path.join(SRC, 'ArtFlawless-Studio-ZImageTurbo-EN.json'), encoding='utf-8'))
 for l in w['links']:
     if l[1] == 2: assert l[2] == 0, l          # only MODEL output of node 2 is used
 nodes = {n['id']: n for n in w['nodes']}
@@ -80,7 +80,7 @@ nodes[66]['widgets_values'][0] = VAE;  nodes[66]['widgets_values_named']['vae_na
 # remove private leftovers (local path + an old test prompt) from the Prompt Extractor node
 for k in ('_browsePath', '_browseSelectedAbsPath', 'pe_extracted_data'):
     nodes[48]['properties'].pop(k, None)
-with open(os.path.join(OUT, 'ArtFlow-Studio-ZImageTurbo-EN.json'), 'w', encoding='utf-8') as f:
+with open(os.path.join(OUT, 'ArtFlawless-Studio-ZImageTurbo-EN.json'), 'w', encoding='utf-8') as f:
     json.dump(w, f, ensure_ascii=False, separators=(',', ':'))
 
 print('ok')
@@ -910,12 +910,86 @@ function openNotif() {""")
 rep("initZoom(); initHelp(); initHost();", "initZoom(); initHelp(); initHost(); initFold();")
 rep("licenseL: 'Licence', ", "licenseL: 'Licence', more: 'More', ")
 rep("licenseL: 'Licenc', ", "licenseL: 'Licenc', more: 'Továbbiak', ")
+# ---- content safety: 18+ check, blur, child protection, safe mode (logic in assets/safety.js) ----
+_SS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'safety_strings.json'), encoding='utf-8'))
+rep("mLearn: 'Learning mode (hints)', ", "mLearn: 'Learning mode (hints)', " + _SS['en'])
+rep("mLearn: 'Tanuló mód (súgó)', ", "mLearn: 'Tanuló mód (súgó)', " + _SS['hu'])
+rep('<label class="mi"><span data-t="mLearn"></span><span class="sw"><input type="checkbox" id="learnSw"><span></span></span></label>',
+    '<label class="mi"><span data-t="mLearn"></span><span class="sw"><input type="checkbox" id="learnSw"><span></span></span></label>\n'
+    '        <label class="mi"><span data-t="mNsfw"></span><span class="sw"><input type="checkbox" id="nsfwSw"><span></span></span></label>\n'
+    '        <label class="mi"><span data-t="mSafe"></span><span class="sw"><input type="checkbox" id="safeSw"><span></span></span></label>')
+rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
+#stage.nsfw #view,#stage.nsfwPend #view{filter:blur(44px) saturate(.7)}
+#stage.blocked #view{filter:blur(70px) brightness(.35)}
+#nsfwCov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:5;text-align:center;padding:20px;background:rgba(9,10,13,.35)}
+#stage.nsfw #nsfwCov,#stage.nsfwPend #nsfwCov,#stage.blocked #nsfwCov{display:flex}
+#stage.nsfw #nsfwCov,#stage.nsfwPend #nsfwCov{-webkit-backdrop-filter:blur(48px) saturate(.6);backdrop-filter:blur(48px) saturate(.6)}
+#stage.blocked #nsfwCov{-webkit-backdrop-filter:blur(80px) brightness(.35);backdrop-filter:blur(80px) brightness(.35)}
+#nsfwCov .eye{width:58px;height:58px;border-radius:50%;border:1px solid var(--line2);background:rgba(21,24,31,.85);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);padding:0}
+#nsfwCov .eye:hover{border-color:var(--acc);color:var(--acc)}
+#nsfwCov .eye svg{width:28px;height:28px}
+#nsfwCov b{font-size:15px}
+#nsfwCov small{color:#b9c0cf;max-width:440px;line-height:1.45}
+#stage.nsfwPend #nsfwCov .eye,#stage.nsfwPend #nsfwCov small,#stage.blocked #nsfwCov .eye{display:none}
+#hist img.nsfw,#steps .chip img.nsfw,.iih img.nsfw{filter:blur(6px) saturate(.6)}
+.iiprev img.nsfw{filter:blur(18px) saturate(.6)}
+.adck{display:flex;gap:9px;align-items:flex-start;margin:12px 0 14px;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);cursor:pointer;font-weight:600}
+.adck input{margin-top:3px;accent-color:var(--acc)}
+.btn.go2{background:var(--acc);border-color:var(--acc);color:var(--accText);font-weight:700}
+.btn.go2:disabled{opacity:.45;cursor:not-allowed}
+#wctl[hidden]{display:none!important}""")
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'safety.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("initZoom(); initHelp(); initHost(); initFold();", "initZoom(); initHelp(); initHost(); initFold(); initSafety();")
+# ---- support: "Buy me a coffee" button in the About header and a quiet link in the main header ----
+COFFEE_URL = 'https://buymeacoffee.com/lalikavics'
+MONKEY = ('<svg class="mk" viewBox="5 7 54 55" aria-hidden="true">'
+  '<path d="M44 52c6 2 12-1 13-7" fill="none" stroke="#4a2a12" stroke-width="3" stroke-linecap="round"/>'
+  '<ellipse cx="32" cy="48" rx="13" ry="11" fill="#5a3518"/><ellipse cx="32" cy="50" rx="8" ry="7" fill="#e0ad7e"/>'
+  '<circle cx="13" cy="25" r="7" fill="#5a3518"/><circle cx="13" cy="25" r="4" fill="#e0ad7e"/><circle cx="51" cy="25" r="7" fill="#5a3518"/><circle cx="51" cy="25" r="4" fill="#e0ad7e"/>'
+  '<circle cx="32" cy="25" r="17" fill="#5a3518"/>'
+  '<path d="M20 26c0-6 5-9 8-7 2 1 6 1 8 0 3-2 8 1 8 7 0 8-5 12-12 12s-12-4-12-12z" fill="#e0ad7e"/>'
+  '<ellipse cx="22" cy="31" rx="2.4" ry="1.5" fill="#f29a8a" opacity=".8"/><ellipse cx="42" cy="31" rx="2.4" ry="1.5" fill="#f29a8a" opacity=".8"/>'
+  '<circle cx="26.3" cy="24" r="3.5" fill="#1a1305"/><circle cx="37.7" cy="24" r="3.5" fill="#1a1305"/><circle cx="27.5" cy="22.7" r="1.3" fill="#fff"/><circle cx="38.9" cy="22.7" r="1.3" fill="#fff"/>'
+  '<ellipse cx="32" cy="33.2" rx="3.6" ry="3" fill="#5a1d14"/>'
+  '<path d="M41.8 60.4L57.8 48.4 56 46 40 58z" fill="#c9852f" stroke="#8a5418" stroke-width=".8" stroke-linejoin="round"/>'
+  '<path d="M31.5 32.5L56 46 40 58z" fill="#f6c453" stroke="#b8741f" stroke-width="1" stroke-linejoin="round"/>'
+  '<circle cx="41" cy="45" r="2.5" fill="#d9442f"/><circle cx="47.5" cy="49" r="2.2" fill="#d9442f"/><circle cx="42.5" cy="52.5" r="2" fill="#d9442f"/><circle cx="46" cy="44.5" r="1.1" fill="#3f7d2c"/><circle cx="38" cy="40.5" r="1" fill="#3f7d2c"/>'
+  '<path d="M46.5 56.2q.6 3.4 1.9 3.6 1.1-.2.8-3.4z" fill="#ffd36b"/>'
+  '<path d="M28.6 33.6q3.4 2.6 6.8 0" fill="none" stroke="#e0ad7e" stroke-width="1.6" stroke-linecap="round"/>'
+  '<circle cx="42" cy="56.5" r="3.6" fill="#5a3518"/><circle cx="54.5" cy="47.2" r="3.6" fill="#5a3518"/></svg>')
+CUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c0 1 1 1 1 2s-1 1-1 2M12 3.5c0 1 1 1 1 2s-1 1-1 2"/></svg>'
+rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
+#modal a.cof{display:none;align-items:center;gap:7px;background:var(--acc);color:var(--accText);border:1px solid #ffd27a;border-radius:8px;height:34px;box-sizing:border-box;padding:0 14px;font-size:14px;font-weight:750;text-decoration:none;white-space:nowrap;will-change:transform;box-shadow:0 2px 10px rgba(242,184,75,.25);transition:box-shadow .2s,transform .2s}
+#modal.about a.cof{display:inline-flex}
+#modal a.cof .more{display:inline-grid;grid-template-columns:0fr;opacity:0;will-change:opacity;transition:grid-template-columns .35s ease,opacity .35s ease}
+#modal a.cof .in{display:inline-flex;align-items:center;gap:5px;min-width:0;overflow:clip;overflow-clip-margin:4px;white-space:nowrap}
+#modal a.cof .mk{width:30px;height:30px;flex:0 0 30px;overflow:visible;transform-origin:50% 85%}
+#modal a.cof:hover{box-shadow:0 3px 18px rgba(242,184,75,.55);transform:translateY(-1px)}
+#modal a.cof:hover .more{grid-template-columns:1fr;opacity:1}
+#modal a.cof:hover .mk{animation:afSway 1.75s ease-in-out -.875s infinite alternate}
+@keyframes afSway{from{rotate:-4deg}to{rotate:4deg}}
+@media (prefers-reduced-motion:reduce){#modal a.cof:hover .mk{animation:none}}
+.cofm{display:none}
+html.inhost .cofm{position:absolute;right:16px;top:38px;display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#5f6676;text-decoration:none;padding:3px 7px;border-radius:6px;transition:color .2s,background .2s}
+html.inhost header{position:relative}
+.cofm svg{width:14px;height:14px}
+.cofm:hover{color:var(--acc);background:rgba(242,184,75,.08)}""")
+rep('<button class="btn sm" id="modalClose" type="button" data-t="close"></button>',
+    '<a class="cof" id="cofBtn" href="' + COFFEE_URL + '" target="_blank" rel="noopener">☕ Buy me a coffee<span class="more"><span class="in">…or a pizza ' + MONKEY + '</span></span></a><button class="btn sm" id="modalClose" type="button" data-t="close"></button>')
+rep("</header>", '<a class="cofm" id="cofMini" href="' + COFFEE_URL + '" target="_blank" rel="noopener" title="ArtFlawless Studio is free. Support is voluntary.">' + CUP + '<span>Buy me a coffee</span></a>\n</header>')
+rep("function openAbout() {", """function initCoffee() {
+  const m = $('#modal'), sync = () => m.classList.toggle('about', MODAL_KIND === 'about' && m.classList.contains('open'));
+  new MutationObserver(sync).observe(m, {attributes: true, attributeFilter: ['class']});
+  new MutationObserver(sync).observe($('#modalTitle'), {childList: true, characterData: true, subtree: true}); sync();
+}
+if (document.readyState === 'loading') addEventListener('DOMContentLoaded', initCoffee); else initCoffee();
+function openAbout() {""")
 # ---- contact: the project's GitHub page (REPO_URL file) ----
 h = h.replace('__REPO_URL__', REPO_URL)
 open(p, 'w', encoding='utf-8', newline='').write(h)
 
 # ---- layout of the original workflow, used to arrange "Open a copy in ComfyUI" ----
-_w = json.load(open(os.path.join(OUT, 'ArtFlow-Studio-ZImageTurbo-EN.json'), encoding='utf-8'))
+_w = json.load(open(os.path.join(OUT, 'ArtFlawless-Studio-ZImageTurbo-EN.json'), encoding='utf-8'))
 _tp = os.path.join(OUT, 'web', 'template.json')
 _t = json.load(open(_tp, encoding='utf-8'))
 _DECOR = ('MarkdownNote', 'Note', 'Fast Groups Bypasser (rgthree)', 'Label (rgthree)')

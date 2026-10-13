@@ -284,6 +284,19 @@ const disp = x => (LANG === 'hu' && HU_NAMES[x]) ? HU_NAMES[x] : String(x);
 const ABOUT = {
 en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer. It arranges existing, publicly available components into one workflow and puts a simple control surface on top of it.</p>
 <p>Workflow layout and Studio interface: <b>Lalikavics</b>. Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<h3>Support</h3>
+<p>I code, draw and create, just for the fun of it. I'm a bit like a Renaissance polymath, just with internet access, visual skills and more bugs. 😄<br>Enjoy my free projects? You can <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">buy me a coffee ☕ or a pizza 🍕</a>. It's never required, but always appreciated, and it keeps me creating more useful (or totally useless) things.</p>
+<p><b>Nothing changes if you do, or if you don't.</b> ArtFlawless Studio is and stays completely free: no paid version, no locked features, no extra support or priority for supporters. A coffee is a voluntary thank-you, not a purchase.</p>
+<h3>Age requirement and content protection</h3>
+<p>ArtFlawless Studio may only be used by adults (18 years or older). The setup asks you to confirm this.</p>
+<ul>
+<li><b>Content filter</b> – every image is checked on your computer; images recognised as adult content (nudity, sexual content) are blurred and saved into the <code>output\\18+</code> folder. Click the eye to show such an image. On by default; it can be switched off in Settings after confirming that you are 18 or older.</li>
+<li><b>Safe mode</b> – adds "no nudity" words to the negative prompt, so nudity does not appear by accident. On by default, can be switched off in Settings.</li>
+<li><b>18+ confirmation</b> – a prompt that asks for nudity or sexual content needs a one-time confirmation that you are an adult.</li>
+<li><b>Child protection</b> – a prompt that refers to a minor together with nudity or sexual content is always refused; this cannot be switched off. Sexual depictions of minors are illegal, including artificial and AI-generated ones (<a href="https://eur-lex.europa.eu/eli/dir/2011/93/oj" target="_blank" rel="noopener">EU Directive 2011/93/EU</a>).</li>
+<li><b>AI marking</b> – generated PNG images carry a machine-readable "AI-generated" mark (IPTC DigitalSourceType), in the spirit of Article 50 of the <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank" rel="noopener">EU AI Act, Regulation (EU) 2024/1689</a>.</li>
+</ul>
+<p>The recognition is automatic and not perfect: it can miss content or flag harmless images. The AI models are not made or distributed by me: the setup downloads them from their original sources, and each of them is subject to its own licence. ArtFlawless Studio tries to reduce the risk of misuse, but as open-source software it cannot rule it out completely. Anyone who gets around these protections, or changes the program to do so, does it at their own responsibility; I do not consent to this and accept no liability for it.</p>
 <h3>What is mine and what is not</h3>
 <p>I made only the frame: the way the nodes are wired together and this interface. Everything that actually creates the images is the work and property of its own authors, who generously published it free of charge under their own licences. Those licences continue to apply to you; please read and respect them, and credit the authors.</p>
 <h3>Components included by default</h3>
@@ -299,6 +312,7 @@ en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-gener
 <li><b>Segment Anything (SAM)</b> – Meta AI</li>
 <li><b>YOLOv8 face and hand detectors</b> – Bingsu (ADetailer models); <b>foot detector</b> – via MonetEinsley/ADetailer_CM; built on Ultralytics YOLO</li>
 <li><b>Real-ESRGAN</b> upscaler – Xintao Wang and co-authors</li>
+<li><b>NudeNet</b> content detector – notAI-tech; <b>nsfw_image_detection</b> classifier – Falconsai</li>
 <li><b>Custom nodes</b>: rgthree-comfy (rgthree) · ComfyUI Impact Pack and Impact Subpack (Dr.Lt.Data) · Ultimate SD Upscale (ssitu) · ComfyUI-Florence2 (kijai) · ComfyUI-Custom-Scripts (pythongosssss) · ControlNet Auxiliary Preprocessors (Fannovel16) · ComfyUI Image Saver (alexopus) · ComfyUI-Prompt-Manager (Francky B)</li>
 </ul>
 <h3>Disclaimer</h3>
@@ -309,6 +323,19 @@ en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-gener
 <p><b>Third-party components.</b> The models, LoRAs and custom nodes are downloaded from their original sources and remain subject to their own licences and terms. If you are an author and want your work removed from the default set, or credited differently, please open an issue on the project's <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> page.</p>`,
 hu: `<p>Az <b>ArtFlow Studio</b> ingyenes, kényelmi kezelőfelület egy képgeneráló workflow-hoz, amely a saját gépeden, a ComfyUI-ban fut. Meglévő, nyilvánosan elérhető összetevőket rendez egy workflow-ba, és egyszerű kezelőfelületet tesz rá.</p>
 <p>A workflow elrendezése és a Studio felülete: <b>Lalikavics</b>. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<h3>Támogatás</h3>
+<p>Programozom, rajzolok és alkotok, egyszerűen a kedvemért. Kicsit olyan vagyok, mint egy reneszánsz polihisztor, csak internettel, vizuális érzékkel és több hibával. 😄<br>Tetszenek az ingyenes projektjeim? <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">Meghívhatsz egy kávéra ☕ vagy egy pizzára 🍕</a>. Sosem kötelező, de mindig jólesik, és segít abban, hogy még több hasznos (vagy teljesen haszontalan) dolgot hozzak létre.</p>
+<p><b>Semmi nem változik, akár adsz, akár nem.</b> Az ArtFlawless Studio ingyenes, és az is marad: nincs fizetős változat, nincsenek zárolt funkciók, a támogatók sem kapnak extra szolgáltatást vagy elsőbbséget. A kávé önkéntes köszönet, nem vásárlás.</p>
+<h3>Korhatár és tartalomvédelem</h3>
+<p>Az ArtFlawless Studiót csak felnőtt (18. életévét betöltött) személy használhatja. A telepítő ezt megerősítteti veled.</p>
+<ul>
+<li><b>Tartalomszűrő</b> – minden kép a saját gépeden ellenőrződik; a felnőtt tartalmúnak (meztelenség, szexuális tartalom) felismert képek homályosítva jelennek meg, és az <code>output\\18+</code> mappába kerülnek. Ilyen képet a szemre kattintva jeleníthetsz meg. Alapból be van kapcsolva; a beállításokban kikapcsolható, miután megerősítetted, hogy elmúltál 18 éves.</li>
+<li><b>Biztonságos mód</b> – „meztelenség nélkül” jellegű szavakat tesz a negatív promptba, hogy véletlenül se jelenjen meg meztelenség. Alapból be van kapcsolva, a beállításokban kikapcsolható.</li>
+<li><b>18+ megerősítés</b> – ha a prompt meztelenséget vagy szexuális tartalmat kér, egyszer meg kell erősítened, hogy felnőtt vagy.</li>
+<li><b>Gyermekvédelem</b> – ha a prompt kiskorúra utal meztelenséggel vagy szexuális tartalommal együtt, a program mindig megtagadja a generálást; ez nem kapcsolható ki. Kiskorúak szexuális ábrázolása tilos, a mesterséges és MI-vel készített is (<a href="https://eur-lex.europa.eu/eli/dir/2011/93/oj" target="_blank" rel="noopener">2011/93/EU irányelv</a>).</li>
+<li><b>MI-jelölés</b> – a generált PNG-képek géppel olvasható „MI által készített” jelölést kapnak (IPTC DigitalSourceType), az <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank" rel="noopener">EU MI-rendelet, (EU) 2024/1689</a> 50. cikkének szellemében.</li>
+</ul>
+<p>A felismerés automatikus, és nem tökéletes: tévedhet mindkét irányba. Az AI-modelleket nem én készítettem, és nem én terjesztem: a telepítő az eredeti forrásukból tölti le őket, és mindegyikre a saját licence vonatkozik. Az ArtFlawless Studio igyekszik csökkenteni a visszaélés kockázatát, de nyílt forráskódú szoftverként ezt teljesen kizárni nem tudja. Aki ezeket a védelmeket megkerüli, vagy a programot ennek érdekében átírja, a saját felelősségére teszi; ehhez nem járulok hozzá, és ezért nem vállalok felelősséget.</p>
 <h3>Mi az enyém, és mi nem</h3>
 <p>Én csak a vázat készítettem: azt, ahogyan a node-ok össze vannak kötve, és ezt a felületet. Minden, ami a képeket ténylegesen létrehozza, a saját készítőinek munkája és tulajdona, akik nagylelkűen, díjmentesen tették közzé a saját licencük alatt. Ezek a licencek rád is vonatkoznak: kérlek, olvasd el és tartsd be őket, és nevezd meg a készítőket.</p>
 <h3>Alapból beemelt összetevők</h3>
@@ -324,6 +351,7 @@ hu: `<p>Az <b>ArtFlow Studio</b> ingyenes, kényelmi kezelőfelület egy képgen
 <li><b>Segment Anything (SAM)</b> – Meta AI</li>
 <li><b>YOLOv8 arc- és kézfelismerő</b> – Bingsu (ADetailer modellek); <b>lábfelismerő</b> – a MonetEinsley/ADetailer_CM gyűjteményből; az Ultralytics YOLO-ra épülnek</li>
 <li><b>Real-ESRGAN</b> nagyító – Xintao Wang és szerzőtársai</li>
+<li><b>NudeNet</b> tartalomfelismerő – notAI-tech; <b>nsfw_image_detection</b> osztályozó – Falconsai</li>
 <li><b>Kiegészítő node-ok</b>: rgthree-comfy (rgthree) · ComfyUI Impact Pack és Impact Subpack (Dr.Lt.Data) · Ultimate SD Upscale (ssitu) · ComfyUI-Florence2 (kijai) · ComfyUI-Custom-Scripts (pythongosssss) · ControlNet Auxiliary Preprocessors (Fannovel16) · ComfyUI Image Saver (alexopus) · ComfyUI-Prompt-Manager (Francky B)</li>
 </ul>
 <h3>Jogi nyilatkozat</h3>
