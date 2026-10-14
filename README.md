@@ -160,4 +160,4 @@ If you are the author of a model, LoRA or node used by the setup and want it rem
 
 ---
 
-*Developed by Lalikavics, with help from Claude.*
+*Developed with the help of Claude (Anthropic).*

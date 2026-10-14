@@ -150,4 +150,4 @@ feltüntetve, szintén nyiss egy issue-t.
 
 ---
 
-*Fejlesztette: Lalikavics, a Claude segítségével.*
+*A Claude (Anthropic) segítségével fejlesztve.*
