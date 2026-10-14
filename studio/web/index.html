@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" spellcheck="false">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -193,7 +193,7 @@ en: {
   brandSub: 'based on ComfyUI node graphs', about: 'About', adv: 'Advanced settings', runs: 'runs', stop: 'Cancel', go: 'Generate', goQ: 'Generate (+{0} queued)', close: 'Close',
   connecting: 'connecting…', connected: 'connected', queue: 'queue: {0}', offline: 'no connection to ComfyUI – retrying',
   empty: 'Set what you want on the left, the image inputs and post-processing on the right, then press Generate.',
-  ready: 'Ready.', starting: 'Starting…', done: 'Done – {0} s', moreQ: ' · {0} more queued', stopped: 'Stopped because of an error.', cancelled: 'Cancelled.', seed: 'seed: {0}',
+  ready: 'Ready.', starting: 'Starting…', done: 'Done – {0} s', moreQ: ' · {0} more queued', stopped: 'Stopped because of an error.', cancelled: 'Cancelled.', stopping: 'Cancelling…', stopSlow: 'ComfyUI is still busy with a step that cannot be interrupted (for example loading or encoding an image). It stops as soon as that step ends; if nothing happens for minutes, close the Studio window and start it again.', seed: 'seed: {0}',
   infoSummary: 'Applied settings and final prompt', applied: 'Applied settings', final: 'Final prompt', copy: 'Copy', copied: 'The final prompt is on the clipboard.',
   open: 'Open', download: 'Download', useStart: 'Use as start image', useStartT: 'Loads it as the 1e start image and switches 1e on', useStartOk: 'Set as start image, 1e switched on.', useStartErr: 'Could not set it: {0}',
   live: 'live preview', earlier: 'earlier image',
@@ -233,7 +233,7 @@ hu: {
   brandSub: 'ComfyUI node-gráfokra épül', about: 'Névjegy', adv: 'Haladó beállítások', runs: 'futások', stop: 'Megszakítás', go: 'Generálás', goQ: 'Generálás (+{0} sorban)', close: 'Bezárás',
   connecting: 'kapcsolódás…', connected: 'kapcsolódva', queue: 'sor: {0}', offline: 'nincs kapcsolat a ComfyUI-val – újrapróbálom',
   empty: 'Állítsd be bal oldalt, mit szeretnél, jobb oldalt a képi bemeneteket és az utófeldolgozást, majd nyomd meg a Generálás gombot.',
-  ready: 'Készen áll.', starting: 'Indul…', done: 'Kész – {0} mp', moreQ: ' · még {0} sorban', stopped: 'Hiba miatt leállt.', cancelled: 'Megszakítva.', seed: 'mag: {0}',
+  ready: 'Készen áll.', starting: 'Indul…', done: 'Kész – {0} mp', moreQ: ' · még {0} sorban', stopped: 'Hiba miatt leállt.', cancelled: 'Megszakítva.', stopping: 'Megszakítás…', stopSlow: 'A ComfyUI még egy nem megszakítható lépésen dolgozik (például kép betöltésén vagy kódolásán). Amint ez véget ér, leáll; ha percekig nem történik semmi, zárd be a Studio ablakát, és indítsd újra.', seed: 'mag: {0}',
   infoSummary: 'Alkalmazott beállítások és végső prompt', applied: 'Alkalmazott beállítások', final: 'Végső prompt', copy: 'Másolás', copied: 'A végső prompt a vágólapon.',
   open: 'Megnyitás', download: 'Letöltés', useStart: 'Legyen kiinduló kép', useStartT: 'Betölti az 1e kiinduló képnek, és bekapcsolja', useStartOk: 'Beállítva kiinduló képnek, az 1e bekapcsolva.', useStartErr: 'Nem sikerült beállítani: {0}',
   live: 'élő előnézet', earlier: 'korábbi kép',
@@ -274,7 +274,7 @@ const HU_NAMES = {'None (own prompt only)': 'Nincs (csak a saját prompt)', 'Por
   'Theme default': 'Téma szerinti', 'Portrait 832×1216': 'Álló 832×1216', 'Landscape 1216×832': 'Fekvő 1216×832', 'Square 1024×1024': 'Négyzet 1024×1024', 'Wide 1280×768': 'Széles 1280×768', 'Tall 768×1280': 'Magas 768×1280'};
 const HU_NODE = {2: 'Modell betöltése', 3: 'Prompt kódolása', 4: 'Negatív prompt kódolása', 6: 'Alapkép generálása', 7: 'Kép előhívása', 15: 'Nagyítás a finomítás előtt', 16: 'Kép kódolása', 17: 'Finomítás', 18: 'Kép előhívása',
   21: 'Arcfelismerő betöltése', 22: 'SAM modell betöltése', 25: 'Arc javítása', 27: 'Kézfelismerő betöltése', 30: 'Kéz javítása', 32: 'Nagyító modell betöltése', 33: 'Végső nagyítás', 35: 'Mentés', 41: 'Kép leírása', 48: 'Mentett prompt kiolvasása',
-  61: 'Lábfelismerő betöltése', 62: 'Láb javítása', 65: 'Szövegkódoló betöltése', 66: 'VAE betöltése', 68: 'LoRA-k betöltése', 69: 'Láb-LoRA betöltése', 72: 'Elrendezés-ControlNet betöltése', 73: 'Mélységtérkép készítése', 74: 'Elrendezés alkalmazása',
+  61: 'Lábfelismerő betöltése', 62: 'Láb javítása', 65: 'Szövegkódoló betöltése', 66: 'VAE betöltése', 68: 'LoRA-k betöltése', 69: 'Láb-LoRA betöltése', 72: 'Elrendezés-ControlNet betöltése', 73: 'Mélységtérkép készítése', 74: 'Elrendezés alkalmazása', 116: 'Elrendezéskép átméretezése',
   78: 'Színvilág átvétele', 79: 'Stíluskép leírása', 83: 'Stílus kivonása', 89: 'Alap LoRA betöltése', 96: 'Kép átméretezése', 97: 'Kép kódolása'};
 const STEP_NAME = {'1a': 'g1a', '1b': 'g1b', '1c': 'g1c', '1d': 'g1d', '1e': 'g1e', '2': 'g2', '3': 'g3', '3b': 'g3b', '3c': 'g3c', '4': 'g4', '5': 'g5'};
 let LANG = 'en'; try { const l = localStorage.getItem(LS_LANG); if (l === 'hu' || l === 'en') LANG = l; } catch (_) {}
@@ -283,7 +283,7 @@ const disp = x => (LANG === 'hu' && HU_NAMES[x]) ? HU_NAMES[x] : String(x);
 
 const ABOUT = {
 en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer. It arranges existing, publicly available components into one workflow and puts a simple control surface on top of it.</p>
-<p>Developed by <b>Lalikavics</b>, with help from Claude. Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<p>Created by <b>Lalikavics</b>. Developed with the help of Claude (Anthropic). Version ${VERSION}.<br>Questions and bug reports: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
 <h3>Support</h3>
 <p>I code, draw and create, just for the fun of it. I'm a bit like a Renaissance polymath, just with internet access, visual skills and more bugs. 😄<br>Enjoy my free projects? You can <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">buy me a coffee ☕ or a pizza 🍕</a>. It's never required, but always appreciated, and it keeps me creating more useful (or totally useless) things.</p>
 <p><b>Nothing changes if you do, or if you don't.</b> ArtFlawless Studio is and stays completely free: no paid version, no locked features, no extra support or priority for supporters. A coffee is a voluntary thank-you, not a purchase.</p>
@@ -322,7 +322,7 @@ en: `<p><b>ArtFlow Studio</b> is a free convenience interface for an image-gener
 <p><b>Liability.</b> To the maximum extent permitted by applicable law, the author accepts no liability for any damage, loss or claim arising from the use of this software, of the third-party components it relies on, or of the content created with them.</p>
 <p><b>Third-party components.</b> The models, LoRAs and custom nodes are downloaded from their original sources and remain subject to their own licences and terms. If you are an author and want your work removed from the default set, or credited differently, please open an issue on the project's <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> page.</p>`,
 hu: `<p>Az <b>ArtFlow Studio</b> ingyenes, kényelmi kezelőfelület egy képgeneráló workflow-hoz, amely a saját gépeden, a ComfyUI-ban fut. Meglévő, nyilvánosan elérhető összetevőket rendez egy workflow-ba, és egyszerű kezelőfelületet tesz rá.</p>
-<p>Fejlesztette: <b>Lalikavics</b>, a Claude segítségével. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
+<p>Készítette: <b>Lalikavics</b>. A Claude (Anthropic) segítségével fejlesztve. Verzió: ${VERSION}.<br>Kérdések és hibajelzés: <a href="__REPO_URL__/issues" target="_blank" rel="noopener">GitHub</a> (Issues)</p>
 <h3>Támogatás</h3>
 <p>Programozom, rajzolok és alkotok, egyszerűen a kedvemért. Kicsit olyan vagyok, mint egy reneszánsz polihisztor, csak internettel, vizuális érzékkel és több hibával. 😄<br>Tetszenek az ingyenes projektjeim? <a href="https://buymeacoffee.com/lalikavics" target="_blank" rel="noopener">Meghívhatsz egy kávéra ☕ vagy egy pizzára 🍕</a>. Sosem kötelező, de mindig jólesik, és segít abban, hogy még több hasznos (vagy teljesen haszontalan) dolgot hozzak létre.</p>
 <p><b>Semmi nem változik, akár adsz, akár nem.</b> Az ArtFlawless Studio ingyenes, és az is marad: nincs fizetős változat, nincsenek zárolt funkciók, a támogatók sem kapnak extra szolgáltatást vagy elsőbbséget. A kávé önkéntes köszönet, nem vásárlás.</p>
@@ -369,6 +369,7 @@ let H = [];
 
 function h(tag, attrs, ...kids) {
   const e = document.createElement(tag);
+  if (tag === 'textarea' || tag === 'input') { e.spellcheck = false; e.setAttribute('autocorrect', 'off'); e.setAttribute('autocapitalize', 'off'); }
   if (attrs) for (const [k, v] of Object.entries(attrs)) {
     if (v == null || v === false) continue;
     if (k === 'class') e.className = v;
@@ -463,13 +464,29 @@ function renderMissing() {
 /* ---------- controls ---------- */
 function sw(checked, cb, title) { const i = h('input', {type: 'checkbox'}); i.checked = !!checked; i.onchange = () => cb(i.checked); return h('label', {class: 'sw', title: title || ''}, i, h('span')); }
 function num(v, c, cb) {
-  const wrap = h('div', {class: 'num'}); const step = c.step || (c.int ? 1 : 0.01);
-  const fire = x => { if (!isFinite(x)) return; if (c.int) x = Math.round(x); cb(x); };
-  const n = h('input', {type: 'number'}); n.step = c.int ? '1' : 'any';
-  if (isFinite(c.min) && Math.abs(c.min) < 1e9) n.min = c.min; if (isFinite(c.max) && Math.abs(c.max) < 1e9) n.max = c.max; n.value = v;
+  // fine = slider and typing precision; arrow = arrow keys / spin buttons (the typical step); typed values are kept inside the range
+  const wrap = h('div', {class: 'num'}); const fine = c.step || (c.int ? 1 : 0.01);
+  const lo = isFinite(c.min) && Math.abs(c.min) < 1e9 ? +c.min : null, hi = isFinite(c.max) && Math.abs(c.max) < 1e9 ? +c.max : null;
+  const span = lo != null && hi != null ? hi - lo : null;
+  const arrow = c.arrow || (c.int ? Math.max(1, Math.round(fine)) : span == null ? Math.max(fine, 0.1) : span <= 2 ? Math.max(fine, 0.05) : span <= 6 ? Math.max(fine, 0.1) : Math.max(fine, 0.5));
+  const decs = x => (String(x).split('.')[1] || '').length;
+  const dec = c.int ? 0 : Math.min(6, Math.max(decs(fine), decs(arrow)));
+  const clamp = x => { if (lo != null && x < lo) x = lo; if (hi != null && x > hi) x = hi; return c.int ? Math.round(x) : +x.toFixed(dec); };
+  const fire = x => { if (isFinite(x)) cb(clamp(x)); };
+  const n = h('input', {type: 'number'}); n.step = String(arrow); n.inputMode = c.int ? 'numeric' : 'decimal';
+  if (lo != null) n.min = lo; if (hi != null) n.max = hi; n.value = v;
   let r = null;
-  if (c.slider && isFinite(c.min) && isFinite(c.max)) { r = h('input', {type: 'range'}); r.min = c.min; r.max = c.max; r.step = step; r.value = v; r.oninput = () => { n.value = r.value; fire(r.valueAsNumber); }; wrap.append(r); }
-  n.oninput = () => { const x = n.valueAsNumber; if (isFinite(x)) { if (r) r.value = x; fire(x); } };
+  if (c.slider && lo != null && hi != null) { r = h('input', {type: 'range'}); r.min = lo; r.max = hi; r.step = fine; r.value = v; r.oninput = () => { n.value = r.value; fire(r.valueAsNumber); }; wrap.append(r); }
+  const sync = x => { n.value = String(x); if (r) r.value = x; fire(x); };
+  n.oninput = () => {
+    const x = n.valueAsNumber; if (!isFinite(x)) return;
+    // above the maximum (or a minus sign where the minimum is 0 or more) jumps to the limit at once;
+    // a value below a positive minimum is corrected when the field is left, so typing "1.5" into a 1-4 field still works
+    if ((hi != null && x > hi) || (lo != null && lo >= 0 && x < 0)) return sync(clamp(x));
+    if (r) r.value = x; if (lo == null || x >= lo) fire(x);
+  };
+  n.onchange = () => { const x = n.valueAsNumber; sync(isFinite(x) ? clamp(x) : clamp(Number(v) || lo || 0)); };
+  n.addEventListener('blur', n.onchange);
   wrap.append(n); return wrap;
 }
 function imagePicker(id, name, o) {
@@ -506,7 +523,7 @@ function field(id, name, label, o) {
     ctl = h('select'); list.forEach((x, i) => ctl.append(h('option', {value: String(i), text: (custom ? disp(x) : o.pretty ? pretty(x) : String(x)) + (opts.includes(x) ? '' : t('notInList'))})));
     ctl.value = String(list.indexOf(v)); ctl.onchange = () => changed(list[+ctl.value]);
   } else if (type === 'BOOLEAN') { ctl = sw(!!v, changed); row.classList.add('inline'); }
-  else if (type === 'INT' || type === 'FLOAT') ctl = num(v, {int: type === 'INT', min: o.min != null ? o.min : cfg.min, max: o.max != null ? o.max : cfg.max, step: o.step != null ? o.step : cfg.step, slider: o.slider}, changed);
+  else if (type === 'INT' || type === 'FLOAT') ctl = num(v, {int: type === 'INT', min: o.min != null ? o.min : cfg.min, max: o.max != null ? o.max : cfg.max, step: o.step != null ? o.step : cfg.step, arrow: o.arrow, slider: o.slider}, changed);
   else {
     const multi = o.rows || cfg.multiline || (typeof v === 'string' && v.length > 70);
     ctl = multi ? h('textarea', {rows: o.rows || 4, spellcheck: false}) : h('input', {type: 'text'});
@@ -525,7 +542,7 @@ function loraList(arr) {
       const row = h('div', {class: 'lora' + (L.on ? '' : ' off')});
       row.append(sw(L.on, x => { L.on = x; row.classList.toggle('off', !x); save(); renderMissing(); }, t('onOff')), s,
         h('button', {class: 'x', type: 'button', title: t('delRow'), text: '✕', onclick: () => { arr.splice(i, 1); save(); draw(); renderMissing(); }}),
-        num(L.strength, {min: 0, max: 2, step: 0.05, slider: true}, x => { L.strength = x; save(); }));
+        num(L.strength, {min: 0, max: 2, step: 0.01, arrow: 0.05, slider: true}, x => { L.strength = x; save(); }));
       box.append(row);
     });
     box.append(h('button', {class: 'btn sm', type: 'button', text: t('addLora'), onclick: () => { arr.push({on: true, lora: opts[0] || '', strength: 1}); save(); draw(); }}));
@@ -547,14 +564,15 @@ function hints() {
 }
 function seedRow() {
   const n = h('input', {type: 'number', step: '1', min: '0'}); n.value = S.seed; n.disabled = !!S.seedRandom;
-  n.oninput = () => { const x = n.valueAsNumber; if (isFinite(x)) { S.seed = Math.round(x); save(); } };
+  n.oninput = () => { const x = n.valueAsNumber; if (isFinite(x)) { if (x < 0) n.value = '0'; S.seed = Math.max(0, Math.round(x)); save(); } };
+  n.onchange = () => { n.value = String(S.seed); };
   const cb = h('input', {type: 'checkbox'}); cb.checked = !!S.seedRandom; cb.onchange = () => { S.seedRandom = cb.checked; n.disabled = cb.checked; save(); };
   const fix = h('button', {class: 'btn sm', type: 'button', text: t('fixLast'), title: t('fixLastT'), onclick: () => { if (R.seed == null) { toast(t('noRun')); return; } S.seed = R.seed; S.seedRandom = false; save(); renderControls(); }});
   return h('div', {class: 'f'}, h('label', {class: 'lab', text: t('seedL')}), h('div', {class: 'row', style: 'flex-wrap:nowrap'}, n, h('label', {class: 'chk'}, cb, t('random')), fix));
 }
 function baseLora() {
   if (!T.prompt['89']) return null; const manual = !!val('92', 'value');
-  const strength = field('94', 'float', t('manualVal'), {min: 0, max: 2, step: 0.05, slider: true}); if (strength) strength.hidden = !manual;
+  const strength = field('94', 'float', t('manualVal'), {min: 0, max: 2, step: 0.01, arrow: 0.05, slider: true}); if (strength) strength.hidden = !manual;
   return h('div', {class: 'sub'},
     h('div', {class: 'subhead'}, sw(!!val('100', 'value'), x => setVal('100', 'value', x)), h('b', {text: t('baseLora')}), h('span', {class: 'muted', text: t('baseLoraHint')})),
     field('89', 'lora_name', t('file'), {pretty: true, onchange: () => renderMissing()}),
@@ -581,33 +599,33 @@ function renderControls() {
   );
   const pr = (p, n) => mini(t('fixPrompts'), field(p, 'text', t('pos'), {rows: 3}), field(n, 'text', t('negS'), {rows: 2}));
   const det = id => mini(t('detect'),
-    field(id, 'bbox_threshold', t('thr'), {min: 0.05, max: 1, step: 0.05, slider: true}),
-    field(id, 'bbox_dilation', t('dil'), {min: 0, max: 200, step: 1, slider: true}),
-    field(id, 'bbox_crop_factor', t('crop'), {min: 1, max: 6, step: 0.1, slider: true}));
+    field(id, 'bbox_threshold', t('thr'), {min: 0.05, max: 1, step: 0.01, arrow: 0.05, slider: true}),
+    field(id, 'bbox_dilation', t('dil'), {min: 0, max: 200, step: 1, arrow: 5, slider: true}),
+    field(id, 'bbox_crop_factor', t('crop'), {min: 1, max: 6, step: 0.05, arrow: 0.25, slider: true}));
   $('#colR').replaceChildren(
     card('4', t('c4'), [
       groupCard('1e', [field('95', 'image', t('image'), {image: true}),
         field('98', 'float', t('rewrite'), {min: 0.05, max: 1, step: 0.01, slider: true}),
-        field('96', 'megapixels', t('mp'), {min: 0.25, max: 4, step: 0.05, slider: true})]),
+        field('96', 'megapixels', t('mp'), {min: 0.25, max: 4, step: 0.05, arrow: 0.25, slider: true})]),
       groupCard('1b', [field('71', 'image', t('image'), {image: true}),
-        field('74', 'strength', t('strength'), {min: 0, max: 1.5, step: 0.05, slider: true}),
-        h('div', {class: 'two'}, field('74', 'start_percent', t('start'), {min: 0, max: 1, step: 0.05}), field('74', 'end_percent', t('end'), {min: 0, max: 1, step: 0.05}))]),
+        field('74', 'strength', t('strength'), {min: 0, max: 1.5, step: 0.01, arrow: 0.05, slider: true}),
+        h('div', {class: 'two'}, field('74', 'start_percent', t('start'), {min: 0, max: 1, step: 0.01, arrow: 0.05}), field('74', 'end_percent', t('end'), {min: 0, max: 1, step: 0.01, arrow: 0.05}))]),
       groupCard('1c', [field('76', 'image', t('image'), {image: true}),
-        field('78', 'strength', t('colorStr'), {min: 0, max: 1, step: 0.05, slider: true}),
+        field('78', 'strength', t('colorStr'), {min: 0, max: 1, step: 0.01, arrow: 0.05, slider: true}),
         mini(t('styleInstr'), field('82', 'string_b', t('styleInstrHint'), {rows: 5}))]),
       groupCard('1a', [field('39', 'image', t('image'), {image: true}), field('41', 'task', t('captionType'))]),
       groupCard('1d', [field('48', 'source_folder', t('srcFolder'), {onchange: () => renderControls()}),
         field('48', 'image', t('image'), {image: true, also: v => setVal('48', 'file', v)})])
     ]),
     card('5', t('c5'), [
-      groupCard('2', [field('15', 'scale_by', t('upBefore'), {min: 1, max: 2, step: 0.05, slider: true}), field('17', 'steps', t('steps'))]),
+      groupCard('2', [field('15', 'scale_by', t('upBefore'), {min: 1, max: 2, step: 0.01, arrow: 0.05, slider: true}), field('17', 'steps', t('steps'))]),
       groupCard('3', [field('25', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}),
         h('div', {class: 'two'}, field('25', 'steps', t('steps')), field('25', 'force_inpaint', t('closeUp'))), det('25'), pr('23', '24')]),
       groupCard('3b', [field('30', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}), field('30', 'steps', t('steps')), det('30'), pr('28', '29')]),
       groupCard('3c', [field('62', 'denoise', t('denoise'), {min: 0, max: 1, step: 0.01, slider: true}), field('62', 'steps', t('steps')), det('62'),
         h('div', {class: 'lab', text: t('footLoras')}), loraList(S.footLoras), pr('57', '58')]),
       groupCard('4', [field('32', 'model_name', t('upModel'), {pretty: true, onchange: again}),
-        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.25}), field('33', 'steps', t('steps')))]),
+        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.05, arrow: 0.25}), field('33', 'steps', t('steps')))]),
       groupCard('5', [field('35', 'filename_prefix', t('prefix'))])
     ])
   );
@@ -681,6 +699,7 @@ function promptError(j) {
 }
 async function stop() {
   const pend = [...R.jobs.keys()].filter(id => id !== R.job);
+  if (R.job) { setProg('stopping', [], parseFloat($('#bar i').style.width) / 100 || 0); clearTimeout(R.stopT); const job = R.job; R.stopT = setTimeout(() => { if (R.job === job && R.jobs.has(job)) toast(t('stopSlow')); }, 20000); }
   try { if (pend.length) await fetch(API + '/queue', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({delete: pend})}); pend.forEach(id => R.jobs.delete(id)); await fetch(API + '/interrupt', {method: 'POST'}); } catch (_) {}
   busy();
 }
@@ -787,7 +806,8 @@ async function boot() {
   const fav = document.createElement('link'); fav.rel = 'icon'; fav.href = logoUrl; document.head.append(fav);
   const logo = $('#logo'); logo.onerror = () => { logo.remove(); fav.href = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#111"/><path d="M32 12 54 50H10z" fill="#f2b84b"/></svg>'); };
   logo.src = logoUrl;
-  const runs = $('#runs'); runs.value = S.runs; runs.oninput = () => { S.runs = Math.max(1, Math.min(50, runs.valueAsNumber | 0 || 1)); save(); };
+  const runs = $('#runs'); runs.value = S.runs; runs.oninput = () => { const x = runs.valueAsNumber; if (!isFinite(x)) return; if (x > 50 || x < 0) runs.value = String(Math.max(1, Math.min(50, Math.round(x)))); S.runs = Math.max(1, Math.min(50, Math.round(x) || 1)); save(); };
+  runs.onchange = () => { runs.value = String(S.runs); };
   $('#goBtn').onclick = run; $('#stopBtn').onclick = stop;
   $('#advBtn').onclick = () => { renderAdvanced(); $('#drawer').classList.add('open'); };
   $('#advClose').onclick = () => { $('#drawer').classList.remove('open'); renderControls(); };

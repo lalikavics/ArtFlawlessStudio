@@ -3,6 +3,23 @@
 All notable changes to ArtFlawless Studio are listed here.
 The version number lives in the `VERSION` file and follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [1.3.2] - 2026-10-14
+### Fixed
+- The history strip now follows the output folder itself: at start and whenever you come back to the Studio window it shows the newest 40 images that really exist (also those in `output\18+`), newest first. Images deleted in Explorer leave the strip and the viewer, and a thumbnail is checked before it opens.
+- "Read embedded prompt from image" (1d): an image without a saved prompt gets a red dashed frame and the label "No embedded prompt", and a short message offers to describe the image instead (1a) or to switch the option off; Generate does not start with such an image.
+- Number fields: the arrows (and arrow keys) now move in a typical step for each setting (for example 0.05 for denoise and strengths, 0.25 for upscale amounts) while the sliders and typing still allow 0.01; the up arrow works again. A typed value above the maximum jumps to the maximum at once, a value below the minimum is set to the minimum when you leave the field.
+- A run could freeze at "Apply layout ControlNet" (start image and layout reference together) on graphics cards with more than 10 GB: ComfyUI's dynamic VRAM loading hung there. On these cards the launcher now starts ComfyUI with `--disable-dynamic-vram`; 8 GB cards keep dynamic loading, where it works and is faster. `--enable-dynamic-vram` in `launcher\comfy-args.txt` turns it back on. The decision is written to `launcher\launcher.log`.
+- Layout reference (1b): the layout image is first resized to about 1 megapixel, so the depth map and the ControlNet do not work on the full size of a large photo.
+- Cancel shows "Cancelling…" right away; if ComfyUI is inside a step that cannot be interrupted, a note explains it after 20 seconds.
+- Extra ComfyUI start options can be put in `launcher\comfy-args.txt` (one or more per line, `#` for comments), for example `--disable-dynamic-vram`.
+- The launcher keeps the ComfyUI log of the previous session (`launcher\comfyui.prev.log`), so a hang can still be looked into after a restart.
+- The prompt and text fields no longer show red spell-check underlines (Windows checked the English prompt against the system language).
+- The Studio window (ArtFlawlessHost.exe) now shows the program icon in Task Manager too; existing installs rebuild the window once on the next start.
+### Added
+- Setup: a welcome page that explains what the program is, a Terms of Use page that must be accepted (use at your own risk, acceptable use, no warranty, third-party model licences; your GPL rights are kept), and a details page before installing. The age declaration stays a separate page. All pages are in English and Hungarian.
+### Changed
+- Credits in the About window and the setup: "Created by Lalikavics. Developed with the help of Claude (Anthropic)."
+
 ## [1.3.1] - 2026-10-13
 ### Changed
 - While the content filter is on, a new image stays hidden (the viewer stays dark) until its content check has finished, instead of flashing up blurred; with the filter off, images appear right away.

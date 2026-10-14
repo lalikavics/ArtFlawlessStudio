@@ -35,7 +35,7 @@ MinVersion=10.0.17134
 ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=assets\artflow.ico
 UninstallDisplayIcon={app}\launcher\artflow.ico
-InfoBeforeFile=studio_out\info.txt
+DisableWelcomePage=no
 OutputDir=Output
 OutputBaseFilename=ArtFlawlessStudio-Setup-{#AppVersion}
 Compression=lzma2
@@ -44,8 +44,26 @@ WizardStyle=modern
 UsePreviousAppDir=no
 
 [Languages]
-Name: "en"; MessagesFile: "compiler:Default.isl"
-Name: "hu"; MessagesFile: "compiler:Languages\Hungarian.isl"
+Name: "en"; MessagesFile: "compiler:Default.isl"; LicenseFile: "studio_out\terms_en.txt"; InfoBeforeFile: "studio_out\info.txt"
+Name: "hu"; MessagesFile: "compiler:Languages\Hungarian.isl"; LicenseFile: "studio_out\terms_hu.txt"; InfoBeforeFile: "studio_out\info_hu.txt"
+
+[Messages]
+en.WelcomeLabel2=ArtFlawless Studio is a free, open-source Windows application for creating images with AI on your own computer.%n%nThis setup installs ComfyUI, the needed add-ons and the AI models (about 25 GB, downloaded from their original sources), and the Studio: a simple interface with ready-made themes, automatic face, hand and foot fixing and upscaling.%n%nEverything runs locally: no account, no subscription, no cloud service. An NVIDIA RTX graphics card with at least 8 GB of video memory is needed.%n%nThe next pages show the terms of use, the age declaration and the details. Please close other applications before continuing.
+hu.WelcomeLabel2=Az ArtFlawless Studio ingyenes, nyílt forráskódú Windows-alkalmazás, amellyel mesterséges intelligenciával készíthetsz képeket a saját gépeden.%n%nA telepítő felteszi a ComfyUI-t, a szükséges kiegészítőket és az AI-modelleket (kb. 25 GB, az eredeti forrásukból), valamint a Studiót: egy egyszerű felületet kész témákkal, automatikus arc-, kéz- és lábjavítással és nagyítással.%n%nMinden a saját gépeden fut: nincs fiók, nincs előfizetés, nincs felhőszolgáltatás. Legalább 8 GB videomemóriás NVIDIA RTX videokártya szükséges.%n%nA következő oldalakon a felhasználási feltételek, a korhatár-nyilatkozat és a tudnivalók következnek. Folytatás előtt zárd be a többi alkalmazást.
+en.WizardLicense=Terms of Use
+en.LicenseLabel=Please read the following important information before continuing.
+en.LicenseLabel3=Please read the terms of use below. You must accept them before continuing with the installation.
+en.LicenseAccepted=I &accept the terms of use
+en.LicenseNotAccepted=I &do not accept the terms of use
+hu.WizardLicense=Felhasználási feltételek
+hu.LicenseLabel=Folytatás előtt olvasd el az alábbi fontos tudnivalókat.
+hu.LicenseLabel3=Olvasd el az alábbi felhasználási feltételeket. A telepítés folytatásához el kell fogadnod őket.
+hu.LicenseAccepted=&Elfogadom a felhasználási feltételeket
+hu.LicenseNotAccepted=&Nem fogadom el a felhasználási feltételeket
+hu.WelcomeLabel1=Üdvözöl az [name] telepítője!
+hu.ClickNext=A folytatáshoz kattints a Tovább gombra, a kilépéshez a Mégse gombra.
+hu.InfoBeforeLabel=Telepítés előtt olvasd el az alábbi fontos tudnivalókat.
+hu.InfoBeforeClickLabel=Ha készen állsz, kattints a Tovább gombra.
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; Flags: checkedonce
@@ -315,10 +333,10 @@ begin
     Result := MsgBox(Q, mbConfirmation, MB_YESNO) = IDYES;
 end;
 
-{ an update goes into the same folder: no folder, info or task pages }
+{ an update goes into the same folder: no folder or task pages }
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  Result := IsUpdate and ((PageID = wpSelectDir) or (PageID = wpInfoBefore) or (PageID = wpSelectTasks));
+  Result := IsUpdate and ((PageID = wpSelectDir) or (PageID = wpSelectTasks));
 end;
 
 function HasNonAscii(const S: String): Boolean;
@@ -344,9 +362,9 @@ end;
 procedure InitializeWizard();
 begin
   if IsHu() then
-    AgePage := CreateCustomPage(wpWelcome, 'Korhatár és felelős használat', 'Kérlek, olvasd el, és erősítsd meg a folytatáshoz.')
+    AgePage := CreateCustomPage(wpLicense, 'Korhatár-nyilatkozat (18+)', 'Kérlek, olvasd el, és erősítsd meg a folytatáshoz.')
   else
-    AgePage := CreateCustomPage(wpWelcome, 'Age requirement and responsible use', 'Please read this and confirm it to continue.');
+    AgePage := CreateCustomPage(wpLicense, 'Age declaration (18+)', 'Please read this and confirm it to continue.');
   AgeMemo := TNewMemo.Create(AgePage);
   AgeMemo.Parent := AgePage.Surface;
   AgeMemo.Left := 0; AgeMemo.Top := 0;

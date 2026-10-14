@@ -14,11 +14,28 @@ shutil.rmtree(OUT, ignore_errors=True)
 os.makedirs(os.path.join(OUT, 'web'))
 shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'studio_init.py'), os.path.join(OUT, '__init__.py'))
 shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'catalog.json'), os.path.join(OUT, 'catalog.json'))
-# setup information page, with the version filled in
-with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'info.txt'), encoding='utf-8') as _f:
-    _info = _f.read().replace('{VERSION}', APP_VERSION).replace('{REPO}', REPO_URL)
-with open(os.path.join(OUT, 'info.txt'), 'w', encoding='utf-8-sig', newline='\r\n') as _f:
-    _f.write(_info)
+# setup pages (information, terms of use) in English and Hungarian, with the version and the project address filled in
+def _reflow(text):
+    # the setup's text boxes wrap by themselves: join the lines of a paragraph / list item, keep headings, blank lines and list starts
+    out = []
+    head = True  # the first block (name, version, credits, links) keeps its lines
+    for ln in text.split('\n'):
+        st = ln.strip()
+        if not st: head = False
+        cont = not head and out and out[-1].strip() and st and not st.startswith(('- ', '* ')) and not (st.isupper() and len(st) > 3) \
+            and not (out[-1].strip().isupper() and len(out[-1].strip()) > 3) and not re.match(r'^\d+\.\s', st)
+        if cont and not out[-1].rstrip().endswith(':'):
+            out[-1] = out[-1].rstrip() + ' ' + st
+        else:
+            out.append(ln.rstrip())
+    return '\n'.join(out)
+
+
+for _name in ('info.txt', 'info_hu.txt', 'terms_en.txt', 'terms_hu.txt'):
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', _name), encoding='utf-8-sig') as _f:
+        _info = _reflow(_f.read().replace('{VERSION}', APP_VERSION).replace('{REPO}', REPO_URL))
+    with open(os.path.join(OUT, _name), 'w', encoding='utf-8-sig', newline='\r\n') as _f:
+        _f.write(_info)
 
 UNET, CLIP, VAE = 'z_image_turbo_bf16.safetensors', 'qwen_3_4b.safetensors', 'ae.safetensors'
 
@@ -176,7 +193,7 @@ rep("async function loadTemplate() {\n  const urls = [API + '/api/userdata/' + e
 rep("      field('2', 'unet_name', t('ckpt'), {pretty: true, onchange: again}), field('65', 'clip_name', t('clip'), {pretty: true, onchange: again}), field('66', 'vae_name', t('vae'), {pretty: true, onchange: again}),\n"
     "      h('div', {class: 'two'}, field('6', 'steps', t('steps')), field('6', 'cfg', t('cfg'))),",
     "      T.prompt['66'] ? field('65', 'clip_name', t('clip'), {pretty: true, onchange: again}) : null, field('66', 'vae_name', t('vae'), {pretty: true, onchange: again}),\n"
-    "      T.prompt['123'] ? h('div', {class: 'two'}, field('123', 'value', t('manSteps'), {min: 0, max: 100, step: 1}), field('124', 'value', t('manCfg'), {min: 0, max: 20, step: 0.5}))\n"
+    "      T.prompt['123'] ? h('div', {class: 'two'}, field('123', 'value', t('manSteps'), {min: 0, max: 100, step: 1}), field('124', 'value', t('manCfg'), {min: 0, max: 20, step: 0.1, arrow: 0.5}))\n"
     "        : h('div', {class: 'two'}, field('6', 'steps', t('steps')), field('6', 'cfg', t('cfg'))),\n"
     "      field('120', 'stop_at_clip_layer', t('clipSkip'), {min: -4, max: -1, step: 1}),")
 rep("      mini(t('neg'), field('51', 'value', t('negHint'), {rows: 3})),",
@@ -502,9 +519,9 @@ open(p, 'w', encoding='utf-8', newline='').write(h)
 
 # ---- separate Save card: file-name tags + metadata switch ---------------------
 h = open(p, encoding='utf-8').read()
-rep("        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.25}), field('33', 'steps', t('steps')))]),\n"
+rep("        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.05, arrow: 0.25}), field('33', 'steps', t('steps')))]),\n"
     "      groupCard('5', [field('35', 'filename_prefix', t('prefix'))])\n    ])\n  );",
-    "        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.25}), field('33', 'steps', t('steps')))])\n    ]),\n"
+    "        h('div', {class: 'two'}, field('33', 'upscale_by', t('upBy'), {min: 1, max: 4, step: 0.05, arrow: 0.25}), field('33', 'steps', t('steps')))])\n    ]),\n"
     "    saveCard()\n  );")
 rep("function renderControls() {",
     r"""const SAVE_TAGS = ['prefix', 'model', 'theme', 'date', 'time', 'seed', 'counter'];
@@ -936,6 +953,10 @@ rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
 #hist img.ckpend,#steps .chip img.ckpend,.iih img.ckpend{visibility:hidden}
 #nsfwHide{position:absolute;right:12px;bottom:12px;z-index:5;display:none;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:1px solid var(--line2);background:rgba(21,24,31,.85);color:var(--text);font-size:12.5px;cursor:pointer}
 #nsfwHide:hover{border-color:var(--acc);color:var(--acc)}
+.imgpick .nembTag{display:none}
+.imgpick.noemb .drop{border-color:var(--err)}
+.imgpick.noemb .nembTag{display:block;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(20,8,8,.85);color:#ffb4b4;border:1px solid var(--err);border-radius:6px;padding:2px 8px;font-size:11.5px;white-space:nowrap;z-index:2}
+.imgpick.noemb .dropmsg{display:none}
 #nsfwHide svg{width:16px;height:16px}
 #stage.nsfwRev #nsfwHide{display:inline-flex}
 .iiprev img.nsfw{filter:blur(18px) saturate(.6)}

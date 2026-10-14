@@ -1,0 +1,45 @@
+ArtFlawless Studio {VERSION}
+Készítette: Lalikavics. A Claude (Anthropic) segítségével fejlesztve.
+Kérdések és hibajelzés: {REPO}/issues
+
+MIT CSINÁL EZ A TELEPÍTŐ
+Az ArtFlawless Studio ingyenes, kényelmes kezelőfelület egy képgeneráló munkafolyamathoz, amely a ComfyUI-ban, a saját gépeden fut.
+A telepítés során a ComfyUI, a kiegészítői és az AI-modellek (összesen kb. 25 GB) az eredeti forrásukból töltődnek le.
+Semmi nem generálódik és semmi nem kerül el máshová: minden kép a saját gépeden készül.
+Az ArtFlawless Studio független kezelőfelület, nem áll kapcsolatban a Comfy Org-gal vagy a ComfyUI fejlesztőivel. A ComfyUI a GNU GPL v3.0
+szerinti szabad szoftver, és módosítás nélkül települ.
+
+TARTALOMVÉDELEM
+Tartalomszűrő (a felnőtt tartalmú képek homályosítva jelennek meg, és az output\18+ mappába kerülnek), biztonságos mód, egyszeri
+18+ megerősítés, gyermekvédelem (kiskorú és meztelenség vagy szexuális tartalom együtt: mindig tiltva) és géppel olvasható
+„MI által készített” jelölés.
+
+RENDSZERKÖVETELMÉNYEK
+Minimum:
+ - Windows 10 64 bites (1803-as vagy újabb verzió) vagy Windows 11
+ - NVIDIA GeForce RTX videokártya 8 GB videomemóriával (például RTX 2070, 3060 Ti, 4060), friss NVIDIA illesztőprogram
+ - 32 GB RAM, 4 magos, 64 bites processzor
+ - 50 GB szabad hely (SSD), internetkapcsolat a telepítéshez és a modellek letöltéséhez
+ - Microsoft Edge (a Windows 10 és 11 része); ez adja a Studio ablakát működtető WebView2 motort is
+Ajánlott:
+ - Windows 11 vagy Windows 10 22H2
+ - NVIDIA RTX kártya 12 GB vagy több videomemóriával (például RTX 3060 12 GB, 4070 vagy jobb)
+ - 64 GB RAM, 6 vagy több magos processzor
+ - 100 GB szabad hely NVMe SSD-n (mindhárom modellcsaládnak)
+Tesztelve: RTX 3060 Ti 8 GB, 64 GB RAM, Windows 10 22H2. AMD és Intel videokártyákat nem támogat.
+
+MI AZ ENYÉM, ÉS MI NEM
+Én csak a keretet készítettem: azt, ahogyan a node-ok össze vannak kötve, és a Studio felületét. Minden, ami a képeket ténylegesen
+létrehozza, a saját szerzőinek munkája és tulajdona, akik díjmentesen, a saját licencük alatt tették közzé. Ezek a licencek rád is
+vonatkoznak: kérlek, olvasd el és tartsd be őket, és nevezd meg a szerzőket:
+ - ComfyUI (Comfy Org); Z-Image Turbo (Tongyi-MAI / Alibaba); Qwen3 4B (Qwen csapat / Alibaba); Flux VAE (Black Forest Labs)
+ - „Hands + Feet + skin perfection style” LoRA (a szerzője a Civitai-on)
+ - Z-Image-Turbo-Fun-Controlnet-Union (Alibaba PAI); Depth Anything V2; Florence-2 (Microsoft); Segment Anything (Meta AI)
+ - YOLOv8 arc- és kézfelismerő (Bingsu, ADetailer); lábfelismerő (MonetEinsley/ADetailer_CM); Ultralytics YOLO
+ - NudeNet tartalomfelismerő (notAI-tech); nsfw_image_detection osztályozó (Falconsai)
+ - Real-ESRGAN (Xintao Wang és társai); 7-Zip (Igor Pavlov, csak a ComfyUI kicsomagolásához)
+ - Kiegészítő node-ok: rgthree-comfy, ComfyUI Impact Pack és Subpack (Dr.Lt.Data), Ultimate SD Upscale (ssitu), ComfyUI-Florence2 (kijai),
+   ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),
+   ComfyUI-Prompt-Manager (Francky B)
+
+A felhasználási feltételek és a korhatár-nyilatkozat az előző oldalakon vannak; a teljes szövegek a Studio névjegyében is megtalálhatók.

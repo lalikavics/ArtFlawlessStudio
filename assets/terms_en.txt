@@ -1,0 +1,50 @@
+﻿ARTFLAWLESS STUDIO – TERMS OF USE
+
+Please read these terms carefully. By choosing "I accept the terms of use" and installing or using ArtFlawless Studio, you agree to them.
+If you do not agree, do not install or use the software.
+
+1. THE SOFTWARE AND ITS LICENCE
+ArtFlawless Studio is free, open-source software, published under the GNU General Public License version 3 or later (GPL-3.0-or-later).
+These terms describe the responsible use of the software; they do not limit the rights the GPL gives you to use, study, share and
+modify the program. The full licence text is in the LICENSE file of the project: {REPO}
+
+2. THIRD-PARTY COMPONENTS
+The setup downloads ComfyUI, custom nodes and AI models from their original sources. They are not made or distributed by the author
+of ArtFlawless Studio, and each of them is subject to its own licence and terms (for example, some models restrict commercial use).
+You are responsible for reading and following these licences. The Studio shows a Licence button with a link next to every model.
+
+3. AGE REQUIREMENT
+The software may only be used by adults (18 years or older). The next page asks you to confirm this.
+
+4. ACCEPTABLE USE
+You use the software at your own responsibility and only in a lawful way. In particular, you must not use it to:
+ - create, possess or distribute sexual or sexualised depictions of minors, including artificial or AI-generated ones;
+ - depict real, identifiable people in sexual, defamatory or misleading content without their consent (for example deepfakes);
+ - create content that is unlawful, that harasses, threatens or deceives others, or that infringes the rights of others
+   (copyright, trademark, personality and privacy rights);
+ - present AI-generated images as real photographs in order to deceive.
+The built-in protection (content filter, safe mode, child protection, AI marking) reduces the risk of misuse, but the recognition is
+automatic and not perfect, and as open-source software it cannot rule out misuse completely. Anyone who gets around these
+protections, or changes the program to do so, does it at their own responsibility; the author does not consent to this and accepts
+no liability for it.
+
+5. YOUR CONTENT
+Everything is created on your own computer. The author does not receive, store, review or control your prompts or images. You alone
+are responsible for what you create and for how you use, publish or share it, including the licences of the models you used and the
+laws that apply to you.
+
+6. NO WARRANTY
+The software is provided "as is", without warranty of any kind, express or implied, including fitness for a particular purpose.
+Image generation puts a heavy load on your graphics card and uses a lot of disk space; make sure your computer is suitable
+(see the system requirements) and that you keep backups of important data.
+
+7. LIMITATION OF LIABILITY
+To the maximum extent permitted by applicable law, the author is not liable for any damage, loss or claim arising from the use of
+the software, of the third-party components it downloads, or of the content created with them.
+
+8. CHANGES
+New versions may come with updated terms; they are shown again by the setup. The current text is always available in the project:
+{REPO}
+
+9. CONTACT
+Questions and bug reports: {REPO}/issues

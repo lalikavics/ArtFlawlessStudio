@@ -143,7 +143,9 @@ run = async function () {
   // because the extractor node picks the first text field of the embedded graph (e.g. the face detailer's)
   if (S.groups['1d'] && T.prompt['48']) {
     const nm = val('48', 'image'); let r = null;
-    if (nm && nm !== '(none)') { try { const [sub, fn] = splitName(nm); const buf = await (await fetch(API + '/view?filename=' + encodeURIComponent(fn) + '&subfolder=' + encodeURIComponent(sub) + '&type=input')).arrayBuffer(); const meta = await readMeta(buf); if (meta && meta.parameters) r = parseA1111(meta.parameters); } catch (_) {} }
+    const emb = await embeddedPrompt(nm);
+    if (emb.state === 'none') { noEmbModal(); return; }
+    r = emb.a1111;
     if (r && r.pos) {
       const keep = {g: S.groups['1d'], p: S.vals['46.value'], n: S.vals['51.value'], hp: '46.value' in S.vals, hn: '51.value' in S.vals};
       S.groups['1d'] = false; S.vals['46.value'] = r.pos.replace(/<lora:[^>]+>/g, '').trim(); if (r.neg != null) S.vals['51.value'] = r.neg;
@@ -193,5 +195,97 @@ function initSafety() {
   $('#nsfwSw').onchange = async e => { if (!e.target.checked && !SAFE.adult && !(await adultModal('filter'))) { e.target.checked = true; return; } SAFE.filter = e.target.checked; saveSafe(); };
   $('#safeSw').onchange = e => { SAFE.safe = e.target.checked; saveSafe(); };
   syncSafeUi(); loadSafe().then(() => { renderHistory(); });
+  initPrune();
   setTimeout(() => fetch(API + '/artflow/check-status').then(r => r.json()).then(j => { if (!j.nudenet && !j.falconsai) { if (!CK_NA) { CK_NA = true; toast(t('ckNa'), 'err'); } } else if (!j.nudenet || !j.falconsai) toast(t('ckPart', j.nudenet ? 'Falconsai' : 'NudeNet')); }).catch(() => {}), 2500);
 }
+
+/* ---------- images deleted in Explorer leave the history strip and the viewer ---------- */
+async function filesExist(urls) {
+  try { const r = await fetch(API + '/artflow/exists', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({files: urls.map(qp)})});
+    const j = await r.json(); return Array.isArray(j.exists) ? j.exists : urls.map(() => true); } catch (_) { return urls.map(() => true); }
+}
+let PRUNE_T = null;
+function pruneSoon() { clearTimeout(PRUNE_T); PRUNE_T = setTimeout(pruneMissing, 400); }
+// the history strip follows the output folder itself: the newest 40 images that really exist (output and output\18+), newest first
+async function syncHistory() {
+  let j; try { j = await (await fetch(API + '/artflow/recent?limit=40', {cache: 'no-store'})).json(); } catch (_) { return false; }
+  if (!j || !Array.isArray(j.files)) return false;
+  const old = new Map(H.map(x => [x.url, x]));
+  const nh = j.files.map(f => { const u = vUrl(f); const o = old.get(u); return {url: u, seed: o ? o.seed : null, t: f.mtime}; });
+  const same = nh.length === H.length && nh.every((x, i) => x.url === H[i].url);
+  H = nh; try { localStorage.setItem(LS_HIST, JSON.stringify(H)); } catch (_) {}
+  if (!same) renderHistory();
+  return true;
+}
+async function pruneMissing() {
+  await syncHistory();
+  const cand = [...H.map(x => x.url), ...Object.values(R.steps).flat(), R.shown, R.cur].filter(u => { if (!u || /^(blob|data):/.test(u)) return false; const q = qp(u); return q && q.filename && q.type === 'output'; });
+  const urls = [...new Set(cand)]; if (!urls.length) return;
+  const ex = await filesExist(urls); const gone = new Set(urls.filter((u, i) => ex[i] === false)); if (!gone.size) return;
+  H = H.filter(x => !gone.has(x.url)); try { localStorage.setItem(LS_HIST, JSON.stringify(H)); } catch (_) {}
+  for (const k of Object.keys(R.steps)) { R.steps[k] = R.steps[k].filter(u => !gone.has(u)); if (!R.steps[k].length) delete R.steps[k]; }
+  if (gone.has(R.cur)) R.cur = null;
+  if (gone.has(R.shown)) { const v = $('#view'); v.hidden = true; v.removeAttribute('src'); $('#empty').hidden = false; $('#badge').hidden = true; R.shown = null; }
+  gone.forEach(u => { CK.delete(u); REVEAL.delete(u); });
+  renderHistory(); renderSteps(); applyGuard();
+}
+function initPrune() {
+  addEventListener('focus', pruneSoon); document.addEventListener('visibilitychange', () => { if (!document.hidden) pruneSoon(); });
+  $('#hist').addEventListener('click', async e => {   // check the file before opening a thumbnail
+    const i = e.target.closest && e.target.closest('img'); if (!i) return; e.stopPropagation();
+    const u = i.getAttribute('src'); const [ok] = await filesExist([u]);
+    if (ok === false) { toast(t('fileGone')); pruneMissing(); return; }
+    show(u, 'earlier'); renderSteps();
+  }, true);
+  pruneSoon();
+}
+
+/* ---------- 1d: warn when the chosen image has no embedded prompt ---------- */
+const EMB = new Map();   // image name -> {state: 'a1111' | 'comfy' | 'none' | 'unknown', a1111}
+async function embeddedPrompt(nm) {
+  if (!nm || nm === '(none)') return {state: 'unknown'};
+  const folder = val('48', 'source_folder') || 'input'; const key = folder + ':' + nm;
+  if (EMB.has(key)) return EMB.get(key);
+  let res = {state: 'unknown'};
+  try {
+    const [sub, fn] = splitName(nm);
+    const r = await fetch(API + '/view?filename=' + encodeURIComponent(fn) + '&subfolder=' + encodeURIComponent(sub) + '&type=' + encodeURIComponent(folder));
+    if (r.ok) {
+      const meta = await readMeta(await r.arrayBuffer()) || {};
+      const a = meta.parameters ? parseA1111(meta.parameters) : null;
+      let c = null; try { c = meta.prompt ? parseComfy(meta.prompt) : null; } catch (_) {}
+      res = a && a.pos ? {state: 'a1111', a1111: a} : (c && c.pos ? {state: 'comfy'} : {state: 'none'});
+    }
+  } catch (_) {}
+  EMB.set(key, res); return res;
+}
+function noEmbModal() {
+  MODAL_KIND = 'noemb'; $('#modalTitle').textContent = t('nembT');
+  const body = $('#modalBody');
+  body.replaceChildren(h('p', {text: t('nembP1')}), h('p', {text: t('nembP2')}),
+    h('div', {class: 'row', style: 'justify-content:flex-end;gap:8px'},
+      T && T.prompt['39'] ? h('button', {class: 'btn sm', type: 'button', text: t('nembUse1a'), onclick: () => {
+        setVal('39', 'image', val('48', 'image')); S.groups['1a'] = true; S.groups['1d'] = false; save(); renderControls(); $('#modal').classList.remove('open'); toast(t('nembDone')); }}) : null,
+      h('button', {class: 'btn sm', type: 'button', text: t('nembOff'), onclick: () => { S.groups['1d'] = false; save(); renderControls(); $('#modal').classList.remove('open'); }}),
+      h('button', {class: 'btn sm go2', type: 'button', text: t('okBtn'), onclick: () => $('#modal').classList.remove('open')})));
+  $('#modal').classList.add('open');
+}
+let EMB_WARNED = '';
+async function checkEmb(el, initial) {
+  const nm = val('48', 'image'); const res = await embeddedPrompt(nm);
+  if (nm !== val('48', 'image')) return;   // changed meanwhile
+  el.classList.toggle('noemb', res.state === 'none');
+  if (res.state === 'none' && !initial && S.groups['1d'] && EMB_WARNED !== nm) { EMB_WARNED = nm; noEmbModal(); }
+}
+const _imagePicker = imagePicker;
+imagePicker = function (id, name, o) {
+  const el = _imagePicker(id, name, o);
+  if (String(id) === '48') {
+    const thumb = el.querySelector('img'); let first = true;
+    const go = () => { checkEmb(el, first); first = false; };
+    if (thumb) new MutationObserver(go).observe(thumb, {attributes: true, attributeFilter: ['src']});
+    const drop = el.querySelector('.drop'); if (drop) drop.append(h('div', {class: 'nembTag', text: t('nembTag')}));
+    go();
+  }
+  return el;
+};

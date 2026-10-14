@@ -1,0 +1,54 @@
+﻿ARTFLAWLESS STUDIO – FELHASZNÁLÁSI FELTÉTELEK
+
+Kérlek, olvasd el figyelmesen ezeket a feltételeket. Az „Elfogadom a felhasználási feltételeket” választásával, valamint az ArtFlawless Studio
+telepítésével vagy használatával elfogadod őket. Ha nem értesz egyet velük, ne telepítsd és ne használd a szoftvert.
+
+1. A SZOFTVER ÉS A LICENCE
+Az ArtFlawless Studio ingyenes, nyílt forráskódú szoftver, amely a GNU General Public License 3-as vagy későbbi változata
+(GPL-3.0-or-later) alatt jelent meg. Ezek a feltételek a szoftver felelős használatát írják le; nem korlátozzák a GPL által adott
+jogaidat a program használatára, tanulmányozására, terjesztésére és módosítására. A licenc teljes szövege a projekt LICENSE
+fájljában található: {REPO}
+
+2. KÜLSŐ ÖSSZETEVŐK
+A telepítő a ComfyUI-t, a kiegészítő node-okat és az AI-modelleket az eredeti forrásukból tölti le. Ezeket nem az ArtFlawless Studio
+szerzője készítette és nem ő terjeszti; mindegyikre a saját licence és feltételei vonatkoznak (egyes modellek például korlátozzák
+a kereskedelmi felhasználást). Ezek elolvasása és betartása a te felelősséged. A Studio minden modell mellett mutat egy Licenc
+gombot a hivatkozással.
+
+3. KORHATÁR
+A szoftvert csak felnőtt (18. életévét betöltött) személy használhatja. A következő oldalon ezt meg kell erősítened.
+
+4. MEGENGEDETT HASZNÁLAT
+A szoftvert a saját felelősségedre és kizárólag jogszerűen használhatod. Különösen tilos vele:
+ - kiskorúakról szexuális vagy szexualizált ábrázolást készíteni, birtokolni vagy terjeszteni, a mesterséges vagy MI-vel
+   készítettet is;
+ - valós, felismerhető személyeket a beleegyezésük nélkül szexuális, rágalmazó vagy megtévesztő tartalomban ábrázolni
+   (például deepfake);
+ - jogellenes tartalmat készíteni, másokat zaklatni, fenyegetni vagy megtéveszteni, illetve mások jogait (szerzői jog, védjegy,
+   személyiségi és magánszférához fűződő jogok) megsérteni;
+ - MI-vel készült képet valódi fényképként feltüntetni megtévesztés céljából.
+A beépített védelem (tartalomszűrő, biztonságos mód, gyermekvédelem, MI-jelölés) csökkenti a visszaélés kockázatát, de a
+felismerés automatikus és nem tökéletes, és nyílt forráskódú szoftverként a visszaélést teljesen kizárni nem tudja. Aki ezeket a
+védelmeket megkerüli, vagy a programot ennek érdekében átírja, a saját felelősségére teszi; ehhez a szerző nem járul hozzá, és
+ezért nem vállal felelősséget.
+
+5. A TE TARTALMAD
+Minden a saját gépeden készül. A szerző nem kapja meg, nem tárolja, nem vizsgálja és nem irányítja a promptjaidat vagy a képeidet.
+Kizárólag te felelsz azért, amit létrehozol, és azért, ahogyan felhasználod, közzéteszed vagy megosztod, beleértve a használt
+modellek licencét és a rád vonatkozó jogszabályokat is.
+
+6. GARANCIA KIZÁRÁSA
+A szoftvert „ahogy van” alapon, mindenféle kifejezett vagy hallgatólagos garancia nélkül adjuk közre, beleértve egy adott célra
+való alkalmasságot is. A képgenerálás erősen terheli a videokártyát, és sok tárhelyet használ; győződj meg róla, hogy a géped
+megfelelő (lásd a rendszerkövetelményeket), és a fontos adataidról legyen biztonsági mentésed.
+
+7. A FELELŐSSÉG KORLÁTOZÁSA
+Az alkalmazandó jog által megengedett legnagyobb mértékben a szerző nem felel semmilyen kárért, veszteségért vagy igényért, amely a
+szoftver, az általa letöltött külső összetevők vagy a velük létrehozott tartalom használatából ered.
+
+8. VÁLTOZÁSOK
+Az új verziókhoz frissített feltételek tartozhatnak; ezeket a telepítő újra megmutatja. Az aktuális szöveg mindig elérhető a
+projekt oldalán: {REPO}
+
+9. KAPCSOLAT
+Kérdések és hibajelzés: {REPO}/issues

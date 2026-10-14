@@ -487,6 +487,56 @@ async def artflow_check(request):
     return web.json_response(res, status=status, headers=NO_CACHE)
 
 
+IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
+
+
+def _recent(limit):
+    base = os.path.abspath(folder_paths.get_output_directory())
+    found = []
+    for root, dirs, files in os.walk(base):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for f in files:
+            if f.lower().endswith(IMG_EXT):
+                p = os.path.join(root, f)
+                try:
+                    found.append((os.path.getmtime(p), p))
+                except OSError:
+                    pass
+    found.sort(reverse=True)
+    out = []
+    for mt, p in found[:limit]:
+        rel = os.path.relpath(os.path.dirname(p), base)
+        out.append({"filename": os.path.basename(p), "subfolder": "" if rel == "." else rel.replace("\\", "/"),
+                    "type": "output", "mtime": int(mt * 1000)})
+    return out
+
+
+@routes.get("/artflow/recent")
+async def artflow_recent(request):
+    """The newest images of the output folder (with subfolders such as 18+), newest first - the Studio's history strip."""
+    try:
+        limit = max(1, min(200, int(request.query.get("limit", "40"))))
+    except ValueError:
+        limit = 40
+    files = await asyncio.get_running_loop().run_in_executor(None, _recent, limit)
+    return web.json_response({"files": files}, headers=NO_CACHE)
+
+
+@routes.post("/artflow/exists")
+async def artflow_exists(request):
+    """Which of the given images (output / temp / input folder) still exist - files deleted in Explorer leave the Studio's lists."""
+    body = await request.json()
+    out = []
+    for f in (body.get("files") or [])[:500]:
+        try:
+            base = os.path.abspath(_media_dir(str(f.get("type", "output"))))
+            path = os.path.abspath(os.path.join(base, str(f.get("subfolder", "") or ""), os.path.basename(str(f.get("filename", "")))))
+            out.append(path.startswith(base + os.sep) and os.path.isfile(path))
+        except Exception:
+            out.append(True)
+    return web.json_response({"exists": out}, headers=NO_CACHE)
+
+
 @routes.get("/artflow/check-status")
 async def artflow_check_status(request):
     def st():

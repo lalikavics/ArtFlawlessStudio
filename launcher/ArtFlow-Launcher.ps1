@@ -85,6 +85,51 @@ if (-not (Test-Up)) {
     $cmdArgs = @('-s', ('"' + $Main + '"'), '--windows-standalone-build', '--listen', '127.0.0.1', '--port', "$Port",
         '--input-directory', ('"' + (Join-Path $Root 'input') + '"'), '--output-directory', ('"' + (Join-Path $Root 'output') + '"'),
         '--disable-auto-launch')
+    # optional extra ComfyUI arguments, one or more per line in launcher\comfy-args.txt (lines starting with # are ignored),
+    # for example --disable-dynamic-vram when a run hangs while loading or encoding
+    $ExtraArgs = Join-Path $PSScriptRoot 'comfy-args.txt'
+    if (Test-Path -LiteralPath $ExtraArgs) {
+        foreach ($ln in [IO.File]::ReadAllLines($ExtraArgs)) {
+            $ln = $ln.Trim(); if (-not $ln -or $ln.StartsWith('#')) { continue }
+            foreach ($tok in ($ln -split '\s+')) { if ($tok -match '^--?[A-Za-z0-9][A-Za-z0-9\-]*$' -or $tok -match '^[0-9.]+$') { $cmdArgs += $tok } }
+        }
+    }
+    # ComfyUI's dynamic VRAM loading can hang on cards with more than 10 GB when the models almost fit
+    # (seen on a 16 GB card with start image + layout reference together), so it is switched off there;
+    # on 8 GB cards it works and is faster. "--enable-dynamic-vram" in comfy-args.txt keeps it on.
+    if (-not ($cmdArgs -contains '--enable-dynamic-vram') -and -not ($cmdArgs -contains '--disable-dynamic-vram')) {
+        $vram = 0; $how = 'not found'
+        # 1) nvidia-smi (in System32 with current drivers, or the old NVSMI folder)
+        try {
+            $smi = $null
+            foreach ($c in @((Join-Path $env:SystemRoot 'System32\nvidia-smi.exe'), (Join-Path $env:ProgramFiles 'NVIDIA Corporation\NVSMI\nvidia-smi.exe'))) { if (Test-Path -LiteralPath $c) { $smi = $c; break } }
+            if (-not $smi) { $g = Get-Command nvidia-smi.exe -ErrorAction SilentlyContinue; if ($g) { $smi = $g.Source } }
+            if ($smi) {
+                foreach ($ln in @(& $smi --query-gpu=memory.total --format=csv,noheader,nounits 2>$null)) {
+                    $m = 0; if ([int]::TryParse(([string]$ln).Trim(), [ref]$m) -and $m -gt $vram) { $vram = $m; $how = 'nvidia-smi' }
+                }
+            }
+        } catch { }
+        # 2) the display driver's registry entry (64-bit memory size in bytes), when nvidia-smi gave nothing
+        if ($vram -le 0) {
+            try {
+                Get-ChildItem 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}' -ErrorAction SilentlyContinue | ForEach-Object {
+                    $p = Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue
+                    if ($p -and ([string]$p.DriverDesc) -match 'NVIDIA') {
+                        $b = $p.'HardwareInformation.qwMemorySize'
+                        if ($b) { $mb = [int]([int64]$b / 1MB); if ($mb -gt $vram) { $vram = $mb; $how = 'registry' } }
+                    }
+                }
+            } catch { }
+        }
+        $dyn = 'on'
+        if ($vram -gt 10240) { $cmdArgs += '--disable-dynamic-vram'; $dyn = 'off' }
+        try { Add-Content -LiteralPath (Join-Path $PSScriptRoot 'launcher.log') -Value ((Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + "  VRAM $vram MB ($how), dynamic VRAM $dyn") -Encoding UTF8 } catch { }
+    }
+    # keep the log of the previous session (for example after a hang and a restart) next to the new one
+    foreach ($x in @($Log, ($Log + '.err'))) {
+        if (Test-Path -LiteralPath $x) { try { Move-Item -LiteralPath $x -Destination ($x -replace 'comfyui\.log', 'comfyui.prev.log') -Force } catch { } }
+    }
     $owned = Start-Process -FilePath $Py -ArgumentList $cmdArgs -WorkingDirectory $Portable -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $Log -RedirectStandardError ($Log + '.err')
     $deadline = (Get-Date).AddMinutes(6)
@@ -108,7 +153,8 @@ function Stop-Comfy { if ($owned -and -not $owned.HasExited) { & taskkill.exe /P
 # frameless Studio window (WebView2); falls back to an Edge app window when WebView2 is not available
 $HostExe = Join-Path $PSScriptRoot 'webview2\ArtFlawlessHost.exe'
 $HostSrc = Join-Path $PSScriptRoot 'ArtFlawlessHost.cs'
-if ((Test-Path -LiteralPath $HostSrc) -and (-not (Test-Path -LiteralPath $HostExe) -or (Get-Item -LiteralPath $HostSrc).LastWriteTimeUtc -gt (Get-Item -LiteralPath $HostExe).LastWriteTimeUtc)) {
+if ((Test-Path -LiteralPath $HostSrc) -and (-not (Test-Path -LiteralPath $HostExe) -or (Get-Item -LiteralPath $HostSrc).LastWriteTimeUtc -gt (Get-Item -LiteralPath $HostExe).LastWriteTimeUtc -or
+    -not (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'webview2\host.build')))) {
     try { & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Build-Host.ps1') *> (Join-Path $PSScriptRoot 'build-host.log') } catch { }
 }
 if (Test-Path -LiteralPath $HostExe) {

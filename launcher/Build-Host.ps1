@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
+﻿# SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Lalikavics - ArtFlawless Studio
 # Builds the frameless Studio window (ArtFlawlessHost.exe) on this computer:
 # downloads the WebView2 SDK files from nuget.org once, then compiles ArtFlawlessHost.cs with the
@@ -32,10 +32,25 @@ if (@($need | Where-Object { -not (Test-Path -LiteralPath (Join-Path $Dir $_)) }
     foreach ($f in $need) { if (-not (Test-Path -LiteralPath (Join-Path $Dir $f))) { throw "WebView2 SDK file missing after download: $f" } }
 }
 
-if (-not (Test-Path -LiteralPath $Exe) -or (Get-Item -LiteralPath $Src).LastWriteTimeUtc -gt (Get-Item -LiteralPath $Exe).LastWriteTimeUtc) {
+# The stamp makes older installs rebuild once (1.3.2: the exe now carries the program icon for Task Manager).
+$Ico = Join-Path $Here 'artflow.ico'
+$Stamp = Join-Path $Dir 'host.build'
+$Build = '2'
+$stale = (-not (Test-Path -LiteralPath $Exe)) -or ((Get-Item -LiteralPath $Src).LastWriteTimeUtc -gt (Get-Item -LiteralPath $Exe).LastWriteTimeUtc) -or
+         (-not (Test-Path -LiteralPath $Stamp)) -or (([IO.File]::ReadAllText($Stamp)).Trim() -ne $Build)
+if ($stale) {
     if (Test-Path -LiteralPath $Exe) { Remove-Item -LiteralPath $Exe -Force }
-    $refs = @('System.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
-        (Join-Path $Dir 'Microsoft.Web.WebView2.Core.dll'), (Join-Path $Dir 'Microsoft.Web.WebView2.WinForms.dll'))
-    Add-Type -TypeDefinition ([IO.File]::ReadAllText($Src)) -ReferencedAssemblies $refs -OutputAssembly $Exe -OutputType WindowsApplication -IgnoreWarnings
+    $cp = New-Object System.CodeDom.Compiler.CompilerParameters
+    foreach ($r in @('System.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
+        (Join-Path $Dir 'Microsoft.Web.WebView2.Core.dll'), (Join-Path $Dir 'Microsoft.Web.WebView2.WinForms.dll'))) { [void]$cp.ReferencedAssemblies.Add($r) }
+    $cp.GenerateExecutable = $true
+    $cp.GenerateInMemory = $false
+    $cp.OutputAssembly = $Exe
+    $cp.CompilerOptions = '/target:winexe /optimize'
+    if (Test-Path -LiteralPath $Ico) { $cp.CompilerOptions += ' /win32icon:"' + $Ico + '"' }
+    $res = (New-Object Microsoft.CSharp.CSharpCodeProvider).CompileAssemblyFromSource($cp, [IO.File]::ReadAllText($Src))
+    $errs = @($res.Errors | Where-Object { -not $_.IsWarning })
+    if ($errs.Count) { throw ('ArtFlawlessHost.cs did not compile: ' + (($errs | ForEach-Object { $_.ToString() }) -join '; ')) }
+    [IO.File]::WriteAllText($Stamp, $Build)
 }
 if (-not (Test-Path -LiteralPath $Exe)) { throw 'ArtFlawlessHost.exe was not built.' }

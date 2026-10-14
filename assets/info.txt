@@ -1,5 +1,6 @@
-﻿ArtFlawless Studio {VERSION}
-Developed by Lalikavics, with help from Claude.  Questions and bug reports: {REPO}/issues
+ArtFlawless Studio {VERSION}
+Created by Lalikavics. Developed with the help of Claude (Anthropic).
+Questions and bug reports: {REPO}/issues
 
 WHAT THIS SETUP DOES
 ArtFlawless Studio is a free convenience interface for an image-generation workflow that runs in ComfyUI on your own computer.
@@ -7,10 +8,9 @@ During setup, ComfyUI, its add-ons and the AI models (about 25 GB in total) are 
 Nothing is generated or sent anywhere: all images are created on your computer.
 ArtFlawless Studio is an independent interface, not affiliated with Comfy Org or the ComfyUI developers. ComfyUI is free software under the GNU GPL v3.0 and is installed unmodified.
 
-AGE REQUIREMENT AND CONTENT PROTECTION
-ArtFlawless Studio may only be used by adults (18 years or older); the next page asks you to confirm this.
-Built-in protection: content filter (adult images are blurred and saved into output\18+), safe mode, a one-time 18+ confirmation,
-child protection (a minor together with nudity or sexual content is always refused) and a machine-readable "AI-generated" mark.
+CONTENT PROTECTION
+Content filter (adult images are blurred and saved into output\18+), safe mode, a one-time 18+ confirmation, child protection
+(a minor together with nudity or sexual content is always refused) and a machine-readable "AI-generated" mark.
 
 SYSTEM REQUIREMENTS
 Minimum:
@@ -40,10 +40,4 @@ continue to apply to you; please read and respect them, and credit the authors:
    ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),
    ComfyUI-Prompt-Manager (Francky B)
 
-DISCLAIMER
-No warranty: this software is provided "as is", without warranty of any kind. You use it at your own risk.
-The author does not train, host, select, review or control the models or the images they produce. You alone are responsible for
-what you create and for how you use or share it, including compliance with the laws that apply to you and with the rights of
-others. Do not use this tool to depict real people without their consent, or to create unlawful content or content that harms
-others. To the maximum extent permitted by law, the author accepts no liability for any damage, loss or claim arising from the
-use of this software, of the third-party components it relies on, or of the content created with them.
+The terms of use and the age declaration are on the previous pages; the full texts are also in the About window of the Studio.
