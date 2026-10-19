@@ -184,8 +184,10 @@
  "translator": {
   "id": "artflawless-hu-en-v1",
   "label": "ArtFlawless HU→EN prompt translator v1",
+  "archive": {
+   "url": "https://github.com/Lalikavics/ArtFlawlessStudio/releases/download/translator-v1/artflawless-hu-en-v1.zip"
+  },
   "base_urls": [
-   "https://github.com/Lalikavics/ArtFlawlessStudio/releases/download/translator-v1",
    "https://huggingface.co/Lalikavics/artflawless-hu-en-v1/resolve/main"
   ],
   "files": {
@@ -196,9 +198,6 @@
    "target.spm": 794916,
    "tokenizer_config.json": 896,
    "vocab.json": 1558602
-  },
-  "release_names": {
-   "model.safetensors": "artflawless-hu-en-v1.safetensors"
   },
   "license": "CC-BY-4.0",
   "author": "Helsinki-NLP / OPUS-MT (base), Lalikavics (fine-tuning)",

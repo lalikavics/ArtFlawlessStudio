@@ -584,49 +584,80 @@ def _tr_installed(info=None):
     return True
 
 
+async def _tr_fetch(url, part, st, base_done, timeout, label):
+    """download url into part (resumes a partial file); progress goes to st["done"] from base_done"""
+    have = os.path.getsize(part) if os.path.exists(part) else 0
+    h = {"User-Agent": "ArtFlawlessStudio/1.4"}
+    if have:
+        h["Range"] = "bytes=%d-" % have
+    async with aiohttp.ClientSession(timeout=timeout) as s:
+        async with s.get(url, headers=h, allow_redirects=True) as r:
+            if r.status == 416:
+                return
+            if r.status not in (200, 206):
+                raise RuntimeError("HTTP %d (%s)" % (r.status, label))
+            if r.status == 200:
+                have = 0
+            st["done"] = base_done + have
+            t0, d0 = time.time(), st["done"]
+            with open(part, "ab" if have else "wb") as f:
+                async for chunk in r.content.iter_chunked(CHUNK):
+                    f.write(chunk)
+                    st["done"] += len(chunk)
+                    dt = time.time() - t0
+                    if dt > 1:
+                        st["speed"] = int((st["done"] - d0) / dt)
+                        t0, d0 = time.time(), st["done"]
+
+
 async def _tr_download(info):
-    st = DL["translator"] = {"state": "running", "done": 0, "total": int(sum((info.get("files") or {}).values())), "error": "", "speed": 0}
+    """The GitHub release holds one zip with the model folder (artflawless-hu-en-v1.zip); Hugging Face holds the same
+    files one by one (the standard model folder layout). The zip is tried first, then the single files."""
+    files = info.get("files") or {}
+    st = DL["translator"] = {"state": "running", "done": 0, "total": int(sum(files.values())), "error": "", "speed": 0}
     d = _tr_dir(info)
     os.makedirs(d, exist_ok=True)
     timeout = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=120)
-    headers = {"User-Agent": "ArtFlawlessStudio/1.4"}
-    base_done = 0
+    ok = lambda name: os.path.isfile(os.path.join(d, name)) and os.path.getsize(os.path.join(d, name)) >= int(files[name] * 0.98)
     try:
-        for name, size in (info.get("files") or {}).items():
-            dest = os.path.join(d, name)
-            if os.path.isfile(dest) and os.path.getsize(dest) >= int(size * 0.98):
+        arch = info.get("archive") or {}
+        if arch.get("url") and not all(ok(n) for n in files):
+            part = os.path.join(d, "download.zip.part")
+            for attempt in range(1, 4):
+                try:
+                    await _tr_fetch(arch["url"], part, st, 0, timeout, os.path.basename(arch["url"]))
+                    break
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    st["error"] = str(e)
+                    if "HTTP 404" in str(e):
+                        break
+                    await asyncio.sleep(3 * attempt)
+            try:
+                import zipfile
+                with zipfile.ZipFile(part) as z:
+                    for zi in z.infolist():
+                        name = os.path.basename(zi.filename)
+                        if name in files and not zi.is_dir():
+                            with z.open(zi) as src, open(os.path.join(d, name + ".part"), "wb") as dst:
+                                shutil.copyfileobj(src, dst, CHUNK)
+                            os.replace(os.path.join(d, name + ".part"), os.path.join(d, name))
+                os.remove(part)
+            except Exception as e:
+                st["error"] = "zip: %s" % e       # the single files below are the fallback
+        base_done = 0
+        urls_base = [u for u in (info.get("base_urls") or []) if u]
+        for name, size in files.items():
+            if ok(name):
                 base_done += size
                 st["done"] = base_done
                 continue
-            part = dest + ".part"
-            # the GitHub release names the weights file descriptively; Hugging Face keeps the standard model.safetensors
-            rn = info.get("release_names") or {}
-            urls = [u.rstrip("/") + "/" + (rn.get(name, name) if "github.com" in u else name) for u in (info.get("base_urls") or [info.get("base_url", "")]) if u]
+            dest = os.path.join(d, name); part = dest + ".part"
+            urls = [u.rstrip("/") + "/" + name for u in urls_base]
             for attempt in range(1, 6):
-                url = urls[(attempt - 1) % len(urls)]       # GitHub first, then the mirror (Hugging Face)
-                have = os.path.getsize(part) if os.path.exists(part) else 0
-                h = dict(headers)
-                if have:
-                    h["Range"] = "bytes=%d-" % have
                 try:
-                    async with aiohttp.ClientSession(timeout=timeout) as s:
-                        async with s.get(url, headers=h, allow_redirects=True) as r:
-                            if r.status == 416:
-                                break
-                            if r.status not in (200, 206):
-                                raise RuntimeError("HTTP %d (%s)" % (r.status, name))
-                            if r.status == 200:
-                                have = 0
-                            st["done"] = base_done + have
-                            t0, d0 = time.time(), st["done"]
-                            with open(part, "ab" if have else "wb") as f:
-                                async for chunk in r.content.iter_chunked(CHUNK):
-                                    f.write(chunk)
-                                    st["done"] += len(chunk)
-                                    dt = time.time() - t0
-                                    if dt > 1:
-                                        st["speed"] = int((st["done"] - d0) / dt)
-                                        t0, d0 = time.time(), st["done"]
+                    await _tr_fetch(urls[(attempt - 1) % len(urls)], part, st, base_done, timeout, name)
                     break
                 except asyncio.CancelledError:
                     raise
