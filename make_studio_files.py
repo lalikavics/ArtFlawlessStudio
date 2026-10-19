@@ -1145,8 +1145,9 @@ rep("#progText{white-space:nowrap;", ".cuinfo{font-size:12px;margin-top:2px}.cui
 rep("#progText{white-space:nowrap;", "#eta{white-space:nowrap;font-variant-numeric:tabular-nums;margin-right:6px}\n#progText{white-space:nowrap;")
 rep(".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}",
     ".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}\n"
-    ".conn .lms{display:grid;gap:2px;margin-top:1px}.conn .lm{display:flex;align-items:center;gap:5px;font:9.5px ui-monospace,Consolas,monospace;color:#7c8396}"
-    ".conn .lml{width:22px}.conn .lmb{width:58px;height:4px;border-radius:3px;background:#262b36;overflow:hidden}"
+    ".conn .cw{gap:0}.conn .ct{line-height:13px}.conn .ip{line-height:11px;margin-top:1px}"
+    ".conn .lms{display:grid;gap:1px;margin-top:3px}.conn .lm{display:flex;align-items:center;gap:5px;font:9px/9px ui-monospace,Consolas,monospace;color:#7c8396}"
+    ".conn .lml{width:22px}.conn .lmb{width:58px;height:3px;border-radius:3px;background:#262b36;overflow:hidden}"
     ".conn .lmb i{display:block;height:100%;width:0;background:#4fb37a;transition:width .4s}.conn .lmb i.mid{background:#e0b341}.conn .lmb i.hi{background:#e5654f}"
     ".conn .lmv{width:28px;text-align:right;color:#aab1c2}")
 rep("initSafety();", "initSafety(); initHuPrompt();")
