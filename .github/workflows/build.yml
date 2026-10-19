@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   build:
+    # releases that are not program versions (e.g. translator-v1, which only holds model files) are skipped
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
