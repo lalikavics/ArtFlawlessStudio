@@ -1,0 +1,41 @@
+# hand-written training pairs 28: negative prompt vocabulary (what should NOT be in the image)
+elmosódott, rossz minőség, alacsony felbontás	blurry, bad quality, low resolution
+torz kéz, extra ujjak, hiányzó ujjak, összenőtt ujjak	deformed hands, extra fingers, missing fingers, fused fingers
+torz arc, aszimmetrikus szemek, kancsal	deformed face, asymmetric eyes, cross-eyed
+rossz anatómia, extra végtagok, hiányzó karok	bad anatomy, extra limbs, missing arms
+hosszú nyak, torz test, rossz arányok	long neck, deformed body, bad proportions
+műanyag bőr, túl sima bőr, viaszos arc	plastic skin, overly smooth skin, waxy face
+túlexponált, alulexponált, kiégett fények	overexposed, underexposed, blown-out highlights
+zajos, szemcsés, jpeg hibák	noisy, grainy, jpeg artifacts
+vízjel, felirat, logó, aláírás	watermark, text, logo, signature
+szöveg, betűk, számok	text, letters, numbers
+rajzfilm, festmény, illusztráció, 3D render	cartoon, painting, illustration, 3D render
+anime, rajz, vázlat	anime, drawing, sketch
+duplikált, klónozott arc, két fej	duplicated, cloned face, two heads
+levágott fej, a kép széle levágja a testet	cropped head, the edge of the image cuts off the body
+csúnya, undorító, torz	ugly, disgusting, distorted
+túltelített színek, neon színek	oversaturated colors, neon colors
+fekete-fehér, monokróm	black and white, monochrome
+torz lábak, extra lábujjak	deformed feet, extra toes
+rossz fogak, torz száj	bad teeth, distorted mouth
+üveges tekintet, élettelen szemek	glassy stare, lifeless eyes
+túl sok smink, mesterkélt	too much make-up, artificial
+keret, szegély, kollázs	frame, border, collage
+homályos háttér nélkül	without a blurry background
+ne legyen elmosódott	it should not be blurry
+ne legyen szöveg a képen	there should be no text in the image
+ne legyen torz a kéz	the hands should not be deformed
+kerüld a rajzfilmes hatást	avoid a cartoonish look
+nincs ember a háttérben	no people in the background
+nincs más ember a képen	no other people in the image
+nincsenek autók	no cars
+nincs ékszer	no jewelry
+nincs szemüveg	no glasses
+nincs kalap	no hat
+nincs tetoválás	no tattoos
+nincs szakáll	no beard
+nincs smink	no make-up
+nincs napszemüveg	no sunglasses
+gyerek nélkül, csak felnőttek	without children, adults only
+felnőtt nő, nem gyerek	adult woman, not a child
+felnőtt férfi	adult man

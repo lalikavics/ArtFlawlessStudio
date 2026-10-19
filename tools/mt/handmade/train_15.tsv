@@ -1,0 +1,46 @@
+# hand-written training pairs 15: portrait photography, mixed Hungarian-English portrait prompts
+Portré lágy ablakfénnyel, a modell a fény felé fordul.	A portrait with soft window light, the model turning toward the light.
+Rembrandt-fény, háromszög alakú fényfolt az arc árnyékos oldalán.	Rembrandt lighting, a triangle of light on the shadowed side of the face.
+Pillangó-fény, a lámpa közvetlenül az arc felett.	Butterfly lighting, the lamp directly above the face.
+Széles fény, a kamera felé fordított arcfél van megvilágítva.	Broad lighting, the side of the face turned toward the camera is lit.
+Keskeny fény, drámai árnyékok az arcon.	Short lighting, dramatic shadows on the face.
+Kétoldali peremfény, sötét háttér, sziluett hatás.	Rim light from both sides, a dark background, a silhouette effect.
+Derítőlap az arc alatt, puha árnyékok.	A reflector under the face, soft shadows.
+Erős vaku, éles árnyék a falon, divatfotó.	A strong flash, a hard shadow on the wall, fashion photo.
+Színes gélszűrős fény, piros és kék az arcon.	Colored gel lighting, red and blue on the face.
+Neonfény az arcon, rózsaszín és türkiz.	Neon light on the face, pink and turquoise.
+Gyertyafényes portré, meleg narancs tónusok.	A candlelit portrait, warm orange tones.
+Aranyórás portré a mezőn, a nap a haj mögött.	A golden hour portrait in the field, the sun behind the hair.
+Felhős napon készült portré, egyenletes fény.	A portrait taken on a cloudy day, even light.
+Árnyékban állva, a háttér világos.	Standing in the shade, the background bright.
+Fénypászmák az arcon a redőnyön át.	Strips of light on the face through the blinds.
+85mm-es objektív, f/1.4, krémes háttér.	An 85mm lens, f/1.4, a creamy background.
+50mm, f/2, természetes perspektíva.	50mm, f/2, a natural perspective.
+135mm teleobjektív, összenyomott háttér.	A 135mm telephoto lens, a compressed background.
+Széles látószögű környezeti portré, a műhely is látszik.	A wide-angle environmental portrait, the workshop visible too.
+Analóg filmes portré, Kodak Portra, finom szemcse.	An analog film portrait, Kodak Portra, fine grain.
+Fekete-fehér portré, nagy kontraszt, mély feketék.	A black and white portrait, high contrast, deep blacks.
+Magazinborító, a modell a kamerába néz, sok üres hely a feliratnak.	A magazine cover, the model looking into the camera, lots of empty space for text.
+Útlevélkép-szerű portré, szemből, semleges háttér.	A passport-style portrait, from the front, a neutral background.
+Céges portré, öltöny, mosoly, elmosódott iroda.	A corporate headshot, a suit, a smile, a blurred office.
+Spontán utcai portré, a járókelő nem néz a kamerába.	A candid street portrait, the passer-by not looking at the camera.
+Önarckép tükörben, a telefon is látszik.	A mirror selfie, the phone visible too.
+Selfie egy hegycsúcson, széles mosoly.	A selfie on a mountain peak, a big smile.
+Egy nő portréja, cinematic lighting, shallow depth of field, 85mm.	A portrait of a woman, cinematic lighting, shallow depth of field, 85mm.
+Egy férfi portréja, dramatic lighting, fekete háttér, high contrast.	A portrait of a man, dramatic lighting, black background, high contrast.
+Egy idős asszony arca, natural light, detailed skin texture, ráncok.	An old woman's face, natural light, detailed skin texture, wrinkles.
+Egy fiatal nő a mezőn, golden hour, film grain, Kodak Portra 400.	A young woman in a field, golden hour, film grain, Kodak Portra 400.
+Egy modell a stúdióban, softbox, beauty dish, clean background.	A model in the studio, softbox, beauty dish, clean background.
+Egy táncos, motion blur, long exposure, sötét színpad.	A dancer, motion blur, long exposure, dark stage.
+Egy férfi az esőben, moody, cinematic, teal and orange.	A man in the rain, moody, cinematic, teal and orange.
+Egy nő ablak mellett, soft light, pastel tones, dreamy.	A woman by a window, soft light, pastel tones, dreamy.
+Divatfotó, high fashion, Vogue stílus, erős smink.	Fashion photo, high fashion, Vogue style, bold make-up.
+Portré, photorealistic, ultra detailed, 8k, sharp focus a szemeken.	Portrait, photorealistic, ultra detailed, 8k, sharp focus on the eyes.
+Egy harcosnő, fantasy, concept art, páncél, epic lighting.	A warrior woman, fantasy, concept art, armor, epic lighting.
+Egy anime lány, kék haj, big eyes, iskolai egyenruha, cherry blossoms.	An anime girl, blue hair, big eyes, school uniform, cherry blossoms.
+Egy cyberpunk srác, neon lights, hologram napszemüveg, eső.	A cyberpunk guy, neon lights, hologram sunglasses, rain.
+nő, portré, 85mm, f/1.8, bokeh, ablakfény, természetes bőr, mosoly	woman, portrait, 85mm, f/1.8, bokeh, window light, natural skin, smile
+férfi, portré, Rembrandt-fény, sötét háttér, borosta, komoly	man, portrait, Rembrandt lighting, dark background, stubble, serious
+pár, aranyóra, mező, ölelés, ellenfény, filmszemcse	couple, golden hour, field, hug, backlight, film grain
+nő, neonfény, éjszakai város, eső, tükröződés, cyberpunk	woman, neon light, night city, rain, reflections, cyberpunk
+idős férfi, fekete-fehér, nagy kontraszt, ráncok, dokumentarista	old man, black and white, high contrast, wrinkles, documentary

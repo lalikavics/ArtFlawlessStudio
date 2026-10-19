@@ -1,0 +1,61 @@
+# id	theme	ratio	Hungarian prompt (image tests of Hungarian prompting; adults only, non-explicit)
+01	Portrait	Theme default	Egy harmincas nő portréja, rövid fekete haj, nagy karika fülbevaló, piros rúzs, mosolyog. Puha ablakfény, sötétkék háttér.
+02	Portrait	Theme default	idős férfi, ősz szakáll, svájcisapka, mély ráncok, kék szem, fekete-fehér, nagy kontraszt, 85mm
+03	Portrait	Theme default	Egy fiatal nő hosszú, göndör vörös hajjal és szeplőkkel, zöld kötött pulóverben, őszi parkban, aranyóra.
+04	Portrait	Theme default	Egy kopasz, szakállas férfi tetovált nyakkal, fekete bőrdzsekiben, neonfények az esős éjszakában, cinematic.
+05	Portrait	Theme default	Közeli portré egy idős asszonyról, színes virágmintás kendővel a fején, meleg, nosztalgikus hangulat.
+06	Portrait	Theme default	nő, rövid szőke haj, szemüveg, fehér ing, könyvtár, háttérben könyvespolcok, természetes fény
+07	Portrait	Theme default	Egy férfi profilból, a fél arca árnyékban, Rembrandt-fény, sötét háttér, olajfestmény hatás.
+08	Portrait	Theme default	Egy nevető nő, a haja copfba fonva, sárga napraforgók között, nyári délután, soft focus.
+09	Portrait	Theme default	Egy fiatal férfi göndör barna hajjal, farmeringben, egy kávézó ablakánál ül, kezében egy csésze kávé.
+10	Portrait	Theme default	Egy ötvenes nő ezüstszürke hajjal, gyöngy nyaklánccal, elegáns fekete ruhában, stúdiófény, szürke háttér.
+11	Portrait	Theme default	Egy szomorú bohóc portréja, lefolyt smink, piros orr, esőcseppek az arcán, drámai fény.
+12	Portrait	Theme default	Egy nő arca a vízből kiemelkedve, nedves haj, vízcseppek a bőrén, kék tónusok, közeli kép.
+13	Portrait	Theme default	férfi, harmincas évek, borosta, kockás ing, erdő, köd, hajnal, komoly tekintet
+14	Portrait	Theme default	Egy menyasszony portréja fátyolban, a kezében egy csokor fehér rózsa, templomi ablak fénye.
+15	People – full body	Theme default	Egy nő piros kabátban sétál egy havas utcán, a kezében egy fekete esernyő, este, utcai lámpák.
+16	People – full body	Theme default	Egy idős férfi kalapban és mellényben hegedül egy falusi lakodalmon, körülötte táncoló emberek.
+17	People – full body	Theme default	Egy fiatal férfi gördeszkázik egy graffitis aluljáróban, mozgás közben elkapva, széles látószög.
+18	People – full body	Theme default	Egy nő jógázik a tengerparton napfelkeltekor, sziluett, nyugalom, pasztell ég.
+19	People – full body	Theme default	Egy szakács lángot csap a serpenyőben egy étterem konyhájában, szikrák, drámai fény.
+20	People – full body	Theme default	Egy pár táncol mezítláb egy konyhában reggel, nevetnek, meleg napfény.
+21	People – full body	Theme default	Egy favágó egy kidőlt fán ül és pihen, mellette egy fejsze, fenyőerdő, ködös reggel.
+22	People – full body	Theme default	Egy nő hátulról, hosszú fehér ruhában áll egy búzamező közepén, a szél fújja a haját, naplemente.
+23	People – full body	Theme default	Egy öreg halász a csónakjában ül a tavon és hálót javít, hajnali köd, tükörsima víz.
+24	People – full body	Theme default	Egy balerina pörög a színpadon, a szoknyája elmosódik a mozgástól, reflektorfény, sötét háttér.
+25	People – full body	Theme default	Egy férfi öltönyben fut az esőben egy piros telefonfülke mellett, London, film noir.
+26	People – full body	Theme default	Két idős nő ül egy padon a parkban és beszélget, galambok a lábuk előtt, ősz.
+27	None (own prompt only)	Theme default	Egy nő fekszik a kanapén egy könyvvel, a lába a karfán, a háttérben eső kopog az ablakon.
+28	None (own prompt only)	Theme default	Egy férfi ül egy sötét konyhában, csak a hűtő fénye világítja meg az arcát.
+29	None (own prompt only)	Theme default	Egy nagyapa megtanítja az unokáját biciklizni a falusi úton, nyári délután.
+30	None (own prompt only)	Theme default	Egy cyberpunk hacker ül több monitor előtt egy sötét szobában, az arcát kék fény világítja meg, neon, 35mm.
+31	None (own prompt only)	Theme default	Egy varázsló öreg könyvet olvas egy toronyszobában, körülötte lebegő gyertyák és üvegcsék, fantasy.
+32	None (own prompt only)	Theme default	Egy űrhajós lebeg a Föld felett, a sisakja üvegén tükröződik a kék bolygó, fotórealisztikus, 8k.
+33	None (own prompt only)	Theme default	Egy lovag páncélban áll egy csatatéren, mögötte füst és zászlók, olajfestmény, barokk stílus.
+34	None (own prompt only)	Theme default	Egy anime stílusú fiatal nő kék kimonóban áll egy cseresznyefa alatt, rózsaszín szirmok hullanak.
+35	Landscape – nature	Theme default	Hegyi tó aranyórában, a víz tükrén a fenyvesek sziluettje, a völgyben köd gomolyog, hófödte csúcsok.
+36	Landscape – nature	Theme default	Egy vén tölgyfa áll egyedül a mező közepén, felette viharfelhők gyülekeznek, drámai ég.
+37	Landscape – nature	Theme default	Pipacsmező egy dombtetőn, a háttérben egy kis vidéki templom, bárányfelhők, élénk színek.
+38	Landscape – nature	Theme default	Viharos tenger, egy világítótorony áll a sziklákon, a hullámok fehéren csapnak fel, hosszú expozíció.
+39	Landscape – nature	Theme default	Egy kristálytiszta hegyi patak köveken csobog egy fenyőerdőben, napsugarak szűrődnek át a fák között.
+40	Landscape – nature	Theme default	sivatagi oázis, pálmafák, tevék isznak a tóból, homokdűnék, lemenő nap
+41	Landscape – nature	Theme default	Ködös reggel a folyóparton, egy horgász ül a stégen, a víz tükörsima, pasztell színek.
+42	Architecture – cityscape	Theme default	Esti fények a rakparton, a villamos épp befordul a kanyarban, hosszú záridő, fénycsíkok.
+43	Architecture – cityscape	Theme default	Egy kisváros főtere vasárnap reggel, galambok a szökőkút körül, a háttérben barokk templom.
+44	Architecture – cityscape	Theme default	Egy elhagyatott gyárcsarnok, a betört ablakokon besüt a nap, a padlón moha és törmelék.
+45	Architecture – cityscape	Theme default	futurisztikus nagyváros éjjel, neonfények, vizes aszfalt, repülő autók a felhőkarcolók között
+46	Architecture – cityscape	Theme default	Egy kocka alakú modern ház üvegfalakkal az erdő közepén, minimalista építészet, naplemente.
+47	Interior	Theme default	Skandináv stílusú nappali világos tölgyfa padlóval, bézs kanapéval és sok szobanövénnyel, reggeli fény.
+48	Interior	Theme default	Régi magyar falusi konyha, a sparhelten rotyog a leves, a falon tányérok lógnak, meleg fény.
+49	Interior	Theme default	Egy régi könyvtár, magas polcok tele bőrkötéses könyvekkel, a létrán egy macska ül, por táncol a levegőben.
+50	Interior	Theme default	Egy kézműves sörfőzde belseje, rézüstök, hordók, meleg fény, ipari stílus.
+51	Product – object – food	Theme default	Frissen sült kakaós csiga egy rusztikus fa asztalon, mellette egy bögre gőzölgő tejeskávé, puha ablakfény.
+52	Product – object – food	Theme default	Egy tál gőzölgő gulyásleves egy kockás terítőn, mellette friss kenyér és piros paprika, felülnézet.
+53	Product – object – food	Theme default	Egy luxus karóra fekete bársonyon, oldalról érkező fény kiemeli a fém textúráját, termékfotó.
+54	Product – object – food	Theme default	kávéscsésze, croissant, márványasztal, reggeli fény, felülnézet, minimalista, krémszínű háttér
+55	Product – object – food	Theme default	Színes fagyigombócok egy tölcsérben, a háttérben a tengerpart, nyári hangulat, termékfotó.
+56	Animal – macro	Theme default	Egy katicabogár mászik fel egy harmatos fűszálon, a cseppekben visszatükröződik a felkelő nap, makró.
+57	Animal – macro	Theme default	Egy vörös róka oson a havas erdőben, a lehelete látszik a hidegben, teleobjektív.
+58	Animal – macro	Theme default	Egy fekete macska ül egy könyvespolc tetején, sárga szemekkel néz le a kamerába, félhomály, gyertyafény.
+59	Animal – macro	Theme default	Egy kolibri lebeg egy piros virág előtt, a szárnyai elmosódnak a mozgástól, sötétzöld háttér.
+60	Animal – macro	Theme default	Egy medvebocs mászik fel egy fára az erdőben, kíváncsian néz a kamerába, természetfotó.

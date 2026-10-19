@@ -37,6 +37,8 @@ vonatkoznak: kérlek, olvasd el és tartsd be őket, és nevezd meg a szerzőket
  - Z-Image-Turbo-Fun-Controlnet-Union (Alibaba PAI); Depth Anything V2; Florence-2 (Microsoft); Segment Anything (Meta AI)
  - YOLOv8 arc- és kézfelismerő (Bingsu, ADetailer); lábfelismerő (MonetEinsley/ADetailer_CM); Ultralytics YOLO
  - NudeNet tartalomfelismerő (notAI-tech); nsfw_image_detection osztályozó (Falconsai)
+ - opus-mt-tc-big-hu-en fordítómodell (Helsinki-NLP / OPUS-MT, CC-BY 4.0), promptokra finomhangolva: ArtFlawless HU->EN
+   (csak akkor töltődik le, ha bekapcsolod a magyar promptolást)
  - Real-ESRGAN (Xintao Wang és társai); 7-Zip (Igor Pavlov, csak a ComfyUI kicsomagolásához)
  - Kiegészítő node-ok: rgthree-comfy, ComfyUI Impact Pack és Subpack (Dr.Lt.Data), Ultimate SD Upscale (ssitu), ComfyUI-Florence2 (kijai),
    ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),

@@ -114,18 +114,37 @@ showInfo = function (meta, url) {
   const src = INFO_SRC; INFO_SRC = null; _showInfo(meta, url);
   const img = document.querySelector('#iiOut .iiprev img'); if (!img || !SAFE.filter) return;
   const txt = meta ? [meta.parameters, meta.prompt].filter(Boolean).join(' ') : '';
-  if ((src && hiddenUrl(src)) || (txt && verdict(txt).adult)) {
+  // a file the user chose or dropped here is shown as it is; only an image picked from the Studio's own history keeps its blur
+  if (src && (hiddenUrl(src) || (txt && verdict(txt).adult))) {
     img.classList.add('nsfw'); img.title = t('nsfwShow'); img.style.cursor = 'pointer';
     img.addEventListener('click', () => { img.classList.remove('nsfw'); if (src) REVEAL.add(src); applyGuard(); }, {once: true});
   }
 };
+// Z-Image Turbo and Flux schnell run at CFG 1, where the negative prompt has almost no effect, so for them safe mode
+// also asks for clothes in the positive prompt when the picture has a person in it (and the prompt does not ask for
+// adult content or swimwear / underwear)
+const SAFE_POS = 'clothed';
+const LOW_CFG = new Set(['zimage', 'flux']);
+const W_PERSON = WL(['woman', 'women', 'man', 'men', 'girl*', 'boy*', 'lady', 'ladies', 'guy*', 'person', 'people', 'couple*', 'bride*', 'groom*', 'model', 'models',
+  'portrait*', 'figure', 'dancer*', 'ballerina*', 'mother', 'father', 'wife', 'husband', 'grandma*', 'grandfather*', 'grandmother*', 'grandpa*', 'old man', 'old woman',
+  'he', 'she', 'his', 'her', 'body', 'full body', 'nude', 'naked', 'human*', 'character*', 'warrior*', 'witch*', 'chef', 'fisherman', 'lumberjack', 'athlete*',
+  'egy no', 'a no', 'nok', 'not', 'novel', 'nonek', 'noi', 'ferfi*', 'lany*', 'fiu*', 'ember*', 'egy par', 'a par', 'menyasszony*', 'voleg*', 'portre*', 'anya', 'apa', 'nagymama*', 'nagyapa*', 'csaj*', 'srac*']);
+const W_SWIM = WL(['bikini*', 'swimsuit*', 'swimwear', 'swimming', 'bathing suit*', 'fürdőruh*', 'furdoruh*', 'bikinis*', 'strand*']);
+function safeClothes() {
+  if (!SAFE.safe || !T || !LOW_CFG.has(T.family) || !T.prompt['46']) return false;
+  const text = fold(userPromptText()).replace(/[^a-z0-9]+/g, ' ').trim(); const v = verdict(userPromptText());
+  if (v.adult || hasWord(text, W_SEXY) || hasWord(text, W_SWIM)) return false;
+  const th = String(val('86', 'choice') || '');
+  return /^(Portrait|People)/.test(th) || hasWord(text, W_PERSON);
+}
 const _buildPrompt = buildPrompt;
 buildPrompt = function (seed, cnt) {
   if (!SAFE.safe || !T.prompt['51']) return _buildPrompt(seed, cnt);
-  const k = '51.value', had = Object.prototype.hasOwnProperty.call(S.vals, k), old = S.vals[k];
-  const base = String(had ? old : (T.prompt['51'].inputs.value || '')).trim();
-  S.vals[k] = base + (base && !/,\s*$/.test(base) ? ', ' : base ? ' ' : '') + SAFE_NEG;
-  try { return _buildPrompt(seed, cnt); } finally { if (had) S.vals[k] = old; else delete S.vals[k]; }
+  const keep = {};
+  const add = (k, base, extra) => { keep[k] = {had: Object.prototype.hasOwnProperty.call(S.vals, k), v: S.vals[k]}; base = String(base).trim(); S.vals[k] = base + (base && !/,\s*$/.test(base) ? ', ' : base ? ' ' : '') + extra; };
+  add('51.value', Object.prototype.hasOwnProperty.call(S.vals, '51.value') ? S.vals['51.value'] : (T.prompt['51'].inputs.value || ''), SAFE_NEG);
+  if (safeClothes()) add('46.value', val('46', 'value') || '', SAFE_POS);
+  try { return _buildPrompt(seed, cnt); } finally { for (const [k, o] of Object.entries(keep)) { if (o.had) S.vals[k] = o.v; else delete S.vals[k]; } }
 };
 const _finish = finish;
 finish = async function (id, ok) {

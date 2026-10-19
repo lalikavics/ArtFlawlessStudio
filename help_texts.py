@@ -10,6 +10,8 @@ HELP = {
           'Modellcsalád', 'Minden család másfajta képmodell, saját workflow-val. A Z-Image Turbo emberekhez a legjobb, az SDXL mindenes, a Flux a hosszú promptokat követi jól és jelenetekben erős. A Custom a saját checkpointodat futtatja, csak a modelltől független funkciókkal.'),
 'h:wf': ('Workflows', 'Start a new, empty setup, or save the current settings under a name and open them again later.',
          'Munkafolyamatok', 'Új, üres beállítást indíthatsz, vagy a mostani beállításokat névvel elmentheted és később újra megnyithatod.'),
+'cu:model': ('Model file', 'Any model from the checkpoints, diffusion_models or unet (GGUF) folder. The Studio reads the file header, recognises the type (SD 1.5, SDXL, Pony, Illustrious, Z-Image, Flux) and builds the run and the settings for it.',
+             'Modellfájl', 'Bármelyik modell a checkpoints, diffusion_models vagy unet (GGUF) mappából. A Studio beolvassa a fájl fejlécét, felismeri a típusát (SD 1.5, SDXL, Pony, Illustrious, Z-Image, Flux), és ahhoz építi fel a futást és a beállításokat.'),
 'h:info': ('Image info', 'Reads the generation data hidden in an image (prompt, model, LoRAs, settings) – from your own images or from images downloaded from sites like Civitai.',
            'Képinfó', 'Kiolvassa a képbe rejtett generálási adatokat (prompt, modell, LoRA-k, beállítások) – a saját képeidből vagy például a Civitairól letöltött képekből.'),
 'h:notif': ('Notifications', 'Messages and warnings collect here. A red “!” means something needs your attention, for example a missing model file.',
@@ -147,4 +149,11 @@ HELP = {
               'Fájlnév részei', 'Válaszd ki, mi kerüljön a fájlnévbe. A sorszám akkor sem indul újra 1-ről, ha képeket törölsz.'),
 'save:meta': ('Generation data', 'ON: the prompt, model, LoRAs and settings are stored inside the PNG, so you or others can see how it was made (Civitai can read it). OFF: a clean image without this data.',
               'Generálási adatok', 'BE: a prompt, a modell, a LoRA-k és a beállítások a PNG-be kerülnek, így te vagy mások láthatják, hogyan készült (a Civitai is olvassa). KI: tiszta kép ezen adatok nélkül.'),
+# ---------------- Hungarian prompting (Hungarian interface only) ----------------
+'hu:sw': ('Hungarian prompting', 'Write the prompt in Hungarian; the Studio translates it to English on this computer before generating. The translator is downloaded once (about 470 MB). English words in the prompt stay as they are.',
+          'Magyar promptolás', 'Magyarul írhatod a promptot, a Studio generálás előtt a saját gépeden angolra fordítja, mert a képmodellek angolul értenek. A fordítómodellt egyszer kell letölteni (kb. 470 MB). A promptban lévő angol szavak változatlanok maradnak. A beállításokban (fogaskerék) is ki- és bekapcsolhatod.'),
+'hu:tr': ('English translation', 'This text goes to the image model. It updates while you type; if a word is translated wrongly, correct it here. A corrected text is kept until you press New translation.',
+          'Angol fordítás', 'Ez a szöveg megy a képmodellhez, és a végső prompt mezőben is ez jelenik meg. Gépelés közben frissül. Ha egy szót rosszul fordított, itt kijavíthatod: a javított szöveg megmarad, amíg nem nyomod meg az Újrafordítás gombot.'),
+'hu:trN': ('Negative prompt in English', 'The translated negative prompt; it can be corrected by hand as well.',
+           'A negatív prompt angolul', 'A lefordított negatív prompt, ez is kijavítható kézzel.'),
 }

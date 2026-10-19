@@ -117,7 +117,8 @@ $nodeList = @(
     @{ Id = 'comfyui-custom-scripts';     Ver = '1.2.5';   Url = 'https://cdn.comfy.org/pythongosssss/comfyui-custom-scripts/1.2.5/node.zip' },
     @{ Id = 'comfyui_controlnet_aux';     Ver = '1.1.5';   Url = 'https://cdn.comfy.org/fannovel16/comfyui_controlnet_aux/1.1.5/node.zip' },
     @{ Id = 'comfyui-image-saver';        Ver = '1.23.0';  Url = 'https://cdn.comfy.org/alexopus/comfyui-image-saver/1.23.0/node.zip' },
-    @{ Id = 'prompt-manager';             Ver = '2.7.2';   Url = 'https://cdn.comfy.org/franckyb/prompt-manager/2.7.2/node.zip' }
+    @{ Id = 'prompt-manager';             Ver = '2.7.2';   Url = 'https://cdn.comfy.org/franckyb/prompt-manager/2.7.2/node.zip' },
+    @{ Id = 'comfyui-gguf';               Ver = '1.1.10';  Url = 'https://cdn.comfy.org/city96/ComfyUI-GGUF/1.1.10/node.zip' }
 )
 foreach ($n in $nodeList) {
     $target = Join-Path $Nodes $n.Id

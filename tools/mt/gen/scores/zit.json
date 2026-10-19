@@ -1,0 +1,7 @@
+{"model":"zit","scale":"2 = every element or one minor miss, 1 = main subject right but a clear miss, 0 = wrong picture",
+ "tr":{"01":2,"02":2,"03":2,"04":2,"05":2,"06":2,"07":1,"08":2,"09":2,"10":2,"11":2,"12":2,"13":2,"14":2,"15":2,"16":2,"17":2,"18":2,"19":2,"20":2,"21":2,"22":2,"23":2,"24":1,"25":1,"26":2,"27":2,"28":2,"29":2,"30":2,"31":2,"32":2,"33":2,"34":2,"35":2,"36":2,"37":2,"38":2,"39":2,"40":2,"41":2,"42":2,"43":2,"44":2,"45":1,"46":2,"47":2,"48":2,"49":2,"50":2,"51":2,"52":2,"53":2,"54":2,"55":2,"56":2,"57":2,"58":2,"59":2,"60":2},
+ "raw":{"01":1,"03":1,"08":0,"15":0,"22":0,"27":0,"35":0,"43":0,"51":0,"57":0},
+ "notes":{"07":"3/4 view instead of profile, half shadow weak","24":"standing pose, no motion blur","25":"posing, not running; colour, not noir","45":"flying cars and neon faint",
+  "01":"East Asian face: European look switch is off by default","10":"East Asian","12":"East Asian","14":"East Asian","24b":"East Asian","26":"East Asian",
+  "raw":"Qwen understands some Hungarian words (portrait, lipstick, red hair, park, fox->parrot!), loses most details; 51 raw wrote the Hungarian text onto the cups"},
+ "translation_issues":{"04":"a tattoo neck (tattooed neck) - image fine","11":"rundown makeup (smeared) - image fine","58":"half-lighting (half-light) - image fine"}}

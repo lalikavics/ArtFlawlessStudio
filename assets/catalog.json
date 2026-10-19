@@ -1,159 +1,204 @@
 {
-  "version": 1,
-  "families": {
-    "zimage": {
-      "label": "Z-Image Turbo",
-      "template": "template.json",
-      "folder": "diffusion_models",
-      "default": "z_image_turbo_bf16",
-      "best_en": "Best for people, portraits and characters.",
-      "best_hu": "Emberekhez, portrékhoz és karakterekhez a legjobb.",
-      "short": "ZIT"
-    },
-    "sdxl": {
-      "label": "SDXL",
-      "template": "template-sdxl.json",
-      "folder": "checkpoints",
-      "default": "juggernaut_xl_v9",
-      "best_en": "All-rounder: landscapes, architecture, products and people. Fast on 8 GB.",
-      "best_hu": "Mindenes: táj, épület, termék és ember. 8 GB-on gyors.",
-      "short": "SDXL"
-    },
-    "flux": {
-      "label": "Flux",
-      "template": "template-flux.json",
-      "folder": "checkpoints",
-      "default": "flux1_schnell_fp8",
-      "best_en": "Follows long prompts very well, good at scenes, landscapes and text. Heavier on 8 GB.",
-      "best_hu": "Hosszú promptokat nagyon jól követ, jelenetekhez, tájhoz, feliratokhoz jó. 8 GB-on nehezebb.",
-      "short": "FLUX"
-    },
-    "custom": {
-      "label": "Custom",
-      "template": "template-custom.json",
-      "folder": "checkpoints",
-      "default": null,
-      "short": "CUSTOM",
-      "best_en": "Your own checkpoint (SD 1.5, SDXL, Pony, Illustrious…) with only the model-independent features: no themes and no automatic LoRAs.",
-      "best_hu": "A saját checkpointod (SD 1.5, SDXL, Pony, Illustrious…) csak a modelltől független funkciókkal: témák és automatikus LoRA-k nélkül."
-    }
+ "version": 1,
+ "families": {
+  "zimage": {
+   "label": "Z-Image Turbo",
+   "template": "template.json",
+   "folder": "diffusion_models",
+   "default": "z_image_turbo_bf16",
+   "best_en": "Best for people, portraits and characters.",
+   "best_hu": "Emberekhez, portrékhoz és karakterekhez a legjobb.",
+   "short": "ZIT"
   },
-  "models": [
-    {
-      "id": "z_image_turbo_bf16",
-      "family": "zimage",
-      "kind": "base",
-      "recommended": true,
-      "label": "Z-Image Turbo (bf16)",
-      "file": "z_image_turbo_bf16.safetensors",
-      "folder": "diffusion_models",
-      "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
-      "size": 12309866400,
-      "license": "Apache-2.0",
-      "author": "Tongyi-MAI (Alibaba)",
-      "short": "ZIT",
-      "license_url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo"
-    },
-    {
-      "id": "juggernaut_xl_v9",
-      "family": "sdxl",
-      "kind": "base",
-      "recommended": true,
-      "label": "Juggernaut XL v9",
-      "file": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
-      "folder": "checkpoints",
-      "url": "https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
-      "size": 7105348188,
-      "license": "CreativeML Open RAIL-M",
-      "author": "RunDiffusion / KandooAI",
-      "note_en": "Photorealistic all-rounder.",
-      "note_hu": "Fotórealisztikus mindenes.",
-      "settings": {
-        "sampler": "dpmpp_2m",
-        "scheduler": "karras",
-        "clip_skip": -1,
-        "prefix": "",
-        "neg_prefix": ""
-      },
-      "short": "SDXL-JUGG",
-      "license_url": "https://huggingface.co/RunDiffusion/Juggernaut-XL-v9",
-      "license_note_en": "Personal and creative use allowed; not behind a paid API/service without a licence from RunDiffusion.",
-      "license_note_hu": "Személyes és alkotói használatra szabad; fizetős API/szolgáltatás mögött csak a RunDiffusion engedélyével."
-    },
-    {
-      "id": "realvisxl_v5",
-      "family": "sdxl",
-      "kind": "base",
-      "label": "RealVisXL V5.0",
-      "file": "RealVisXL_V5.0_fp16.safetensors",
-      "folder": "checkpoints",
-      "url": "https://huggingface.co/SG161222/RealVisXL_V5.0/resolve/main/RealVisXL_V5.0_fp16.safetensors",
-      "size": 6938065488,
-      "license": "OpenRAIL++",
-      "author": "SG161222",
-      "note_en": "Very realistic people and skin.",
-      "note_hu": "Nagyon valósághű emberek és bőr.",
-      "settings": {
-        "sampler": "dpmpp_sde",
-        "scheduler": "karras",
-        "clip_skip": -1,
-        "prefix": "",
-        "neg_prefix": ""
-      },
-      "short": "SDXL-RV",
-      "license_url": "https://huggingface.co/SG161222/RealVisXL_V5.0"
-    },
-    {
-      "id": "pony_v6",
-      "family": "sdxl",
-      "kind": "base",
-      "label": "Pony Diffusion V6 XL",
-      "file": "ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
-      "folder": "checkpoints",
-      "url": "https://huggingface.co/LyliaEngine/Pony_Diffusion_V6_XL/resolve/main/ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
-      "size": 6938041050,
-      "license": "Fair AI Public License 1.0-SD (no monetised inference)",
-      "author": "PurpleSmartAI (AstraliteHeart)",
-      "note_en": "Stylised, anime and cartoon characters. Use it with the \"None\" theme and tag-style prompts; the photo themes do not suit it.",
-      "note_hu": "Stilizált, anime és rajzfilm karakterek. A \"Nincs\" témával és címkés promptokkal használd, a fotós témák nem illenek hozzá.",
-      "settings": {
-        "sampler": "euler_ancestral",
-        "scheduler": "normal",
-        "clip_skip": -2,
-        "cfg": 7.0,
-        "steps": 25,
-        "prefix": "score_9, score_8_up, score_7_up, score_6_up, score_5_up, score_4_up, ",
-        "neg_prefix": "",
-        "theme": "None (own prompt only)"
-      },
-      "short": "SDXL-PONY",
-      "license_url": "https://civitai.com/models/257749/pony-diffusion-v6-xl",
-      "license_note_en": "No paid generation service (monetised inference); read the licence before commercial use.",
-      "license_note_hu": "Fizetős generáló szolgáltatásként nem használható; kereskedelmi használat előtt olvasd el a licencet."
-    },
-    {
-      "id": "flux1_schnell_fp8",
-      "family": "flux",
-      "kind": "base",
-      "recommended": true,
-      "label": "Flux.1 schnell (fp8)",
-      "file": "flux1-schnell-fp8.safetensors",
-      "folder": "checkpoints",
-      "url": "https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors",
-      "size": 17236328572,
-      "license": "Apache-2.0",
-      "author": "Black Forest Labs (packaged by Comfy-Org)",
-      "note_en": "4 steps, free licence. Text encoders are included in the file.",
-      "note_hu": "4 lépés, szabad licenc. A szövegkódolók benne vannak a fájlban.",
-      "settings": {
-        "sampler": "euler",
-        "scheduler": "simple",
-        "clip_skip": -1,
-        "prefix": "",
-        "neg_prefix": ""
-      },
-      "short": "FLUX-S",
-      "license_url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
-    }
-  ]
+  "sdxl": {
+   "label": "SDXL",
+   "template": "template-sdxl.json",
+   "folder": "checkpoints",
+   "default": "juggernaut_xl_v9",
+   "best_en": "All-rounder: landscapes, architecture, products and people. Fast on 8 GB.",
+   "best_hu": "Mindenes: táj, épület, termék és ember. 8 GB-on gyors.",
+   "short": "SDXL"
+  },
+  "flux": {
+   "label": "Flux",
+   "template": "template-flux.json",
+   "folder": "checkpoints",
+   "default": "flux1_schnell_fp8",
+   "best_en": "Follows long prompts very well, good at scenes, landscapes and text. Heavier on 8 GB.",
+   "best_hu": "Hosszú promptokat nagyon jól követ, jelenetekhez, tájhoz, feliratokhoz jó. 8 GB-on nehezebb.",
+   "short": "FLUX"
+  },
+  "custom": {
+   "label": "Custom",
+   "template": "template-custom.json",
+   "folder": "checkpoints",
+   "default": null,
+   "short": "CUSTOM",
+   "best_en": "Your own model: SD 1.5, SDXL (Pony, Illustrious), Z-Image or Flux – complete checkpoints, diffusion-only models and GGUF files. The Studio recognises the type and sets up the right loaders and settings.",
+   "best_hu": "Saját modell: SD 1.5, SDXL (Pony, Illustrious), Z-Image vagy Flux – teljes checkpoint, csak képalkotó modell vagy GGUF fájl. A Studio felismeri a típusát, és ahhoz állítja be a betöltést és a beállításokat."
+  }
+ },
+ "models": [
+  {
+   "id": "z_image_turbo_bf16",
+   "family": "zimage",
+   "kind": "base",
+   "recommended": true,
+   "label": "Z-Image Turbo (bf16)",
+   "file": "z_image_turbo_bf16.safetensors",
+   "folder": "diffusion_models",
+   "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+   "size": 12309866400,
+   "license": "Apache-2.0",
+   "author": "Tongyi-MAI (Alibaba)",
+   "short": "ZIT",
+   "license_url": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo"
+  },
+  {
+   "id": "juggernaut_xl_v9",
+   "family": "sdxl",
+   "kind": "base",
+   "recommended": true,
+   "label": "Juggernaut XL v9",
+   "file": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
+   "folder": "checkpoints",
+   "url": "https://huggingface.co/RunDiffusion/Juggernaut-XL-v9/resolve/main/Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
+   "size": 7105348188,
+   "license": "CreativeML Open RAIL-M",
+   "author": "RunDiffusion / KandooAI",
+   "note_en": "Photorealistic all-rounder.",
+   "note_hu": "Fotórealisztikus mindenes.",
+   "settings": {
+    "sampler": "dpmpp_2m",
+    "scheduler": "karras",
+    "clip_skip": -1,
+    "prefix": "",
+    "neg_prefix": ""
+   },
+   "short": "SDXL-JUGG",
+   "license_url": "https://huggingface.co/RunDiffusion/Juggernaut-XL-v9",
+   "license_note_en": "Personal and creative use allowed; not behind a paid API/service without a licence from RunDiffusion.",
+   "license_note_hu": "Személyes és alkotói használatra szabad; fizetős API/szolgáltatás mögött csak a RunDiffusion engedélyével."
+  },
+  {
+   "id": "realvisxl_v5",
+   "family": "sdxl",
+   "kind": "base",
+   "label": "RealVisXL V5.0",
+   "file": "RealVisXL_V5.0_fp16.safetensors",
+   "folder": "checkpoints",
+   "url": "https://huggingface.co/SG161222/RealVisXL_V5.0/resolve/main/RealVisXL_V5.0_fp16.safetensors",
+   "size": 6938065488,
+   "license": "OpenRAIL++",
+   "author": "SG161222",
+   "note_en": "Very realistic people and skin.",
+   "note_hu": "Nagyon valósághű emberek és bőr.",
+   "settings": {
+    "sampler": "dpmpp_sde",
+    "scheduler": "karras",
+    "clip_skip": -1,
+    "prefix": "",
+    "neg_prefix": ""
+   },
+   "short": "SDXL-RV",
+   "license_url": "https://huggingface.co/SG161222/RealVisXL_V5.0"
+  },
+  {
+   "id": "pony_v6",
+   "family": "sdxl",
+   "kind": "base",
+   "label": "Pony Diffusion V6 XL (anime)",
+   "file": "ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
+   "folder": "checkpoints",
+   "url": "https://huggingface.co/LyliaEngine/Pony_Diffusion_V6_XL/resolve/main/ponyDiffusionV6XL_v6StartWithThisOne.safetensors",
+   "size": 6938041050,
+   "license": "Fair AI Public License 1.0-SD (no monetised inference)",
+   "author": "PurpleSmartAI (AstraliteHeart)",
+   "note_en": "Anime, cartoon and illustrated characters only. Not for photos, landscapes or products: it tends to draw every person as a young woman and drops the objects of a scene. Use it with the \"None\" theme and tag-style prompts.",
+   "note_hu": "Csak anime, rajzfilm és illusztrált karakterekhez. Fotóhoz, tájhoz, termékhez nem ajánlott: szinte minden embert fiatal nőnek rajzol, és a jelenet tárgyait elhagyja. A „Nincs” témával és címkés promptokkal használd.",
+   "settings": {
+    "sampler": "euler_ancestral",
+    "scheduler": "normal",
+    "clip_skip": -2,
+    "cfg": 7.0,
+    "steps": 25,
+    "prefix": "score_9, score_8_up, score_7_up, score_6_up, score_5_up, score_4_up, ",
+    "neg_prefix": "",
+    "theme": "None (own prompt only)"
+   },
+   "short": "SDXL-PONY",
+   "license_url": "https://civitai.com/models/257749/pony-diffusion-v6-xl",
+   "license_note_en": "No paid generation service (monetised inference); read the licence before commercial use.",
+   "license_note_hu": "Fizetős generáló szolgáltatásként nem használható; kereskedelmi használat előtt olvasd el a licencet.",
+   "style": "anime"
+  },
+  {
+   "id": "flux1_schnell_fp8",
+   "family": "flux",
+   "kind": "base",
+   "recommended": true,
+   "label": "Flux.1 schnell (fp8)",
+   "file": "flux1-schnell-fp8.safetensors",
+   "folder": "checkpoints",
+   "url": "https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors",
+   "size": 17236328572,
+   "license": "Apache-2.0",
+   "author": "Black Forest Labs (packaged by Comfy-Org)",
+   "note_en": "4 steps, free licence. Text encoders are included in the file.",
+   "note_hu": "4 lépés, szabad licenc. A szövegkódolók benne vannak a fájlban.",
+   "settings": {
+    "sampler": "euler",
+    "scheduler": "simple",
+    "clip_skip": -1,
+    "prefix": "",
+    "neg_prefix": ""
+   },
+   "short": "FLUX-S",
+   "license_url": "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
+  },
+  {
+   "id": "te_clip_l",
+   "family": "component",
+   "kind": "component",
+   "label": "CLIP-L text encoder (Flux)",
+   "file": "clip_l.safetensors",
+   "folder": "text_encoders",
+   "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors",
+   "size": 246144152,
+   "license": "MIT",
+   "author": "OpenAI (packaged by comfyanonymous)"
+  },
+  {
+   "id": "te_t5xxl_fp8",
+   "family": "component",
+   "kind": "component",
+   "label": "T5-XXL text encoder fp8 (Flux)",
+   "file": "t5xxl_fp8_e4m3fn.safetensors",
+   "folder": "text_encoders",
+   "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors",
+   "size": 4893934904,
+   "license": "Apache-2.0",
+   "author": "Google (packaged by comfyanonymous)"
+  }
+ ],
+ "translator": {
+  "id": "artflawless-hu-en-v1",
+  "label": "ArtFlawless HU→EN prompt translator v1",
+  "base_urls": [
+   "https://github.com/Lalikavics/ArtFlawlessStudio/releases/download/translator-v1",
+   "https://huggingface.co/Lalikavics/artflawless-hu-en-v1/resolve/main"
+  ],
+  "files": {
+   "config.json": 1043,
+   "generation_config.json": 312,
+   "model.safetensors": 469538930,
+   "source.spm": 834496,
+   "target.spm": 794916,
+   "tokenizer_config.json": 896,
+   "vocab.json": 1558602
+  },
+  "license": "CC-BY-4.0",
+  "author": "Helsinki-NLP / OPUS-MT (base), Lalikavics (fine-tuning)",
+  "license_url": "https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-hu-en"
+ }
 }

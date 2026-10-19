@@ -19,9 +19,16 @@ számítógépedet, a modellek pedig egyszer töltődnek le az eredeti forrásuk
 ## Funkciók
 
 - Egyetlen telepítő felteszi a ComfyUI-t, a szükséges kiegészítőket és az AI-modelleket az eredeti forrásukból.
-- Három modellcsalád kész témákkal: **Z-Image Turbo**, **SDXL** (Juggernaut XL, RealVisXL, Pony) és **Flux.1 schnell**, valamint egy **CUSTOM** fül a saját checkpointodhoz.
+- Három modellcsalád kész témákkal: **Z-Image Turbo**, **SDXL** (Juggernaut XL, RealVisXL, Pony) és **Flux.1 schnell**, valamint egy **CUSTOM** fül a saját modelljeidhez.
+- **CUSTOM fül**: felismeri a kiválasztott fájl típusát (SD 1.5, SDXL, Pony, Illustrious, Z-Image, Flux schnell / dev; teljes checkpoint,
+  csak képalkotó modell és GGUF fájl), betölti a hozzá való szövegkódolót és VAE-t, és a típusnak megfelelő részletes beállításokat mutat,
+  modellenként megjegyezve. Figyelmeztet, ha a modell túl nagy a videókártyához vagy a memóriához. A LoRA-soroknál látszik, illik-e a
+  LoRA a betöltött modellhez, a trigger szavai (egy kattintással a promptba kerülnek), és külön állítható a szövegkódoló erőssége.
+- A fejlécben élő GPU- és CPU-terhelés, futás közben pedig a korábbiak alapján becsült idő.
 - Finomítás, arc-, kéz- és lábjavítás, végső nagyítás; képbemenetek (kezdőkép, stílusreferencia, elrendezés-referencia, automatikus képleírás).
 - Civitai-kompatibilis metaadatok, képinfó ablak, mentett munkafolyamatok, tanuló mód rámutatásos magyarázatokkal (magyarul és angolul).
+- **Magyar promptolás** (magyar felületen): a promptot és a negatív promptot magyarul írhatod; egy helyi fordító (egyszer
+  kell letölteni, kb. 470 MB, internet nélkül fut) angolra fordítja, az angol szöveget generálás előtt kézzel is javíthatod.
 - „Másolat megnyitása a ComfyUI-ban”: a teljes node-gráf, ha kíváncsi vagy, mi van a motorháztető alatt.
 
 ## Rendszerkövetelmények
@@ -89,7 +96,8 @@ Az ArtFlawless Studiót csak **felnőtt (18. életévét betöltött) személy**
   tartalmúnak (meztelenség, szexuális tartalom) felismert képek homályosítva jelennek meg, szem gombbal megjeleníthetők, és az
   `output\18+` mappába kerülnek. Alapból be van kapcsolva; a beállításokban kikapcsolható, miután megerősítetted, hogy elmúltál 18 éves.
 - **Biztonságos mód**: „meztelenség nélkül” jellegű szavakat tesz a negatív promptba, hogy véletlenül se jelenjen meg meztelenség.
-  Alapból be van kapcsolva, kikapcsolható.
+  A Z-Image Turbo és a Flux.1 schnell negatív prompt nélkül fut (CFG 1), ezért ezeknél, ha a prompt emberekről szól, a biztonságos
+  mód magába a promptba teszi a „clothed” (felöltözött) szót. Alapból be van kapcsolva, kikapcsolható.
 - **18+ megerősítés**: ha a prompt meztelenséget vagy szexuális tartalmat kér, egyszer meg kell erősítened, hogy felnőtt vagy.
 - **Gyermekvédelem**: ha a prompt kiskorúra utal meztelenséggel vagy szexuális tartalommal együtt, a program mindig megtagadja a
   generálást, és ez nem kapcsolható ki. Kiskorúak szexuális ábrázolása tilos, a mesterséges és MI-vel készített is
@@ -125,9 +133,14 @@ telepítő az eredeti forrásukból tölti le őket, és mindegyikre a saját li
 
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL-3.0), módosítás nélkül telepítve.
 - Kiegészítő node-ok: rgthree-comfy, ComfyUI Impact Pack és Subpack, Ultimate SD Upscale, ComfyUI-Florence2, ComfyUI-Custom-Scripts,
-  ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager.
+  ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager, [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) (Apache-2.0).
+- Flux szövegkódolók a CUSTOM fülhöz, csak ha kellenek (előtte rákérdez): CLIP-L (MIT) és T5-XXL fp8 (Apache-2.0),
+  forrás: [comfyanonymous/flux_text_encoders](https://huggingface.co/comfyanonymous/flux_text_encoders).
 - Tartalomellenőrzés: [NudeNet](https://github.com/notAI-tech/NudeNet) (a csomag AGPL-3.0 és MIT licencet is feltüntet) és
   [Falconsai/nsfw_image_detection](https://huggingface.co/Falconsai/nsfw_image_detection) (Apache-2.0).
+- Promptfordító: ArtFlawless HU→EN v1, a [Helsinki-NLP/opus-mt-tc-big-hu-en](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-hu-en)
+  (CC-BY 4.0, OPUS-MT, Helsinki Egyetem) továbbtanított változata; ez is CC-BY 4.0, és e tároló `translator-v1` kiadásából vagy a
+  [Hugging Face-ről](https://huggingface.co/Lalikavics/artflawless-hu-en-v1) töltődik le.
 - Modellek: Z-Image Turbo és Flux.1 schnell (Apache-2.0), Juggernaut XL v9 (CreativeML Open RAIL-M), RealVisXL V5.0 (OpenRAIL++),
   Pony Diffusion V6 XL (Fair AI Public License 1.0-SD), valamint a telepítőben felsorolt LoRA-k, detektorok és nagyítók.
 

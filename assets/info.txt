@@ -35,6 +35,8 @@ continue to apply to you; please read and respect them, and credit the authors:
  - Z-Image-Turbo-Fun-Controlnet-Union (Alibaba PAI); Depth Anything V2; Florence-2 (Microsoft); Segment Anything (Meta AI)
  - YOLOv8 face / hand detectors (Bingsu, ADetailer); foot detector (MonetEinsley/ADetailer_CM); Ultralytics YOLO
  - NudeNet content detector (notAI-tech); nsfw_image_detection classifier (Falconsai)
+ - opus-mt-tc-big-hu-en translation model (Helsinki-NLP / OPUS-MT, CC-BY 4.0), fine-tuned for prompts as ArtFlawless HU->EN
+   (downloaded only if Hungarian prompting is switched on)
  - Real-ESRGAN (Xintao Wang et al.); 7-Zip (Igor Pavlov, used only to unpack ComfyUI)
  - Custom nodes: rgthree-comfy, ComfyUI Impact Pack and Subpack (Dr.Lt.Data), Ultimate SD Upscale (ssitu), ComfyUI-Florence2 (kijai),
    ComfyUI-Custom-Scripts (pythongosssss), ControlNet Auxiliary Preprocessors (Fannovel16), ComfyUI Image Saver (alexopus),

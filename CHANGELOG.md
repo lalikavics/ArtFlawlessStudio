@@ -3,6 +3,29 @@
 All notable changes to ArtFlawless Studio are listed here.
 The version number lives in the `VERSION` file and follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [1.4.0] - 2026-10-19
+### Added
+- Hungarian prompting (Hungarian interface): a switch in card 1 and in the Settings menu. The prompt and the negative prompt can be written in Hungarian; a local translator turns them into English before generating. The English text is shown in an editable box under each field ("corrected by hand" stays until you translate again), and the content check looks at both the Hungarian original and the English text.
+- The translator (ArtFlawless HU→EN v1, about 470 MB, CC-BY 4.0) is fine-tuned from Helsinki-NLP opus-mt-tc-big-hu-en for image prompts and is downloaded once, from this repository's `translator-v1` release or, if that fails, from Hugging Face. It runs offline: on the graphics card when it has room (well under a second), otherwise on the processor (a few seconds). English words inside a Hungarian prompt, `<lora:...>` tags and `(word:1.2)` weights are kept.
+- With Hungarian prompting off, a prompt that looks Hungarian gets a note under the field, and Generate asks whether to switch the translator on, send the text as it is, or cancel (the models do not understand Hungarian).
+- `tools/mt/`: the scripts and hand-written data used to make the translator, its test sets and the image test.
+- CUSTOM tab for any model: the Studio reads the header of the chosen file (no weights) and recognises SD 1.5, SDXL, Pony, Illustrious, Z-Image and Flux schnell / dev, as a complete checkpoint, a diffusion-only model (also when it sits in `models\checkpoints`) or a GGUF file. It builds the run for that type (text encoder and VAE loaders, sampling shift, Flux guidance, latent type) and shows a detailed settings panel: sampler, scheduler, steps, CFG, base size, CLIP skip, prompt prefixes (Pony score tags), text encoders, VAE, weight precision. The settings are remembered per model file; "Defaults" brings back the values for the type.
+- Hardware check on the CUSTOM tab: a note when a model does not fit the graphics card (it runs partly from RAM), and a question before starting when it is far too large or does not fit into the memory.
+- Flux text encoders (CLIP-L, T5-XXL fp8) are offered for download when a Flux model without them is chosen.
+- GGUF models: the ComfyUI-GGUF node (city96, Apache-2.0) is installed with the other add-ons; GGUF files in `models\unet` appear in the CUSTOM model list.
+- LoRA rows on every tab: whether the LoRA fits the loaded model ("Does not work with the loaded checkpoint" switches it off), its trigger words from the training data (click one, or "All into the prompt"), the other frequent training tags, and a separate text-encoder strength for SD 1.5 / SDXL LoRAs. Files in the LoRA folder that are not LoRAs (a checkpoint, an embedding) are named as such.
+- Image info: "Use the settings (CUSTOM)" takes the steps, CFG, sampler, scheduler, size, CLIP skip and seed of an A1111 / Civitai image.
+- Header: live GPU and CPU load under the connection address (tooltip: VRAM and RAM use).
+- Status bar: elapsed time of the run and an estimate from earlier runs with the same model, size and steps.
+### Changed
+- Safe mode on Z-Image Turbo and Flux.1 schnell: these run at CFG 1 and ignore the negative prompt, so when the prompt is about people (Portrait / People themes or words like woman, man) safe mode adds "clothed" to the prompt itself. Not added for swimwear prompts, with the adult setting, or on SDXL.
+- Z-Image: the European look is on by default in the Hungarian interface; switching it off is remembered.
+- Pony Diffusion V6 XL is labelled as an anime model; its note says it is for anime, cartoon and illustrated characters, not for photos (in tests it drew most people as young women and dropped objects of the scene).
+- About window, setup texts and README credit the translator's base model (OPUS-MT, University of Helsinki, CC-BY 4.0).
+### Fixed
+- Image info no longer blurs an image you opened yourself; only adult images picked from the history stay blurred.
+- CUSTOM tab: a Z-Image or Flux file used to fail with a CLIP error ("-2") whatever the settings were.
+
 ## [1.3.2] - 2026-10-14
 ### Fixed
 - The history strip now follows the output folder itself: at start and whenever you come back to the Studio window it shows the newest 40 images that really exist (also those in `output\18+`), newest first. Images deleted in Explorer leave the strip and the viewer, and a thumbnail is checked before it opens.

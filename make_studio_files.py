@@ -715,7 +715,7 @@ rep("const known = new Set(CAT.models.map(m => m.file)); const own = onDisk.filt
     "const known = new Set(CAT.models.map(m => m.file)); const own = FAMILY === 'custom' ? onDisk : onDisk.filter(x => !known.has(x));")
 rep("    fi ? h('div', {class: 'muted', text: t('famHint') + ': ' + (fi['best_' + LANG] || fi.best_en || '')}) : null, box,",
     "    fi ? h('div', {class: 'muted', text: t('famHint') + ': ' + (fi['best_' + LANG] || fi.best_en || '')}) : null, box,\n"
-    "    T.groups.v ? groupCard('v', [field('125', 'vae_name', t('vae'), {pretty: true, onchange: () => renderMissing()})]) : null,")
+    "    T.groups.v && T.family !== 'custom' ? groupCard('v', [field('125', 'vae_name', t('vae'), {pretty: true, onchange: () => renderMissing()})]) : null,")
 rep("function shortName() {\n  const f = val('2', modelField());",
     "function shortName() {\n  const f = val('2', modelField());\n  if (FAMILY === 'custom') return (slug(pretty(f || '')).slice(0, 28)) || 'CUSTOM';")
 rep("async function run() {\n  if (!T) return;", "async function run() {\n  if (!T) return; if (!val('2', modelField())) { toast(t('noModelSel'), 'err'); return; }")
@@ -1103,4 +1103,57 @@ function openNotif() {""")
 rep("  $('#stageSpin').hidden = n === 0; }", "  $('#stageSpin').hidden = n === 0; if (n) $('#empty').hidden = true; }")
 # themed scrollbars
 rep("/* ---- learning mode ---- */", "/* ---- scrollbars ---- */\n*{scrollbar-width:thin;scrollbar-color:#343a49 transparent}\n*::-webkit-scrollbar{width:10px;height:10px}*::-webkit-scrollbar-track{background:transparent}\n*::-webkit-scrollbar-thumb{background:#2c3240;border-radius:8px;border:2px solid var(--bg)}*::-webkit-scrollbar-thumb:hover{background:#3d4456}\n/* ---- learning mode ---- */")
+# ---- Hungarian prompting: HU -> EN translation of the prompt (logic in assets/hu_prompt.js, backend in studio_init.py) ----
+rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
+.hub{border:1px solid var(--line2);border-radius:8px;padding:9px 11px;background:var(--panel2);display:flex;flex-direction:column;gap:7px}
+.hub .f.inline{margin:0}
+.hub .tag,.mi .tag{font-size:10.5px;border:1px solid var(--line2);border-radius:5px;padding:1px 5px;color:var(--muted);margin-left:6px;font-weight:400}
+.hub .dl{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:8px}
+.hub .row,.tr .row{display:flex;gap:8px;align-items:center}
+.hub .pbar{flex:1;height:6px;background:#2a2f3c;border-radius:4px;overflow:hidden}.hub .pbar i{display:block;height:100%;background:var(--acc);transition:width .3s}
+.btn.acc{border-color:var(--acc);color:var(--acc)}
+.tr{border:1px dashed var(--line2);border-radius:8px;padding:8px 10px;background:#11141a;display:flex;flex-direction:column;gap:6px}
+.tr[hidden]{display:none}
+.tr .th{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.tr .th b{color:var(--acc);font-weight:600}
+.tr textarea{background:transparent;border-color:transparent;padding:4px 2px;resize:vertical;line-height:1.45}
+.tr textarea:hover{border-color:var(--line2)}
+.tr textarea:focus{border-color:var(--acc);background:var(--bg)}
+.tr.busy textarea{opacity:.55}
+.tr .ft{display:flex;flex-direction:column;gap:6px}
+.tr .ft .row{justify-content:space-between;align-items:flex-start}
+.tr .hint.warn{color:#f3dfa6}
+.gmenu .mi[hidden]{display:none}""")
+rep('        <label class="mi"><span data-t="mSafe"></span><span class="sw"><input type="checkbox" id="safeSw"><span></span></span></label>',
+    '        <label class="mi"><span data-t="mSafe"></span><span class="sw"><input type="checkbox" id="safeSw"><span></span></span></label>\n'
+    '        <label class="mi" id="huMi" hidden><span>Magyar promptolás <span class="tag">HU → EN</span></span><span class="sw"><input type="checkbox" id="huSw"><span></span></span></label>')
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'hu_prompt.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+# ---- model / LoRA family check and time estimate (assets/studio_extras.js, backend /artflow/model-kind) ----
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'studio_extras.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("const classes = [...new Set([...Object.values(T.prompt).map(n => n.class_type), 'LoraLoaderModelOnly', 'Image Saver', 'Image Saver Simple'])];",
+    "const classes = [...new Set([...Object.values(T.prompt).map(n => n.class_type), 'LoraLoaderModelOnly', 'Image Saver', 'Image Saver Simple', 'KSampler',\n"
+    "    ...(T.family === 'custom' ? ['CheckpointLoaderSimple', 'UNETLoader', 'UnetLoaderGGUF', 'CLIPLoader', 'DualCLIPLoader', 'VAELoader', 'ModelSamplingAuraFlow', 'FluxGuidance', 'EmptySD3LatentImage'] : [])])];")
+# ---- CUSTOM tab: universal model loader + LoRA fit / trigger words (assets/custom_universal.js, backend /artflow/model-kind, /artflow/lora-match) ----
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'custom_universal.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("#progText{white-space:nowrap;", ".cuinfo{font-size:12px;margin-top:2px}.cuinfo.bad{color:var(--err)}.cuhw{font-size:12px;border-radius:6px;padding:5px 8px;margin-top:2px}.cuhw:empty{display:none}"
+    ".cuhw.ok{color:#7fd19b;background:rgba(79,179,122,.08)}.cuhw.mid{color:#e8c46a;background:rgba(224,179,65,.10)}.cuhw.bad{color:#f08b78;background:rgba(229,101,79,.12)}"
+    ".cuset{display:flex;flex-direction:column;gap:8px;margin-top:6px;padding:10px;border:1px solid var(--line);border-radius:8px}.cuset input[type=text]{width:100%}"
+    ".lorax{display:flex;flex-direction:column;gap:4px;margin:-2px 0 6px 6px;font-size:11.5px}.lorax:empty{display:none}.lorax .lrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}"
+    ".lfit{font-weight:600}.lfit.ok{color:#7fd19b}.lfit.part{color:#e8c46a}.lfit.bad{color:#f08b78}.lfit.na{color:var(--muted)}.lora.lbad select{color:var(--muted)}"
+    ".ltrig{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.tchip{font:11px inherit;padding:2px 7px;border-radius:10px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer}"
+    ".tchip:hover{border-color:var(--acc);color:var(--acc)}.tchip.sub{opacity:.75;font-size:10.5px}.ltags summary{cursor:pointer;font-size:11px;margin:2px 0}.ltags .ltrig{margin-top:3px}\n#progText{white-space:nowrap;")
+rep("#progText{white-space:nowrap;", "#eta{white-space:nowrap;font-variant-numeric:tabular-nums;margin-right:6px}\n#progText{white-space:nowrap;")
+rep(".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}",
+    ".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}\n"
+    ".conn .lms{display:grid;gap:2px;margin-top:1px}.conn .lm{display:flex;align-items:center;gap:5px;font:9.5px ui-monospace,Consolas,monospace;color:#7c8396}"
+    ".conn .lml{width:22px}.conn .lmb{width:58px;height:4px;border-radius:3px;background:#262b36;overflow:hidden}"
+    ".conn .lmb i{display:block;height:100%;width:0;background:#4fb37a;transition:width .4s}.conn .lmb i.mid{background:#e0b341}.conn .lmb i.hi{background:#e5654f}"
+    ".conn .lmv{width:28px;text-align:right;color:#aab1c2}")
+rep("initSafety();", "initSafety(); initHuPrompt();")
+rep("initSafety(); initHuPrompt();", "initSafety(); initHuPrompt(); initExtras();")
+rep("      h('div', {class: 'note', id: 'promptHint', hidden: true}),\n      field('46', 'value', t('prompt'), {rows: 9}),\n      mini(t('neg'), field('51', 'value', T.family === 'sdxl' ? t('negHintX') : t('negHint'), {rows: 3})),",
+    "      h('div', {class: 'note', id: 'promptHint', hidden: true}),\n      huPrompt(),\n      field('46', 'value', huActive() ? HUS.label : t('prompt'), {rows: huActive() ? 7 : 9}),\n      huDetect(),\n      huTrans('p'),\n      mini(t('neg'), field('51', 'value', T.family === 'sdxl' ? t('negHintX') : t('negHint'), {rows: 3}), huTrans('n')),")
+rep("    ], false)\n  );\n  const pr = (p, n) =>", "    ], false)\n  );\n  huBoxes();\n  const pr = (p, n) =>")
+rep("function renderControls() {\n  const lookId = T.ids && T.ids.look;", "function renderControls() {\n  huLookDefault(); const lookId = T.ids && T.ids.look;")
+rep("function applyLang() {\n  document.documentElement.lang = LANG;", "function applyLang() {\n  document.documentElement.lang = LANG; { const hm = $('#huMi'); if (hm) hm.hidden = LANG !== 'hu'; }")
 open(p, 'w', encoding='utf-8', newline='').write(h)

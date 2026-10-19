@@ -19,9 +19,16 @@ models are downloaded once from their original sources.
 ## Features
 
 - One setup installs ComfyUI, the needed add-ons and the AI models from their original sources.
-- Three model families with ready-made themes: **Z-Image Turbo**, **SDXL** (Juggernaut XL, RealVisXL, Pony) and **Flux.1 schnell**, plus a **CUSTOM** tab for your own checkpoint.
+- Three model families with ready-made themes: **Z-Image Turbo**, **SDXL** (Juggernaut XL, RealVisXL, Pony) and **Flux.1 schnell**, plus a **CUSTOM** tab for your own models.
+- **CUSTOM tab**: recognises the type of the chosen file (SD 1.5, SDXL, Pony, Illustrious, Z-Image, Flux schnell / dev; complete checkpoints,
+  diffusion-only models and GGUF files), loads the matching text encoder and VAE, and shows detailed settings for that type, remembered per model.
+  It warns when a model is too large for the graphics card or the memory. LoRA rows show whether the LoRA fits the loaded model,
+  its trigger words (one click puts them into the prompt) and a separate text-encoder strength.
+- Live GPU and CPU load in the header, and an estimated time for each run from the earlier ones.
 - Refine, face / hand / foot fix and final upscale steps, image inputs (start image, style reference, image description).
 - Civitai-compatible metadata, Image info window, saved workflows, learning mode with hints (English and Hungarian).
+- **Hungarian prompting** (Hungarian interface): write the prompt and the negative prompt in Hungarian; a local translator
+  (downloaded once, about 470 MB, runs offline) turns them into English, and you can correct the English text by hand before generating.
 - "Open a copy in ComfyUI" shows the full node graph, for those who want to look under the hood.
 
 ## System requirements
@@ -93,6 +100,7 @@ Version numbers follow [Semantic Versioning](https://semver.org): fixes raise th
 | `make_studio_files.py`, `make_families.py`, `help_texts.py` | generate the Studio page and the SDXL / Flux / Custom templates into `studio_out/` |
 | `assets/` | ComfyUI add-on of the Studio (`studio_init.py`), model catalogue, setup texts, icon and logo |
 | `tools/` | helper scripts for the release workflow |
+| `tools/mt/` | how the Hungarian→English prompt translator was made: data preparation, fine-tuning, evaluation sets, image tests |
 
 ## Age requirement and content protection
 
@@ -101,7 +109,8 @@ ArtFlawless Studio may only be used by **adults (18 years or older)**. The setup
 - **Content filter**: every image is checked on your own computer (NudeNet detector and Falconsai classifier, on the processor).
   Images recognised as adult content (nudity, sexual content) are blurred, with an eye button to show them, and saved into `output\18+`.
   On by default; it can be switched off in Settings after confirming that you are 18 or older.
-- **Safe mode**: adds "no nudity" words to the negative prompt, so nudity does not appear by accident. On by default, can be switched off.
+- **Safe mode**: adds "no nudity" words to the negative prompt, so nudity does not appear by accident. Z-Image Turbo and Flux.1 schnell
+  run without a negative prompt (CFG 1), so for these, when the prompt is about people, safe mode adds "clothed" to the prompt itself. On by default, can be switched off.
 - **18+ confirmation**: a prompt that asks for nudity or sexual content needs a one-time confirmation that you are an adult.
 - **Child protection**: a prompt that refers to a minor together with nudity or sexual content is always refused, and this cannot be
   switched off. Sexual depictions of minors are illegal, including artificial and AI-generated ones ([EU Directive 2011/93/EU](https://eur-lex.europa.eu/eli/dir/2011/93/oj)).
@@ -136,9 +145,14 @@ downloads them from their original sources, and each of them stays under its own
 
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI) (GPL-3.0), installed unmodified.
 - Custom nodes: rgthree-comfy, ComfyUI Impact Pack and Subpack, Ultimate SD Upscale, ComfyUI-Florence2, ComfyUI-Custom-Scripts,
-  ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager.
+  ControlNet Auxiliary Preprocessors, ComfyUI Image Saver, ComfyUI-Prompt-Manager, [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) (Apache-2.0).
+- Flux text encoders for the CUSTOM tab, downloaded only when needed (asks first): CLIP-L (MIT) and T5-XXL fp8 (Apache-2.0)
+  from [comfyanonymous/flux_text_encoders](https://huggingface.co/comfyanonymous/flux_text_encoders).
 - Content check: [NudeNet](https://github.com/notAI-tech/NudeNet) (the package states both AGPL-3.0 and MIT) and
   [Falconsai/nsfw_image_detection](https://huggingface.co/Falconsai/nsfw_image_detection) (Apache-2.0).
+- Prompt translator: ArtFlawless HU→EN v1, fine-tuned from [Helsinki-NLP/opus-mt-tc-big-hu-en](https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-hu-en)
+  (CC-BY 4.0, OPUS-MT, University of Helsinki); the fine-tuned model is CC-BY 4.0 too and is downloaded from this repository's
+  `translator-v1` release or from [Hugging Face](https://huggingface.co/Lalikavics/artflawless-hu-en-v1).
 - Models: Z-Image Turbo and Flux.1 schnell (Apache-2.0), Juggernaut XL v9 (CreativeML Open RAIL-M), RealVisXL V5.0 (OpenRAIL++),
   Pony Diffusion V6 XL (Fair AI Public License 1.0-SD), and the LoRAs, detectors and upscalers listed in the setup.
 
