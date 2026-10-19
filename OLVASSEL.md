@@ -2,6 +2,8 @@
 
 **Helyi AI-képgenerálás, egyszerűen.**
 
+![Az ArtFlawless Studio főablaka: modellcsalád-fülek, bal oldalt a prompt és a beállítások, középen az elkészült kép, jobb oldalt a képbemenetek és a mentés](docs/screenshot.png)
+
 Az ArtFlawless Studio ingyenes, nyílt forráskódú Windows-alkalmazás, amellyel mesterséges intelligenciával készíthetsz képeket a saját
 gépeden. Két részből áll: egy telepítőből, amely mindent feltesz, ami kell, és egy egyszerű, barátságos kezelőfelületből (a *Studióból*),
 amely a népszerű, node-alapú képgeneráló motorra, a [ComfyUI](https://github.com/comfyanonymous/ComfyUI)-ra épül.

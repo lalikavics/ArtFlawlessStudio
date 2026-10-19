@@ -2,6 +2,8 @@
 
 **Local AI image generation, made simple.**
 
+![ArtFlawless Studio main window: model family tabs, prompt and settings on the left, the generated image in the middle, image inputs and saving on the right](docs/screenshot.png)
+
 ArtFlawless Studio is a free, open-source Windows application for creating images with AI on your own computer. It consists of
 a setup that installs everything you need, and a simple, friendly interface (the *Studio*) on top of
 [ComfyUI](https://github.com/comfyanonymous/ComfyUI), the popular node-based image-generation engine.
