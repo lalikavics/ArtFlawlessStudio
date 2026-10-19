@@ -599,7 +599,9 @@ async def _tr_download(info):
                 st["done"] = base_done
                 continue
             part = dest + ".part"
-            urls = [u.rstrip("/") + "/" + name for u in (info.get("base_urls") or [info.get("base_url", "")]) if u]
+            # the GitHub release names the weights file descriptively; Hugging Face keeps the standard model.safetensors
+            rn = info.get("release_names") or {}
+            urls = [u.rstrip("/") + "/" + (rn.get(name, name) if "github.com" in u else name) for u in (info.get("base_urls") or [info.get("base_url", "")]) if u]
             for attempt in range(1, 6):
                 url = urls[(attempt - 1) % len(urls)]       # GitHub first, then the mirror (Hugging Face)
                 have = os.path.getsize(part) if os.path.exists(part) else 0

@@ -197,6 +197,9 @@
    "tokenizer_config.json": 896,
    "vocab.json": 1558602
   },
+  "release_names": {
+   "model.safetensors": "artflawless-hu-en-v1.safetensors"
+  },
   "license": "CC-BY-4.0",
   "author": "Helsinki-NLP / OPUS-MT (base), Lalikavics (fine-tuning)",
   "license_url": "https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-hu-en"
