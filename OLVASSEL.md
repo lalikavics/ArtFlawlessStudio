@@ -64,6 +64,7 @@ megmaradnak. Frissítés előtt zárd be a Studiót.
 - Az SDXL-hez és a Fluxhoz nincs automatikus bőr- és kéz-LoRA; az arc-, kéz- és lábjavító lépések minden családnál működnek.
 - A Flux.1 schnell bőre kissé „műanyag” hatású; emberekhez a Z-Image Turbo vagy a RealVisXL jobb.
 - A telepítő még nincs digitálisan aláírva, ezért a Windows SmartScreen figyelmeztethet („További információ” → „Futtatás mindenképp”).
+- Ha a Studio ablaka furcsán viselkedik (egér, fájlbehúzás), tegyél egy `window-mode.txt` fájlt `window` tartalommal a telepítés `studio-window` mappájába: az ablak ekkor a régebbi megjelenítési módot használja.
 
 ## Fordítás forrásból
 

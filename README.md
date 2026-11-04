@@ -64,6 +64,7 @@ Close the Studio before updating.
 - SDXL and Flux have no automatic skin / hand LoRAs; the face, hand and foot fix steps work with every family.
 - Flux.1 schnell tends to render skin a little "plastic"; for people Z-Image Turbo or RealVisXL work better.
 - The setup is not digitally signed yet, so Windows SmartScreen may show a warning ("More info" → "Run anyway").
+- If the Studio window misbehaves (mouse, drag & drop), put a file `window-mode.txt` with the word `window` into the `studio-window` folder of the installation: the window then uses the older way of showing the page.
 
 ## Build from source
 

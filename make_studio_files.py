@@ -682,7 +682,7 @@ rep("  document.querySelectorAll('[data-t]').forEach(e => { e.textContent = t(e.
     "  document.querySelectorAll('[data-tt]').forEach(e => { e.title = t(e.getAttribute('data-tt')); e.setAttribute('aria-label', e.title); });")
 # ---- connection + busy state ----
 rep("function conn(on) { if (on != null) CONN = on; $('#dot').classList.toggle('on', !!CONN); $('#connText').textContent = CONN == null ? t('connecting') : CONN ? t('connected') + (R.queue ? ' · ' + t('queue', R.queue) : '') : t('offline'); }",
-    "function conn(on) { if (on != null) CONN = on; $('#dot').classList.toggle('on', !!CONN); $('#connText').textContent = CONN == null ? t('connecting') : CONN ? t('connected') : t('offlineS'); $('#connIp').textContent = API_URL.host; }")
+    "function conn(on) { if (on != null) CONN = on; $('#dot').classList.toggle('on', !!CONN); const tx = CONN == null ? t('connecting') : CONN ? t('connected') : t('offlineS'); if ($('#connText').textContent !== tx) $('#connText').textContent = tx; if ($('#connIp').textContent !== API_URL.host) $('#connIp').textContent = API_URL.host; }")
 rep("function busy() { const n = R.jobs.size; $('#stopBtn').disabled = n === 0; $('#goBtn').textContent = n ? t('goQ', n) : t('go'); }",
     "function busy() { const n = R.jobs.size; $('#stopBtn').disabled = n === 0; const g = $('#goBtn'); g.classList.toggle('busy', n > 0);\n"
     "  if (n) { g.replaceChildren(h('i', {class: 'spin'}), t('generating') + (n > 1 ? ' (+' + (n - 1) + ')' : '')); } else g.textContent = t('go');\n"
@@ -898,14 +898,28 @@ header.cc .conn .ip,header.cc .conn #connText{display:none}header.cc .hbox.conn{
 .gmenu.dd .mi.act{color:var(--acc);font-weight:700}
 </style>""")
 rep("function openNotif() {", r"""const FOLD = ['c1', 'c2', 'cc', 'cb', 'c3'];   // order: "runs" label, icon buttons, connection text, brand texts, family tabs
-function fitHeader() {
-  const hd = document.querySelector('header'); if (!hd) return; const mid = hd.querySelector('.hmid'), ft = $('#famTabs');
-  const act = ft && ft.querySelector('button.act'); $('#famDdTxt').textContent = act ? act.textContent : '';
-  hd.classList.remove(...FOLD);
-  const over = () => hd.scrollWidth > hd.clientWidth + 1 || (!hd.classList.contains('c3') && ft && mid && ft.scrollWidth > mid.clientWidth - 22);
-  for (const c of FOLD) { if (!over()) break; hd.classList.add(c); }
-  $('#moreBadge').hidden = $('#notifBadge').hidden;
+// The header folds parts away when the window gets narrow. The widths each fold step needs are measured only when the
+// header content changes (language, family tabs, connection text, badges); while the window is resized only the window
+// width is compared with them, without reading the layout, so resizing stays smooth.
+let FOLD_W = null, FOLD_OFF = 0, FOLD_LVL = -1;
+function measureFold() {
+  const hd = document.querySelector('header'); if (!hd) return;
+  const act = $('#famTabs') && $('#famTabs').querySelector('button.act'); const lbl = act ? act.textContent : '';
+  if ($('#famDdTxt').textContent !== lbl) $('#famDdTxt').textContent = lbl;
+  if ($('#moreBadge').hidden !== $('#notifBadge').hidden) $('#moreBadge').hidden = $('#notifBadge').hidden;
+  const keep = FOLD.filter(c => hd.classList.contains(c)); FOLD_OFF = innerWidth - hd.clientWidth;
+  hd.style.width = 'max-content'; const need = [];
+  for (let i = 0; i <= FOLD.length; i++) { hd.classList.remove(...FOLD); hd.classList.add(...FOLD.slice(0, i)); need.push(hd.scrollWidth + (i < FOLD.length ? 22 : 0)); }
+  hd.style.width = ''; hd.classList.remove(...FOLD); hd.classList.add(...keep);
+  FOLD_W = need; FOLD_LVL = keep.length; applyFold();
 }
+function applyFold() {
+  const hd = document.querySelector('header'); if (!hd || !FOLD_W) return;
+  const avail = innerWidth - FOLD_OFF; let lvl = FOLD_W.findIndex(w => w <= avail + 1); if (lvl < 0) lvl = FOLD.length;
+  if (lvl === FOLD_LVL) return;
+  FOLD_LVL = lvl; FOLD.forEach((c, i) => hd.classList.toggle(c, i < lvl));
+}
+function fitHeader() { measureFold(); }
 function ddToggle(menu, btn, fill) {
   const open = menu.hidden; document.querySelectorAll('.gmenu.dd').forEach(m => m.hidden = true); if (!open) return;
   fill(menu); menu.hidden = false;
@@ -918,10 +932,13 @@ function initFold() {
   $('#famDdBtn').onclick = e => { e.stopPropagation(); ddToggle(fd, e.currentTarget, m => { m.replaceChildren();
     $('#famTabs').querySelectorAll('button').forEach(src => m.append(h('button', {class: 'mi' + (src.classList.contains('act') ? ' act' : ''), type: 'button', text: src.textContent, title: src.title, onclick: ev => { ev.stopPropagation(); m.hidden = true; src.click(); }}))); }); };
   document.addEventListener('click', e => { document.querySelectorAll('.gmenu.dd').forEach(m => { if (!m.hidden && !m.contains(e.target)) m.hidden = true; }); });
-  let raf = 0; const go = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fitHeader); };
-  if (window.ResizeObserver) new ResizeObserver(go).observe(document.querySelector('header')); addEventListener('resize', go);
-  new MutationObserver(go).observe($('#famTabs'), {childList: true, subtree: true, attributes: true}); new MutationObserver(go).observe($('#notifBadge'), {attributes: true});
-  go();
+  addEventListener('resize', applyFold);
+  // header content changed: measure again (after the change has settled; the load meters have a fixed width and are left out)
+  let mt = 0; const again = () => { clearTimeout(mt); mt = setTimeout(() => requestAnimationFrame(measureFold), 120); };
+  new MutationObserver(recs => { if (recs.some(r => r.target !== document.querySelector('header') && !(r.target.closest && r.target.closest('.lms')) && !(r.target.parentElement && r.target.parentElement.closest('.lms')))) again(); })
+    .observe(document.querySelector('header'), {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class']});
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);
+  measureFold();
 }
 function openNotif() {""")
 rep("initZoom(); initHelp(); initHost();", "initZoom(); initHelp(); initHost(); initFold();")
@@ -1146,9 +1163,10 @@ rep("#progText{white-space:nowrap;", "#eta{white-space:nowrap;font-variant-numer
 rep(".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}",
     ".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}\n"
     ".conn .cw{gap:0}.conn .ct{line-height:13px}.conn .ip{line-height:11px;margin-top:1px}"
-    ".conn .lms{display:grid;gap:1px;margin-top:3px}.conn .lm{display:flex;align-items:center;gap:5px;font:9px/9px ui-monospace,Consolas,monospace;color:#7c8396}"
+    ".conn .lms{display:grid;gap:1px;margin-top:3px;contain:layout paint}.conn .lm{display:flex;align-items:center;gap:5px;font:9px/9px ui-monospace,Consolas,monospace;color:#7c8396}"
     ".conn .lml{width:22px}.conn .lmb{width:58px;height:3px;border-radius:3px;background:#262b36;overflow:hidden}"
-    ".conn .lmb i{display:block;height:100%;width:0;background:#4fb37a;transition:width .4s}.conn .lmb i.mid{background:#e0b341}.conn .lmb i.hi{background:#e5654f}"
+    ".conn .lmb i{display:block;height:100%;width:100%;transform-origin:left;transform:scaleX(0);background:#4fb37a;transition:transform .3s}"   # transform, not width: the bar moves on the GPU without re-laying out the page
+    ".conn .lmb i.mid{background:#e0b341}.conn .lmb i.hi{background:#e5654f}"
     ".conn .lmv{width:28px;text-align:right;color:#aab1c2}")
 rep("initSafety();", "initSafety(); initHuPrompt();")
 rep("initSafety(); initHuPrompt();", "initSafety(); initHuPrompt(); initExtras();")

@@ -3,6 +3,15 @@
 All notable changes to ArtFlawless Studio are listed here.
 The version number lives in the `VERSION` file and follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [1.4.1] - 2026-11-04
+### Fixed
+- The Studio used processor and graphics card time even when idle, and moving the window stuttered: the GPU/CPU load meters in the header animated their width, which made the whole page lay itself out on every screen frame (about 70 times a second, more on high refresh rate monitors). The bars now move on the graphics card and change only when the value changes; idle work of the page dropped from 0.56 s to 0.04 s per 10 s, the window's own processor use from about 26 % to 0.5 % of a core.
+- Resizing the window: the header no longer measures itself several times on every step to decide what to fold away; the widths are measured once when the header content changes, and resizing only compares the window width with them.
+- No grey frame line around the window after switching to another program and back.
+### Changed
+- The Studio window shows the page through visual hosting (DirectComposition): during a resize drag the window and the page change together, one step per screen refresh, so the content no longer trembles or jumps. Mouse input, the cursor and drag & drop are passed to the page by the window. If visual hosting cannot start, the window uses the previous way (the page in its own child window), now passing the new size on at most once per screen refresh. `studio-window\window-mode.txt` with the word `window` selects that way by hand.
+- Right-click menu: in text fields only Cut, Copy, Paste and Select all, on selected text only Copy, elsewhere none (no Inspect, Save, Print and the like); F12 no longer opens the developer tools.
+
 ## [1.4.0] - 2026-10-19
 ### Added
 - Hungarian prompting (Hungarian interface): a switch in card 1 and in the Settings menu. The prompt and the negative prompt can be written in Hungarian; a local translator turns them into English before generating. The English text is shown in an editable box under each field ("corrected by hand" stays until you translate again), and the content check looks at both the Hungarian original and the English text.

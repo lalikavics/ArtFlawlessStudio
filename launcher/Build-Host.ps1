@@ -32,10 +32,11 @@ if (@($need | Where-Object { -not (Test-Path -LiteralPath (Join-Path $Dir $_)) }
     foreach ($f in $need) { if (-not (Test-Path -LiteralPath (Join-Path $Dir $f))) { throw "WebView2 SDK file missing after download: $f" } }
 }
 
-# The stamp makes older installs rebuild once (1.3.2: the exe now carries the program icon for Task Manager).
+# The stamp makes older installs rebuild once (1.3.2: the exe now carries the program icon for Task Manager;
+# 1.4.1: visual hosting, smooth resizing, no grey frame on focus change, trimmed right-click menu).
 $Ico = Join-Path $Here 'artflow.ico'
 $Stamp = Join-Path $Dir 'host.build'
-$Build = '2'
+$Build = '3'
 $stale = (-not (Test-Path -LiteralPath $Exe)) -or ((Get-Item -LiteralPath $Src).LastWriteTimeUtc -gt (Get-Item -LiteralPath $Exe).LastWriteTimeUtc) -or
          (-not (Test-Path -LiteralPath $Stamp)) -or (([IO.File]::ReadAllText($Stamp)).Trim() -ne $Build)
 if ($stale) {

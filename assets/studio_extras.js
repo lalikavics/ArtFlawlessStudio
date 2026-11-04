@@ -93,7 +93,7 @@ finish = async function (id, ok) {
 };
 function etaTick() {
   const el = $('#eta'); if (!el) return;
-  if (!R.job || !R.t0) { el.textContent = ''; el.hidden = true; return; }
+  if (!R.job || !R.t0) { if (!el.hidden) { el.textContent = ''; el.hidden = true; } return; }
   const el2 = (Date.now() - R.t0) / 1000; const e = estimate(JOB_SIG.get(R.job) || '');
   el.hidden = false;
   el.textContent = xs('el', fmtT(el2)) + (e ? ' · ' + xs('est', fmtT(Math.max(e.sec, el2))) : '');
@@ -109,10 +109,15 @@ function loadMeter(id, label) {
   return h('div', {class: 'lm', id}, h('span', {class: 'lml', text: label}), h('span', {class: 'lmb'}, h('i')), h('span', {class: 'lmv', text: '–'}));
 }
 function setMeter(id, v, tip) {
-  const m = $('#' + id); if (!m) return; const ok = v != null && isFinite(v);
-  m.querySelector('i').style.width = (ok ? Math.max(0, Math.min(100, v)) : 0) + '%';
-  m.querySelector('i').className = ok && v >= 90 ? 'hi' : ok && v >= 60 ? 'mid' : '';
-  m.querySelector('.lmv').textContent = ok ? Math.round(v) + '%' : '–'; m.title = tip || '';
+  // only what changed is written: every change of the page costs a style and layout pass (and the window repaints)
+  const m = $('#' + id); if (!m) return; const ok = v != null && isFinite(v); const pct = ok ? Math.round(Math.max(0, Math.min(100, v))) : -1;
+  if (m._pct !== pct) {
+    m._pct = pct; const bar = m.querySelector('i');
+    bar.style.transform = 'scaleX(' + (ok ? pct / 100 : 0) + ')';
+    const cls = ok && pct >= 90 ? 'hi' : ok && pct >= 60 ? 'mid' : ''; if (bar.className !== cls) bar.className = cls;
+    m.querySelector('.lmv').textContent = ok ? pct + '%' : '–';
+  }
+  if (m.title !== (tip || '')) m.title = tip || '';
 }
 async function pollLoad() {
   try {
@@ -124,5 +129,5 @@ async function pollLoad() {
 function initLoad() {
   const cw = document.querySelector('.conn .cw'); if (!cw || $('#lmGpu')) return;
   cw.append(h('div', {class: 'lms'}, loadMeter('lmGpu', 'GPU'), loadMeter('lmCpu', 'CPU')));
-  pollLoad(); setInterval(() => { if (!document.hidden) pollLoad(); }, 1500);
+  pollLoad(); setInterval(() => { if (!document.hidden) pollLoad(); }, 2000);
 }
