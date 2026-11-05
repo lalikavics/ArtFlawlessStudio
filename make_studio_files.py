@@ -113,6 +113,10 @@ rep("  const logoUrl = API + '/view?filename=artflow-logo.png&subfolder=&type=in
     "  const logoOld = API + '/view?filename=artflow-logo.png&subfolder=&type=input', logoUrl = API + '/view?filename=artflow-icon.png&subfolder=&type=input';")
 rep("  const logo = $('#logo'); logo.onerror = () => { logo.remove();",
     "  const logo = $('#logo'); logo.onerror = () => { if (logo.src !== logoOld) { logo.src = logoOld; fav.href = logoOld; return; } logo.remove();")
+rep("let LANG = 'en'; try { const l = localStorage.getItem(LS_LANG); if (l === 'hu' || l === 'en') LANG = l; } catch (_) {}",
+    "let LANG = 'en'; try { const l = localStorage.getItem(LS_LANG); if (l === 'hu' || l === 'en') LANG = l;\n"
+    "  // first start: the language of the setup (the backend puts it into the page), kept as the Studio's own from now on\n"
+    "  else { const m = document.querySelector('meta[name=\"af-setup-lang\"]'); const sl = m && m.content; if (sl === 'hu' || sl === 'en') { LANG = sl; localStorage.setItem(LS_LANG, sl); } } } catch (_) {}")
 rep("#modal a{color:var(--acc)}",
     "#modal a{color:var(--acc)}\n#notifBtn{position:relative}\n#notifBadge{display:inline-block;margin-left:6px;min-width:17px;height:17px;line-height:17px;border-radius:9px;background:var(--err);color:#1a0505;font-size:12px;font-weight:800;text-align:center}\n#notifBadge[hidden]{display:none}\n.nt{border-top:1px solid var(--line);padding:6px 0;font-size:13px;white-space:pre-wrap}.nt small{color:var(--muted);margin-right:8px}.nt.err{color:#ffb4b4}\n.nh{margin:12px 0 4px;font-weight:700}")
 rep('<button class="btn sm" id="aboutBtn"',

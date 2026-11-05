@@ -125,7 +125,22 @@ async def _download(m):
 
 @routes.get("/artflow")
 async def artflow_index(request):
-    return web.FileResponse(os.path.join(WEB, "index.html"), headers=NO_CACHE)
+    """The page; it is told the language of the setup / the start window (user\\artflow-ui-lang.txt), which the page takes
+    as its own on the first start, before anything was chosen in the Studio."""
+    lang = ""
+    try:
+        f = _user_file("artflow-ui-lang.txt")
+        if os.path.isfile(f):
+            with open(f, encoding="ascii", errors="ignore") as fh:
+                lang = fh.read().strip().lower()
+    except Exception:
+        lang = ""
+    if lang not in ("hu", "en"):
+        return web.FileResponse(os.path.join(WEB, "index.html"), headers=NO_CACHE)
+    with open(os.path.join(WEB, "index.html"), encoding="utf-8") as fh:
+        page = fh.read()
+    page = page.replace("<head>", '<head><meta name="af-setup-lang" content="%s">' % lang, 1)
+    return web.Response(text=page, content_type="text/html", charset="utf-8", headers=NO_CACHE)
 
 
 @routes.get("/artflow/preview")
