@@ -44,6 +44,12 @@ const cus = (k, ...a) => {
     tags: hu ? 'Gyakori tanítási címkék (nem kötelezők)' : 'Frequent training tags (optional)',
     nlCk: hu ? '✕ Ez nem LoRA, hanem egy teljes checkpoint – a models\\checkpoints mappába való.' : '✕ This is not a LoRA but a complete checkpoint – it belongs in the models\\checkpoints folder.',
     nlEm: hu ? '✕ Ez nem LoRA, hanem embedding (textual inversion) – a models\\embeddings mappába tedd, és a promptban így használd: embedding:%1' : '✕ This is not a LoRA but an embedding (textual inversion) – put it into models\\embeddings and use it in the prompt as embedding:%1',
+    lPick: hu ? '– válassz LoRA-t –' : '– choose a LoRA –', trigHead: hu ? 'Trigger szavak' : 'Trigger words', trigNone: hu ? 'Nincs kiolvasható trigger szó (a LoRA leírásában nézz utána, ha kell)' : 'No trigger word in the file (see the LoRA page if it needs one)',
+    trigOn: hu ? 'A promptban van – kattints a kivételhez' : 'In the prompt – click to take it out',
+    gFit: hu ? 'Ehhez a modellhez valók' : 'For this model', gOther: hu ? 'Másik modellcsaládhoz valók – nem választhatók' : 'For another model family – cannot be chosen',
+    gUnk: hu ? 'Ismeretlen típusú' : 'Unknown type',
+    mWrong: hu ? 'A kiválasztott modell (%1) %2 típusú, ez a fül viszont %3 modellekhez való, így a generálás hibával leállna. Válaszd az ajánlott modellt, vagy használd ezt a fájlt a CUSTOM fülön.' : 'The selected model (%1) is a %2 model, but this tab is for %3 models, so a run would stop with an error. Choose the recommended model, or use this file on the CUSTOM tab.',
+    mFix: hu ? 'Ajánlott modell kiválasztása' : 'Choose the recommended model', mWrongT: hu ? 'Ez a modell nem ehhez a fülhöz való' : 'This model does not belong to this tab',
     iiApply: hu ? 'Beállítások átvétele (CUSTOM)' : 'Use the settings (CUSTOM)', iiApplied: hu ? 'A kép beállításai átvéve: %1' : 'Settings taken from the image: %1',
   };
   let s = M[k] || k; a.forEach((v, i) => { s = s.split('%' + (i + 1)).join(v); }); return s;
@@ -190,7 +196,33 @@ function drawCustom(box) {
   });
 }
 const _drawModelsCU = drawModels;
-drawModels = function (box) { if (FAMILY === 'custom') return drawCustom(box); return _drawModelsCU(box); };
+drawModels = function (box) { if (FAMILY === 'custom') return drawCustom(box); const r = _drawModelsCU(box); famModelCheck(box); return r; };
+/* the fixed tabs (Z-Image, SDXL, Flux) run only their own model family: the own-model list shows the matching files first,
+   and a file of another family (for example chosen earlier, or a Z-Image checkpoint on the SDXL tab) is named as such */
+const FAM_OK = {zimage: ['zimage'], sdxl: ['sdxl'], flux: ['flux']};
+const FAM_NAME = {zimage: 'Z-Image', sdxl: 'SDXL', flux: 'Flux'};
+async function famModelCheck(box) {
+  const ok = FAM_OK[FAMILY]; if (!ok) return; const fam = FAMILY;
+  const m = curModelRef(); const mk = m.name ? await modelKind(m.folder, m.name) : null;
+  if (!box.isConnected || FAMILY !== fam) return;
+  const bad = mk && mk.kind && !['unknown', 'missing'].includes(mk.kind) && !ok.includes(mk.kind);
+  if (bad) {
+    const fi = famInfo(FAMILY); const rec = fi && CAT && CAT.models.find(x => x.id === fi.default);
+    box.prepend(h('div', {class: 'cuhw bad'}, h('div', {text: cus('mWrong', pretty(m.name), kindLabel(mk), FAM_NAME[FAMILY])}),
+      rec ? h('button', {class: 'btn sm', type: 'button', style: 'margin-top:6px', text: cus('mFix'), onclick: () => { applyModel(rec); renderControls(); }}) : null));
+  }
+  const sel = box.querySelector('select'); if (!sel || sel.dataset.grouped) return; sel.dataset.grouped = '1';
+  // the select keeps the position in the list as its value; the file names are in the node's option list
+  const files = (spec('2', modelField()) || {}).options || []; const fileOf = o => (/^\d+$/.test(o.value) && files[+o.value] != null) ? files[+o.value] : o.value;
+  const opts = [...sel.options]; const kinds = {}; await Promise.all(opts.filter(o => o.value !== '').map(o => modelKind(m.folder, fileOf(o)).then(k => { kinds[o.value] = k; })));
+  if (!sel.isConnected) return; const cur = sel.value; const fit = [], other = [], plain = [];
+  for (const o of opts) { if (o.value === '') { plain.push(o); continue; } const k = kinds[o.value] || {}; (ok.includes(k.kind) || !k.kind || k.kind === 'unknown' ? fit : other).push(o); }
+  fit.forEach(o => { o.style.color = '#4fb37a'; }); other.forEach(o => { o.style.color = '#e5654f'; });
+  if (!other.length) return;
+  sel.replaceChildren(...plain);
+  const grp = (label, arr) => { if (!arr.length) return; const g = h('optgroup', {label}); arr.forEach(o => g.append(o)); sel.append(g); };
+  grp(cus('gFit') + ' (' + FAM_NAME[FAMILY] + ')', fit); grp(cus('gOther'), other); sel.value = cur;
+}
 const _findMissingCU = findMissing;
 findMissing = function () {
   let m = _findMissingCU(); if (FAMILY !== 'custom') return m;
@@ -226,6 +258,16 @@ const _bpCU = buildPrompt;
 buildPrompt = function (seed, cnt) { const wf = _bpCU(seed, cnt); if (T && T.family === 'custom') { try { cuTransform(wf); } catch (e) { console.error(e); } } return wf; };
 /* before a run on the CUSTOM tab: supported type, text encoders on disk, hardware */
 async function cuPreRun() {
+  if (T && FAM_OK[T.family]) {
+    const m = curModelRef(); const mk = m.name ? await modelKind(m.folder, m.name) : null;
+    if (mk && mk.kind && !['unknown', 'missing'].includes(mk.kind) && !FAM_OK[T.family].includes(mk.kind)) {
+      const fi = famInfo(FAMILY); const rec = fi && CAT && CAT.models.find(x => x.id === fi.default);
+      const a = await xModal(cus('mWrongT'), [h('p', {text: cus('mWrong', pretty(m.name), kindLabel(mk), FAM_NAME[T.family])})], rec ? [[cus('cancel'), 'cancel'], [cus('mFix'), 'fix', true]] : [[cus('ok'), 'cancel', true]]);
+      if (a === 'fix' && rec) { applyModel(rec); renderControls(); toast(cus('mFix') + ': ' + rec.label); }
+      return false;
+    }
+    return true;
+  }
   if (!T || T.family !== 'custom') return true; if (!S.cm) S.cm = {};
   const c = cuCur(); if (!c.name) return true; const info = await cuInfo(); await cuSys();
   const pk = cuProfKey(info); const prof = pk && CU_PROF[pk];
@@ -265,48 +307,122 @@ function loraMatch(L) {
 function loraFit(r) {
   if (!r || !r.model || !r.lora) return null; const mk = r.model.kind, lk = r.lora.kind;
   if (r.lora.notlora) return 'bad';
-  if (lk === 'unknown' || mk === 'unknown' || lk === 'missing' || mk === 'missing') return null;
+  if (mk === 'unknown' || mk === 'missing' || lk === 'missing') return null;
+  // a LoRA of unknown type: its layers are compared with the model's; too few in common = it does not work with it
+  if (lk === 'unknown') return r.match == null || r.converted ? null : r.match < 30 ? 'bad' : r.match < 80 ? 'part' : 'ok';
   if (lk !== mk) return 'bad';
   if (r.match != null && !r.converted && r.match < 30) return 'bad';
   if ((r.lora.sub || '') !== (r.model.sub || '') && mk === 'sdxl') return 'part';
   if (r.match != null && !r.converted && r.match < 80) return 'part';
   return 'ok';
 }
+// trigger words go to the end of the prompt; with Hungarian prompting they are written as (word:1) so the translator leaves
+// them as they are (a weight of 1 changes nothing). A word that is already in the prompt is taken out again on a second click.
+const trigRe = w => new RegExp('(^|[\\s,(])\\(?' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?::\\s*1(?:\\.0+)?\\))?(?=$|[\\s,)])', 'i');
+function hasTrigger(w) { return trigRe(w).test(String(val('46', 'value') || '')); }
 function addTrigger(w) {
-  const cur = String(val('46', 'value') || ''); if (cur.toLowerCase().includes(w.toLowerCase())) return;
-  setVal('46', 'value', cur.trim() ? cur.replace(/\s*,?\s*$/, '') + ', ' + w : w); renderControls();
+  const cur = String(val('46', 'value') || ''); if (hasTrigger(w)) return;
+  const hu = typeof huActive === 'function' && huActive(); const word = hu && /^[\x20-\x7e]+$/.test(w) ? '(' + w + ':1)' : w;
+  setVal('46', 'value', cur.trim() ? cur.replace(/[\s.,;]+$/, '') + ', ' + word : word); renderControls();
+  if (hu && typeof huSoon === 'function') huSoon('p');
 }
-const _loraListCU = loraList;
+function removeTrigger(w) {
+  const esc = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const cur = String(val('46', 'value') || '');
+  const out = cur.replace(new RegExp('(^|,)\\s*\\(?' + esc + '(?::\\s*1(?:\\.0+)?\\))?\\s*(?=,|$)', 'i'), '$1').replace(/^\s*,\s*|\s*,\s*$/g, '').replace(/,\s*,/g, ',');
+  if (out !== cur) { setVal('46', 'value', out); renderControls(); if (typeof huActive === 'function' && huActive() && typeof huSoon === 'function') huSoon('p'); }
+}
+function trigChip(w, sub) {
+  const on = hasTrigger(w);
+  return h('button', {class: 'tchip' + (sub ? ' sub' : '') + (on ? ' on' : ''), type: 'button', text: (on ? '✓ ' : '') + w, title: on ? cus('trigOn') : cus('trigAdd'),
+    onclick: () => { if (hasTrigger(w)) removeTrigger(w); else { addTrigger(w); toast(cus('trigDone')); } }});
+}
+/* the LoRA lists (every tab; also the foot-fix LoRAs): one row per LoRA with its own fit check under it.
+   - the list of a row: LoRAs made for the loaded model first (green), then the ones of unknown type (grey, selectable; the
+     check under the row tells if they do not work), then the ones of another model family (not selectable)
+   - choosing a LoRA switches its row on; a new row starts empty and off until a LoRA is chosen
+   - under the row: fits / partly / does not work, the trigger words as buttons (click: into the prompt, again: out),
+     the other frequent training tags, and a separate text-encoder strength for SD 1.5 / SDXL */
+const KS = new Map();   // folder|name -> result of /artflow/model-kind, once it has arrived
+function kindNow(folder, name) { const k = folder + '|' + name; if (KS.has(k)) return KS.get(k); modelKind(folder, name).then(r => KS.set(k, r)); return null; }
+function fitClass(lk, mk) {
+  if (!lk || !mk || !mk.kind || mk.kind === 'unknown' || mk.kind === 'missing') return 'unk';
+  if (lk.notlora) return 'other';
+  if (!lk.kind || lk.kind === 'unknown' || lk.kind === 'missing') return 'unk';
+  return lk.kind === mk.kind ? 'fit' : 'other';
+}
+const FIT_COLOR = {fit: '#4fb37a', unk: '#9aa1b3', other: '#c0574b'};
 loraList = function (arr) {
-  const box = _loraListCU(arr);
-  const deco = () => {
-    const rows = box.querySelectorAll(':scope > .lora');
-    rows.forEach((row, i) => {
-      const L = arr[i]; if (!L || row.nextElementSibling && row.nextElementSibling.classList.contains('lorax')) return;
-      const x = h('div', {class: 'lorax'}); row.after(x);
-      loraMatch(L).then(r => {
-        if (!r || !x.isConnected) return; const fit = loraFit(r); const kinds = cus('lKind', kindLabel(r.lora), kindLabel(r.model));
-        const nl = r.lora.notlora; const stem = String(L.lora).split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
-        const badge = h('span', {class: 'lfit ' + (fit || 'na'), text: nl === 'checkpoint' ? cus('nlCk') : nl === 'embedding' ? cus('nlEm', stem) : fit === 'ok' ? cus('lOk') : fit === 'part' ? cus('lPart') : fit === 'bad' ? cus('lBad') : kinds});
-        const det = nl ? '' : [fit ? kinds : null, r.match != null ? (r.converted ? cus('lConv') : cus('lMatch', r.match)) : null].filter(Boolean).join(' · ');
-        x.append(h('div', {class: 'lrow'}, badge, det ? h('span', {class: 'muted', text: det}) : null));
-        if (fit === 'bad') { if (L.on) { L.on = false; save(); } row.classList.add('off', 'lbad'); const cb = row.querySelector('input[type=checkbox]'); if (cb) { cb.checked = false; cb.disabled = true; } }
-        const sd = r.model.kind === 'sd15' || r.model.kind === 'sdxl';
-        if (sd && r.lora.te && fit !== 'bad') x.append(h('div', {class: 'lrow'}, h('span', {class: 'muted', text: cus('lTe')}),
-          num(L.strength2 != null ? L.strength2 : L.strength, {min: 0, max: 2, step: 0.01, arrow: 0.05, slider: true}, v => { L.strength2 = v; save(); })));
-        const tr = (r.lora.triggers || []);
-        if (tr.length && fit !== 'bad') x.append(h('div', {class: 'ltrig'}, h('span', {class: 'muted', text: cus('trig')}),
-          ...tr.map(w => h('button', {class: 'tchip', type: 'button', text: w, title: cus('trigAdd'), onclick: () => { addTrigger(w); toast(cus('trigDone')); }})),
-          h('button', {class: 'btn sm', type: 'button', text: cus('trigAll'), onclick: () => { tr.forEach(addTrigger); toast(cus('trigDone')); }})));
-        const tg = (r.lora.tags || []).slice(0, 10);
-        if (tg.length && fit !== 'bad') x.append(h('details', {class: 'ltags'}, h('summary', {class: 'muted', text: cus('tags')}),
-          h('div', {class: 'ltrig'}, ...tg.map(w => h('button', {class: 'tchip sub', type: 'button', text: w, title: cus('trigAdd'), onclick: () => { addTrigger(w); toast(cus('trigDone')); }})))));
-      });
+  const box = h('div', {class: 'loras', 'data-help': 'loras'}); let waiting = false;
+  const draw = () => {
+    const opts = loraOpts() || []; const m = curModelRef(); const mk = m.name ? kindNow(m.folder, m.name) : null;
+    const kinds = {}; let missing = !mk && !!m.name; for (const n of opts) { kinds[n] = kindNow('loras', n); if (!kinds[n]) missing = true; }
+    if (missing && !waiting) {   // the types arrive in a moment (cached afterwards): draw again then
+      waiting = true; Promise.all([m.name ? modelKind(m.folder, m.name) : null, ...opts.map(n => modelKind('loras', n))]).then(() => setTimeout(() => { waiting = false; if (box.isConnected) draw(); }, 0));
+    }
+    const cls = n => fitClass(kinds[n], mk);
+    box.replaceChildren();
+    arr.forEach((L, i) => {
+      const s = h('select', {class: 'lsel'});
+      if (!L.lora) s.append(h('option', {value: '', text: cus('lPick')}));
+      const groups = {fit: [], unk: [], other: []};
+      for (const n of opts) groups[cls(n)].push(n);
+      if (L.lora && !opts.includes(L.lora)) s.append(h('option', {value: L.lora, text: pretty(L.lora) + t('notFound')}));
+      const grp = (key, label) => {
+        const list = groups[key]; if (!list.length) return;
+        const g = h('optgroup', {label, class: 'og-' + key});
+        list.forEach(n => { const o = h('option', {value: n, text: pretty(n)}); o.style.color = FIT_COLOR[key]; if (key === 'other' && n !== L.lora) o.disabled = true; g.append(o); });
+        s.append(g);
+      };
+      const mlabel = mk && mk.kind && mk.kind !== 'unknown' ? ' (' + kindLabel(mk) + ')' : '';
+      grp('fit', cus('gFit') + mlabel); grp('unk', cus('gUnk')); grp('other', cus('gOther'));
+      s.value = L.lora || ''; if (L.lora) s.style.color = FIT_COLOR[opts.includes(L.lora) ? cls(L.lora) : 'unk'];
+      s.onchange = () => { if (!s.value) return; L.lora = s.value; L.on = true; delete L.strength2; save(); draw(); renderMissing(); };
+      const row = h('div', {class: 'lora' + (L.on && L.lora ? '' : ' off')});
+      const swi = sw(!!(L.on && L.lora), x => { if (!L.lora) return; L.on = x; row.classList.toggle('off', !x); save(); renderMissing(); }, t('onOff'));
+      row.append(swi, s,
+        h('button', {class: 'x', type: 'button', title: t('delRow'), text: '✕', onclick: () => { arr.splice(i, 1); save(); draw(); renderMissing(); }}),
+        num(L.strength, {min: 0, max: 2, step: 0.01, arrow: 0.05, slider: true}, x => { L.strength = x; save(); }));
+      box.append(row);
+      const x = h('div', {class: 'lorax'}); box.append(x);
+      if (L.lora) loraInfo(L, row, swi, x);
     });
+    box.append(h('button', {class: 'btn sm', type: 'button', text: t('addLora'), onclick: () => { arr.push({on: false, lora: '', strength: 1}); save(); draw(); }}));
   };
-  new MutationObserver(deco).observe(box, {childList: true}); deco();
-  return box;
+  draw(); return box;
 };
+// the LoRA's details fold away: a "Trigger words" line with a small triangle on the left and the fit on the right;
+// opened, it shows the LoRA / model types, the match and the trigger words (the open ones are remembered)
+const LX_OPEN = new Set();
+function loraInfo(L, row, swi, x) {
+  loraMatch(L).then(r => {
+    if (!r || !x.isConnected) return; const fit = loraFit(r); const kinds = cus('lKind', kindLabel(r.lora), kindLabel(r.model));
+    const nl = r.lora.notlora; const stem = String(L.lora).split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
+    const badge = h('span', {class: 'lfit ' + (fit || 'na'), text: nl === 'checkpoint' ? cus('nlCk') : nl === 'embedding' ? cus('nlEm', stem) : fit === 'ok' ? cus('lOk') : fit === 'part' ? cus('lPart') : fit === 'bad' ? cus('lBad') : kinds});
+    const det = nl ? '' : [fit ? kinds : null, r.match != null ? (r.converted ? cus('lConv') : cus('lMatch', r.match)) : null].filter(Boolean).join(' · ');
+    const body = h('div', {class: 'lxb'}); const key = String(L.lora);
+    const tog = h('button', {class: 'hfold lxt', type: 'button'}, h('i'), h('span', {text: cus('trigHead')}));
+    const setOpen = on => { tog.classList.toggle('open', on); body.hidden = !on; if (on) LX_OPEN.add(key); else LX_OPEN.delete(key); };
+    tog.onclick = e => { e.preventDefault(); setOpen(body.hidden); };
+    x.append(h('div', {class: 'lrow lxh'}, tog, h('span', {class: 'sp'}), badge), body);
+    if (det) body.append(h('div', {class: 'lrow'}, h('span', {class: 'muted', text: det})));
+    setOpen(LX_OPEN.has(key));
+    if (fit === 'bad') {
+      if (L.on) { L.on = false; save(); renderMissing(); }
+      row.classList.add('off', 'lbad'); const cb = swi.querySelector ? swi.querySelector('input[type=checkbox]') : null; if (cb) { cb.checked = false; cb.disabled = true; }
+      return;
+    }
+    const sd = r.model.kind === 'sd15' || r.model.kind === 'sdxl';
+    if (sd && r.lora.te) x.insertBefore(h('div', {class: 'lrow'}, h('span', {class: 'muted', text: cus('lTe')}),
+      num(L.strength2 != null ? L.strength2 : L.strength, {min: 0, max: 2, step: 0.01, arrow: 0.05, slider: true}, v => { L.strength2 = v; save(); })), body);
+    const tr = r.lora.triggers || [];
+    if (tr.length) body.append(h('div', {class: 'ltrig'}, ...tr.map(w => trigChip(w)),
+      tr.length > 1 ? h('button', {class: 'btn sm', type: 'button', text: cus('trigAll'), onclick: () => { tr.forEach(addTrigger); toast(cus('trigDone')); }}) : null));
+    else body.append(h('div', {class: 'ltrig'}, h('span', {class: 'muted', text: cus('trigNone')})));
+    const tg = (r.lora.tags || []).slice(0, 10);
+    if (tg.length) body.append(h('details', {class: 'ltags'}, h('summary', {class: 'muted', text: cus('tags')}), h('div', {class: 'ltrig'}, ...tg.map(w => trigChip(w, true)))));
+  });
+}
 const _setLorasCU = setLoras;
 setLoras = function (node, arr) {
   _setLorasCU(node, arr); if (!node) return;

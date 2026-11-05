@@ -2,7 +2,9 @@
 # Copyright (C) 2026 Lalikavics - ArtFlawless Studio
 # ArtFlawless Studio - component installer (run by the setup wizard; can be re-run safely to resume/repair).
 # Downloads ComfyUI (portable), the custom nodes and the models from their original sources.
-param([Parameter(Mandatory = $true)][string]$InstallDir)
+# It runs without a console: what it does, and how far each download is, shows in the ArtFlawless start window (Splash.ps1);
+# everything is also written to launcher\install.log.
+param([Parameter(Mandatory = $true)][string]$InstallDir, [string]$Lang = 'en')
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -24,31 +26,93 @@ $Warnings = New-Object System.Collections.Generic.List[string]
 New-Item -ItemType Directory -Force -Path $Tools, (Join-Path $InstallDir 'input'), (Join-Path $InstallDir 'output') | Out-Null
 try { Start-Transcript -Path (Join-Path $InstallDir 'launcher\install.log') -Append | Out-Null } catch { }
 
+# ------------------------------------------------------------------ the window
+. (Join-Path $InstallDir 'launcher\Splash.ps1')
+if ($Lang -notin @('hu', 'en')) { $Lang = 'en' }
+$TX = @{
+    en = @{ title = 'ArtFlawless Studio Setup'; s0 = 'Checking this computer…'; gpu = 'Graphics card: {0}, {1} GB, driver {2}'; s1 = 'ComfyUI {0}';
+            s2 = 'Components'; s3 = 'ArtFlawless Studio'; s4 = 'Models (about 25 GB)'; s5 = 'Base LoRA (Civitai)'; s6 = 'Finishing…';
+            have = '{0} – already here'; dl = '{0}'; dlp = '{0}: {1} / {2} ({3}%) · {4}/s'; dlpn = '{0}: {1} · {2}/s'; dlok = '{0} – downloaded ({1})';
+            unpack = 'Unpacking ComfyUI… {0}%'; unpackOk = 'ComfyUI unpacked'; comfyHave = 'ComfyUI is already installed';
+            pip = 'Python packages: {0}…'; node = '({1}/{2}) {0}'; nodeHave = '({1}/{2}) {0} – already installed'; nodeOk = '({1}/{2}) {0} – installed';
+            model = '({1}/{2}) {0}'; studioOk = 'Studio files in place'; check = 'Content check (NudeNet)…'; checkOk = 'Content check is ready';
+            mirror = 'trying the mirror…'; lora = 'Hands + Feet + skin LoRA'; loraOk = 'Base LoRA is in place'; loraSkip = 'Base LoRA skipped (it can be added later)';
+            host = 'Preparing the Studio window…'; hostOk = 'Studio window ready'; warn = 'Warning: {0}'; allOk = 'Everything is installed';
+            warnN = 'Finished with {0} warning(s)'; stop = 'Setup stopped: {0}'; resume = 'You can close it now: running the setup again continues where it stopped.';
+            loraAsk = "The base LoRA needs a free Civitai login, so it cannot be downloaded automatically.`n`n1. Your browser opens the download page: log in to Civitai and download the file.`n2. Save it into the folder that opens:`n   {0}`n   (or move it there from Downloads).`n3. Then press OK.`n`nPress Cancel to skip it - the Studio works without the LoRA.";
+            sumWarn = "Setup finished with {0} warning(s):`n`n{1}`n`nThe Studio lists anything missing when it starts, and the setup can be run again to retry.";
+            sumMiss = "The base model files are missing:`n{0}`n`nRun the setup again to continue the download." }
+    hu = @{ title = 'ArtFlawless Studio telepítő'; s0 = 'A számítógép ellenőrzése…'; gpu = 'Videókártya: {0}, {1} GB, illesztőprogram {2}'; s1 = 'ComfyUI {0}';
+            s2 = 'Összetevők'; s3 = 'ArtFlawless Studio'; s4 = 'Modellek (kb. 25 GB)'; s5 = 'Alap LoRA (Civitai)'; s6 = 'Befejezés…';
+            have = '{0} – már megvan'; dl = '{0}'; dlp = '{0}: {1} / {2} ({3}%) · {4}/s'; dlpn = '{0}: {1} · {2}/s'; dlok = '{0} – letöltve ({1})';
+            unpack = 'A ComfyUI kicsomagolása… {0}%'; unpackOk = 'A ComfyUI kicsomagolva'; comfyHave = 'A ComfyUI már telepítve van';
+            pip = 'Python-csomagok: {0}…'; node = '({1}/{2}) {0}'; nodeHave = '({1}/{2}) {0} – már telepítve'; nodeOk = '({1}/{2}) {0} – telepítve';
+            model = '({1}/{2}) {0}'; studioOk = 'A Studio fájljai a helyükön'; check = 'Tartalomellenőrzés (NudeNet)…'; checkOk = 'A tartalomellenőrzés kész';
+            mirror = 'a tükörszerver próbálása…'; lora = 'Hands + Feet + skin LoRA'; loraOk = 'Az alap LoRA a helyén'; loraSkip = 'Az alap LoRA kimaradt (később is hozzáadható)';
+            host = 'A Studio ablakának előkészítése…'; hostOk = 'A Studio ablaka kész'; warn = 'Figyelmeztetés: {0}'; allOk = 'Minden telepítve';
+            warnN = 'Kész, {0} figyelmeztetéssel'; stop = 'A telepítés leállt: {0}'; resume = 'Bezárhatod: a telepítő újbóli futtatása ott folytatja, ahol abbahagyta.';
+            loraAsk = "Az alap LoRA letöltéséhez ingyenes Civitai-belépés kell, ezért nem tölthető le automatikusan.`n`n1. A böngésző megnyitja a letöltési oldalt: lépj be a Civitaira, és töltsd le a fájlt.`n2. Mentsd a megnyíló mappába:`n   {0}`n   (vagy helyezd át oda a Letöltések mappából).`n3. Utána nyomd meg az OK gombot.`n`nA Mégse gombbal kihagyhatod - a Studio a LoRA nélkül is működik.";
+            sumWarn = "A telepítés {0} figyelmeztetéssel fejeződött be:`n`n{1}`n`nA Studio induláskor jelzi, ha valami hiányzik, és a telepítő újra futtatható.";
+            sumMiss = "Hiányoznak az alapmodell fájljai:`n{0}`n`nFuttasd újra a telepítőt a letöltés folytatásához." }
+}
+function T([string]$k) { $v = $TX[$Lang][$k]; if ($args.Count) { $v = [string]::Format($v, $args) }; return $v }
+if (-not (Start-ArtSplash $false)) { Show-Console }
+if ($script:SplashOk) { [ArtSplash]::SetTitle((T 'title')) }
+
 trap {
     Write-Host ''
     Write-Host ('INSTALLATION STOPPED: ' + $_.Exception.Message) -ForegroundColor Red
     try { Stop-Transcript | Out-Null } catch { }
-    Read-Host 'Press Enter to close this window'
+    Splash-Error (T 'stop' $_.Exception.Message)
+    [void](Splash-Ask ((T 'stop' $_.Exception.Message) + "`n`n" + (T 'resume') + "`n`n" + (Join-Path $InstallDir 'launcher\install.log')))
+    Close-ArtSplash
     exit 1
 }
 
-function Step($n, $text) { Write-Host ''; Write-Host ("[{0}] {1}" -f $n, $text) -ForegroundColor Cyan }
-function Warn($text) { $Warnings.Add($text); Write-Host ("  WARNING: " + $text) -ForegroundColor Yellow }
+function Step($n, $text) { Write-Host ''; Write-Host ("[{0}] {1}" -f $n, $text) -ForegroundColor Cyan; Splash-Step $text }
+function Warn($text) { $Warnings.Add($text); Write-Host ("  WARNING: " + $text) -ForegroundColor Yellow; Splash-Fail (T 'warn' $text) }
 
 # size-checked, resumable download (curl.exe ships with Windows 10 1803+)
-function Get-File([string]$Url, [string]$Dest, [long]$MinBytes, [string]$Label) {
+# the size of the file behind the URL (after the redirects), 0 when the server does not say
+function Get-RemoteSize([string]$Url) {
+    $len = 0
+    try { foreach ($l in @(& $Curl -sIL --max-time 25 $Url 2>$null)) { if ($l -match '^\s*content-length:\s*(\d+)') { $len = [long]$Matches[1] } } } catch { }
+    return $len
+}
+# curl runs hidden; the window shows how far it is: "Label: 3.2 / 12.3 GB (26%) · 18 MB/s"
+function Invoke-Download([string]$Url, [string]$Part, [string]$Text, [long]$Total) {
+    $a = @('-L', '--fail', '--retry', '5', '--retry-delay', '3', '-C', '-', '-s', '-S', '-o', ('"' + $Part + '"'), ('"' + $Url + '"'))
+    $p = Start-Process -FilePath $Curl -ArgumentList $a -WindowStyle Hidden -PassThru
+    $null = $p.Handle
+    $lastB = -1L; $lastT = Get-Date; $speed = 0.0
+    while (-not $p.HasExited) {
+        Start-Sleep -Milliseconds 500
+        $b = 0L; try { if (Test-Path -LiteralPath $Part) { $b = (Get-Item -LiteralPath $Part).Length } } catch { }
+        $now = Get-Date; $dt = ($now - $lastT).TotalSeconds
+        if ($lastB -ge 0 -and $dt -gt 0) { $speed = 0.7 * $speed + 0.3 * [math]::Max(0, ($b - $lastB) / $dt) }
+        $lastB = $b; $lastT = $now
+        if ($Total -gt 0) { Splash-Update (T 'dlp' $Text (Format-Size $b $Lang) (Format-Size $Total $Lang) ([math]::Min(100, [math]::Floor($b * 100 / $Total))) (Format-Size $speed $Lang)) }
+        else { Splash-Update (T 'dlpn' $Text (Format-Size $b $Lang) (Format-Size $speed $Lang)) }
+    }
+    $p.WaitForExit()
+    return $p.ExitCode
+}
+function Get-File([string]$Url, [string]$Dest, [long]$MinBytes, [string]$Label, [string]$Text = '') {
+    if (-not $Text) { $Text = $Label }
     if ((Test-Path -LiteralPath $Dest) -and ((Get-Item -LiteralPath $Dest).Length -ge $MinBytes)) {
-        Write-Host ("  already present: " + $Label); return
+        Write-Host ("  already present: " + $Label); Splash-Step $Text; Splash-Done (T 'have' $Text); return
     }
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dest) | Out-Null
     $part = $Dest + '.part'
     Write-Host ("  downloading: " + $Label)
+    Splash-Step $Text
+    $total = Get-RemoteSize $Url
     for ($try = 1; $try -le 3; $try++) {
-        & $Curl -L --fail --retry 5 --retry-delay 3 -C - --progress-bar -o $part $Url
-        $code = $LASTEXITCODE
+        $code = Invoke-Download $Url $part $Text $total
         if ($code -eq 33) { Remove-Item -LiteralPath $part -Force -ErrorAction SilentlyContinue; continue }   # bad resume range
         if ($code -eq 0 -and (Test-Path -LiteralPath $part) -and ((Get-Item -LiteralPath $part).Length -ge $MinBytes)) {
-            Move-Item -LiteralPath $part -Destination $Dest -Force; return
+            Move-Item -LiteralPath $part -Destination $Dest -Force
+            Splash-Done (T 'dlok' $Text (Format-Size ((Get-Item -LiteralPath $Dest).Length) $Lang)); return
         }
         Write-Host ("  attempt {0} failed (curl exit {1})" -f $try, $code) -ForegroundColor Yellow
     }
@@ -77,10 +141,11 @@ function Get-NvidiaInfo {
 }
 
 # ------------------------------------------------------------------ 0. checks
-Step '0/7' 'Checking this computer'
+Step '0/7' (T 's0')
 $gpu = Get-NvidiaInfo
 if (-not $gpu) { throw 'No NVIDIA graphics card (or no NVIDIA driver) was found. ArtFlawless Studio needs an NVIDIA card with at least 8 GB of video memory.' }
 Write-Host ("  GPU: {0}, {1} MiB, driver {2}" -f $gpu.Name, $gpu.MiB, $gpu.Driver)
+Splash-Done (T 'gpu' $gpu.Name ([math]::Round($gpu.MiB / 1024)) $gpu.Driver)
 if ($gpu.MiB -lt 7900) { throw ("Your graphics card has only {0} MiB video memory; at least 8 GB is required." -f $gpu.MiB) }
 $weightDtype = if ($gpu.MiB -lt 14000) { 'fp8_e4m3fn' } else { 'default' }
 $archive = if ($gpu.Driver -ge 580) { 'ComfyUI_windows_portable_nvidia.7z' } else { 'ComfyUI_windows_portable_nvidia_cu126.7z' }
@@ -88,16 +153,32 @@ if ($gpu.Driver -lt 580) { Write-Host '  older NVIDIA driver: using the CUDA 12.
 if (-not (Test-Path -LiteralPath $Curl)) { throw 'curl.exe was not found (Windows 10 version 1803 or newer is required).' }
 
 # ------------------------------------------------------------------ 1. ComfyUI
-Step '1/7' ('ComfyUI ' + $ComfyTag + ' (portable)')
+Step '1/7' (T 's1' $ComfyTag)
 if (-not (Test-Path -LiteralPath $Py)) {
     Get-File 'https://github.com/ip7z/7zip/releases/download/26.04/7zr.exe' (Join-Path $Tools '7zr.exe') 200000 '7-Zip console (7zr.exe) - used only to unpack ComfyUI'
     $arc = Join-Path $Tools $archive
     Get-File ("https://github.com/Comfy-Org/ComfyUI/releases/download/{0}/{1}" -f $ComfyTag, $archive) $arc 1500000000 ('ComfyUI ' + $archive)
     Write-Host '  unpacking (a few minutes)...'
-    & (Join-Path $Tools '7zr.exe') x -y ("-o" + $InstallDir) $arc | Out-Null
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $Py)) { throw 'Unpacking ComfyUI failed.' }
+    Splash-Step (T 'unpack' 0)
+    $prog = Join-Path $Tools '7z-progress.txt'
+    $z = Start-Process -FilePath (Join-Path $Tools '7zr.exe') -ArgumentList @('x', '-y', ('"-o' + $InstallDir + '"'), ('"' + $arc + '"'), '-bsp1', '-bso0', '-bse1') `
+        -WindowStyle Hidden -PassThru -RedirectStandardOutput $prog
+    $null = $z.Handle
+    while (-not $z.HasExited) {
+        Start-Sleep -Milliseconds 700
+        try {
+            $fs = [IO.File]::Open($prog, 'Open', 'Read', 'ReadWrite')
+            try { $len = [math]::Min(4096, $fs.Length); $fs.Seek(-$len, 'End') | Out-Null; $buf = New-Object byte[] $len; [void]$fs.Read($buf, 0, $len)
+                  $m = [regex]::Matches([Text.Encoding]::ASCII.GetString($buf), '(\d{1,3})%'); if ($m.Count) { Splash-Update (T 'unpack' $m[$m.Count - 1].Groups[1].Value) } }
+            finally { $fs.Dispose() }
+        } catch { }
+    }
+    $z.WaitForExit()
+    Remove-Item -LiteralPath $prog -Force -ErrorAction SilentlyContinue
+    if ($z.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $Py)) { throw 'Unpacking ComfyUI failed.' }
+    Splash-Done (T 'unpackOk')
     Remove-Item -LiteralPath $arc -Force -ErrorAction SilentlyContinue
-} else { Write-Host '  already installed' }
+} else { Write-Host '  already installed'; Splash-Step (T 'comfyHave'); Splash-Done $null }
 
 # keep torch / numpy exactly as shipped when pip installs node requirements
 $constraints = Join-Path $Tools 'constraints.txt'
@@ -107,7 +188,7 @@ try {
 if (-not (Test-Path -LiteralPath $constraints)) { Set-Content -Path $constraints -Value '' -Encoding ASCII }
 
 # ------------------------------------------------------------------ 2. custom nodes
-Step '2/7' 'Custom nodes'
+Step '2/7' (T 's2'); Splash-Done $null
 $nodeList = @(
     @{ Id = 'rgthree-comfy';              Ver = '1.0.2608210019'; Url = 'https://cdn.comfy.org/rgthree/rgthree-comfy/1.0.2608210019/node.zip' },
     @{ Id = 'comfyui-impact-pack';        Ver = '8.28.3';  Url = 'https://cdn.comfy.org/drltdata/comfyui-impact-pack/8.28.3/node.zip' },
@@ -120,14 +201,18 @@ $nodeList = @(
     @{ Id = 'prompt-manager';             Ver = '2.7.2';   Url = 'https://cdn.comfy.org/franckyb/prompt-manager/2.7.2/node.zip' },
     @{ Id = 'comfyui-gguf';               Ver = '1.1.10';  Url = 'https://cdn.comfy.org/city96/ComfyUI-GGUF/1.1.10/node.zip' }
 )
+$ni = 0
 foreach ($n in $nodeList) {
+    $ni++
     $target = Join-Path $Nodes $n.Id
     $marker = Join-Path $target '.artflow-version'
-    if ((Test-Path -LiteralPath $marker) -and ((Get-Content -LiteralPath $marker -Raw).Trim() -eq $n.Ver)) { Write-Host ("  already installed: {0} {1}" -f $n.Id, $n.Ver); continue }
+    $nodeText = T 'node' $n.Id $ni $nodeList.Count
+    if ((Test-Path -LiteralPath $marker) -and ((Get-Content -LiteralPath $marker -Raw).Trim() -eq $n.Ver)) {
+        Write-Host ("  already installed: {0} {1}" -f $n.Id, $n.Ver); Splash-Step $nodeText; Splash-Done (T 'nodeHave' $n.Id $ni $nodeList.Count); continue }
     try {
         $zip = Join-Path $Tools ($n.Id + '.zip')
         $tmp = Join-Path $Tools ('x_' + $n.Id)
-        Get-File $n.Url $zip 1000 ("{0} {1}" -f $n.Id, $n.Ver)
+        Get-File $n.Url $zip 1000 ("{0} {1}" -f $n.Id, $n.Ver) $nodeText
         if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Recurse -Force }
         Expand-Archive -LiteralPath $zip -DestinationPath $tmp -Force
         $items = @(Get-ChildItem -LiteralPath $tmp -Force)
@@ -140,6 +225,7 @@ foreach ($n in $nodeList) {
         $req = Join-Path $target 'requirements.txt'
         if (Test-Path -LiteralPath $req) {
             Write-Host ("  installing Python packages for " + $n.Id)
+            Splash-Step (T 'pip' $n.Id)
             # lines that need git (e.g. the optional SAM2 package of the Impact Pack) cannot be installed without git: leave them out
             $reqLines = @(Get-Content -LiteralPath $req)
             $okLines = @($reqLines | Where-Object { $_ -notmatch '^\s*git\+' -and $_ -notmatch '@\s*git\+' })
@@ -150,13 +236,14 @@ foreach ($n in $nodeList) {
             if ($LASTEXITCODE -ne 0) { throw ("pip failed for " + $n.Id) }
         }
         Set-Content -LiteralPath $marker -Value $n.Ver -Encoding ASCII
+        Splash-Done (T 'nodeOk' $n.Id $ni $nodeList.Count)
     } catch {
         Warn ("{0}: {1}" -f $n.Id, $_.Exception.Message)
     }
 }
 
 # ------------------------------------------------------------------ 3. Studio
-Step '3/7' 'ArtFlawless Studio'
+Step '3/7' (T 's3')
 $studioDir = Join-Path $Nodes 'artflow-studio'
 New-Item -ItemType Directory -Force -Path (Join-Path $studioDir 'web') | Out-Null
 Copy-Item -LiteralPath (Join-Path $Payload 'studio\__init__.py') -Destination $studioDir -Force
@@ -169,6 +256,13 @@ Copy-Item -LiteralPath (Join-Path $Payload 'studio\ArtFlawless-Studio-ZImageTurb
 $oldWf = Join-Path $wf 'ArtFlow-Studio-ZImageTurbo-EN.json'   # file name used by earlier versions
 if (Test-Path -LiteralPath $oldWf) { Remove-Item -LiteralPath $oldWf -Force -ErrorAction SilentlyContinue }
 Copy-Item -LiteralPath (Join-Path $Payload 'artflow-logo.png') -Destination (Join-Path $InstallDir 'input') -Force
+$iconPng = Join-Path $Payload 'artflow-icon.png'
+if (Test-Path -LiteralPath $iconPng) { Copy-Item -LiteralPath $iconPng -Destination (Join-Path $InstallDir 'input') -Force }
+# the setup language is the Studio's first language (and the start window's)
+try { $ud = Join-Path $Comfy 'user'; New-Item -ItemType Directory -Force -Path $ud | Out-Null
+      if (-not (Test-Path -LiteralPath (Join-Path $ud 'artflow-ui-lang.txt'))) { [IO.File]::WriteAllText((Join-Path $ud 'artflow-ui-lang.txt'), $Lang) } } catch { }
+Splash-Done (T 'studioOk')
+Splash-Step (T 'check')
 # local content check of generated images (NudeNet detector; the Falconsai classifier is downloaded with the models)
 try {
     & $Py -s -m pip install --no-deps --no-warn-script-location 'nudenet==3.4.2'
@@ -179,10 +273,11 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'pip failed for onnxruntime' }
     }
     Write-Host '  content check (NudeNet) is ready.'
+    Splash-Done (T 'checkOk')
 } catch { Warn ('Content check (NudeNet): ' + $_.Exception.Message + ' - adult images may not be recognised.') }
 
 # ------------------------------------------------------------------ 4. models
-Step '4/7' 'Models (about 25 GB - this takes a while; you can close and re-run the installer to resume)'
+Step '4/7' (T 's4'); Splash-Done $null
 $HF = 'https://huggingface.co'
 $modelList = @(
     @{ Req = $true;  Rel = 'diffusion_models\z_image_turbo_bf16.safetensors'; Min = 11500000000; Label = 'Z-Image Turbo (Comfy-Org, bf16, 12.3 GB)';
@@ -212,11 +307,14 @@ $modelList = @(
        Url = "$HF/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1-lite-2602-8steps.safetensors" }
 )
 $missingRequired = @()
+$mi = 0
 foreach ($m in $modelList) {
+    $mi++
     $dest = Join-Path $Models $m.Rel
+    $mText = T 'model' $m.Label $mi $modelList.Count
     try {
-        try { Get-File $m.Url $dest $m.Min $m.Label }
-        catch { if ($m.Alt) { Write-Host '  primary source failed, trying the mirror...' -ForegroundColor Yellow; Get-File $m.Alt $dest $m.Min $m.Label } else { throw } }
+        try { Get-File $m.Url $dest $m.Min $m.Label $mText }
+        catch { if ($m.Alt) { Write-Host '  primary source failed, trying the mirror...' -ForegroundColor Yellow; Splash-Update ($mText + ' – ' + (T 'mirror')); Get-File $m.Alt $dest $m.Min $m.Label $mText } else { throw } }
     } catch {
         if ($m.Req) { $missingRequired += $m.Rel }
         Warn ("{0}: {1}" -f $m.Label, $_.Exception.Message)
@@ -224,12 +322,12 @@ foreach ($m in $modelList) {
 }
 
 # ------------------------------------------------------------------ 5. base LoRA
-Step '5/7' 'Base LoRA (Civitai)'
+Step '5/7' (T 's5'); Splash-Done $null
 $loraName = 'Hands + Feet + skin perfection style zib v1.safetensors'
 $loraDest = Join-Path $Models ('loras\' + $loraName)
 $loraUrl = 'https://civitai.red/api/download/models/2577477?fileId=2464717'
 if ($env:CIVITAI_TOKEN) { $loraUrl += '&token=' + $env:CIVITAI_TOKEN }
-try { Get-File $loraUrl $loraDest 1000000 'Hands + Feet + skin perfection style LoRA' }
+try { Get-File $loraUrl $loraDest 1000000 'Hands + Feet + skin perfection style LoRA' (T 'lora') }
 catch {
     Remove-Item -LiteralPath ($loraDest + '.part') -Force -ErrorAction SilentlyContinue
     $loraDir = Split-Path -Parent $loraDest
@@ -245,7 +343,7 @@ catch {
     $manualUrl = 'https://civitai.red/api/download/models/2577477?fileId=2464717'
     try { Start-Process explorer.exe -ArgumentList ('"' + $loraDir + '"') } catch { }
     try { Start-Process $manualUrl } catch { }
-    try { [void](Read-Host '  Press Enter when the file is in the folder') } catch { }
+    $skip = -not (Splash-Ask (T 'loraAsk' $loraDir) 'ArtFlawless Studio' -OkCancel)
     # accept the file under any name in the LoRA folder or in the install folder, and give it the expected name
     $found = $null
     foreach ($dir in @($loraDir, $InstallDir)) {
@@ -254,26 +352,30 @@ catch {
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($found) { break }
     }
-    if ($found) {
+    if ($found -and -not $skip) {
         if ($found.FullName -ne $loraDest) { Move-Item -LiteralPath $found.FullName -Destination $loraDest -Force }
         Write-Host ("  LoRA is in place: " + $loraDest) -ForegroundColor Green
+        Splash-Done (T 'loraOk')
     } else {
+        Splash-Done (T 'loraSkip')
         Warn ("The base LoRA was skipped. To add it later, save the file as  " + $loraDest)
     }
 }
 
 # ------------------------------------------------------------------ 6. output
-Step '6/7' 'Finishing'
+Step '6/7' (T 's6'); Splash-Done $null
+Splash-Step (T 'host')
 try {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir 'launcher\Build-Host.ps1')
     if ($LASTEXITCODE -ne 0) { throw ('exit code ' + $LASTEXITCODE) }
     Write-Host '  Studio window (WebView2) is ready.'
+    Splash-Done (T 'hostOk')
 } catch { Warn ('The frameless Studio window could not be prepared (' + $_.Exception.Message + '); the Studio will open in Microsoft Edge instead.') }
 Write-Host ("  input folder : " + (Join-Path $InstallDir 'input'))
 Write-Host ("  output folder: " + (Join-Path $InstallDir 'output'))
 Write-Host '  (the depth-map model and Florence-2 are downloaded automatically the first time they are used)'
 
-Step '7/7' 'Summary'
+Write-Host ''; Write-Host '[7/7] Summary' -ForegroundColor Cyan
 if ($Warnings.Count) {
     Write-Host ("{0} warning(s):" -f $Warnings.Count) -ForegroundColor Yellow
     $Warnings | ForEach-Object { Write-Host ("  - " + $_) -ForegroundColor Yellow }
@@ -284,9 +386,16 @@ try { Stop-Transcript | Out-Null } catch { }
 if ($missingRequired.Count -or -not (Test-Path -LiteralPath $Py)) {
     Write-Host ''
     Write-Host ('The base model files are missing: ' + ($missingRequired -join ', ')) -ForegroundColor Red
-    Read-Host 'Press Enter to close'
+    Splash-Error (T 'stop' ($missingRequired -join ', '))
+    [void](Splash-Ask (T 'sumMiss' ($missingRequired -join "`n")))
+    Close-ArtSplash
     exit 2
 }
-Write-Host ''
-Read-Host 'Done. Press Enter to close this window'
+if ($Warnings.Count) {
+    Splash-Step (T 'warnN' $Warnings.Count); Splash-Done $null
+    [void](Splash-Ask (T 'sumWarn' $Warnings.Count (($Warnings | ForEach-Object { '- ' + $_ }) -join "`n")))
+} else {
+    Splash-Step (T 'allOk'); Splash-Done $null; Start-Sleep -Milliseconds 1200
+}
+Close-ArtSplash
 exit 0

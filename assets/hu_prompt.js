@@ -12,7 +12,7 @@ const HU_KIND = {p: '46', n: '51'};
 let HU_SRC = '';   // the Hungarian original while a translated generation is being sent (read by the content check)
 const HUS = {
   sw: 'Magyar promptolás', tag: 'HU → EN',
-  swHint: 'Bekapcsolva magyarul írhatod a promptot: generáláskor a Studio a saját gépeden lefordítja angolra, mert a képmodellek angolul értenek. Az angol szavakat és kifejezéseket (pl. golden hour, 85mm) változatlanul hagyja.',
+  swHint: 'Magyarul írhatod a promptot, a Studio generáláskor a gépeden lefordítja angolra (a képmodellek angolul értenek). Az angol kifejezések, pl. golden hour, 85mm, változatlanok maradnak.',
   need: 'Ehhez egy fordítómodell kell (ArtFlawless HU→EN, kb. {0} MB). Csak egyszer kell letölteni, utána internet nélkül is működik.',
   dl: 'Letöltés ({0} MB)', cancel: 'Mégse', dling: 'Fordítómodell letöltése…', dlRun: '{0} / {1} MB · {2} MB/s', dlErr: 'A fordítómodell letöltése nem sikerült: {0}', dlDone: 'A fordítómodell letöltve, a magyar promptolás be van kapcsolva.',
   noSrv: 'A fordítás nem érhető el (a Studio háttérrésze nem válaszol).',
@@ -20,7 +20,8 @@ const HUS = {
   trP: 'Angol fordítás', trN: 'A negatív prompt angolul', trSub: ' – ez megy a képmodellhez',
   busy: 'fordítás…', ready: 'kész · {0} s', manual: 'kézzel javítva', err: 'hiba',
   empty: 'A fordítás itt jelenik meg, amint írsz valamit.',
-  hintP: 'Gépelés közben, egy rövid szünet után frissül, és a végső prompt mezőben is ez jelenik meg. Ha valamit rosszul fordított, itt kézzel kijavíthatod. A tartalomszűrő a magyar és az angol szöveget is ellenőrzi.',
+  hintPs: 'Ez megy a képmodellhez, itt javíthatod.',
+  hintP: 'Gépelés után pár pillanattal frissül, és ez kerül a végső promptba. Ha valamit rosszul fordított, írd át itt. A tartalomszűrő a magyar és az angol szöveget is nézi.',
   hintN: 'Ezt is kijavíthatod kézzel.',
   stale: 'A magyar szöveg a kézi javítás óta megváltozott – a generálás továbbra is a javított angol szöveget használja.',
   again: 'Újrafordítás', trErr: 'Nem sikerült lefordítani a promptot: {0}',
@@ -126,7 +127,7 @@ function huDrawBox(kind) {
   const stale = st.man && src && st.src !== src;
   const ft = b.querySelector('.ft');
   ft.replaceChildren(...[stale ? h('div', {class: 'hint warn', text: HUS.stale}) : null,
-    h('div', {class: 'row'}, h('div', {class: 'hint', text: kind === 'p' ? HUS.hintP : HUS.hintN}),
+    h('div', {class: 'row'}, h('div', {class: 'hint', text: kind === 'p' ? HUS.hintP : HUS.hintN, 'data-short': kind === 'p' ? HUS.hintPs : null}),
       st.man ? h('button', {class: 'btn sm', type: 'button', text: HUS.again, onclick: () => huTranslate(kind, true)}) : null)].filter(Boolean));
 }
 
@@ -193,7 +194,8 @@ run = async function () {
   for (const [k, id] of Object.entries(HU_KIND)) {
     if (!T.prompt[id]) continue; const key = id + '.value';
     keep[key] = {had: Object.prototype.hasOwnProperty.call(S.vals, key), v: S.vals[key]};
-    srcs.push(huSrc(k)); S.vals[key] = hut(k).en || '';
+    if (k === 'p') srcs.push(huSrc(k));   // only the positive prompt counts for the content check: a negative prompt lists what to avoid
+    S.vals[key] = hut(k).en || '';
   }
   HU_SRC = srcs.join(' ');
   try { return await _runHu(); }

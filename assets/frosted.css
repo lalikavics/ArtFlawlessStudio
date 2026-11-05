@@ -1,0 +1,164 @@
+/* ---- frosted (sandblasted, anodised) aluminium: the main panels, the header, the buttons and the pop-ups;
+   the panels inside are sunk into the surface; the yellow buttons are sandblasted glass ---- */
+:root{--R:23px;   /* outer radius = inner panel radius (9px) + the gap around it (14px): the corners run parallel */
+  --fA:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='241' height='241'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); --fB:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='337' height='337'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); --fY:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='163' height='163'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); --fYd:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='211' height='211'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='3' seed='19' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .17 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --plate:#151619}
+/* two grain layers of different sizes on top of each other: their repeats never line up, so no checker pattern shows */
+.card,details.card,#viewCard,#histBox,header,#modal .box,.gmenu,#hxPop,#drawer,.toast{background-color:var(--plate);
+  background-image:radial-gradient(140% 70% at 22% 0%,rgba(255,255,255,.03),rgba(255,255,255,0) 65%),linear-gradient(180deg,rgba(255,255,255,.025) 0,rgba(255,255,255,.005) 40%,rgba(0,0,0,.11) 100%),var(--fA),var(--fB);
+  background-size:100% 100%,100% 100%,241px 241px,337px 337px;border:1px solid rgba(255,255,255,.07);border-top-color:rgba(255,255,255,.17);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.35),0 10px 26px rgba(0,0,0,.42),0 1px 2px rgba(0,0,0,.5)}
+.toast{border-left:4px solid var(--acc)}
+.card,details.card,#viewCard,#histBox{border-radius:var(--R)}
+/* header: rounded lower corners (its boxes have a 10px radius and sit 9px from the edge), and a shadow over the columns */
+header{position:relative;z-index:30;border-width:0 0 1px;border-color:rgba(0,0,0,.5);border-radius:0 0 19px 19px;box-shadow:inset 0 -1px 0 rgba(255,255,255,.05),0 10px 24px rgba(0,0,0,.55)}
+.hbox{border-color:rgba(255,255,255,.16)!important}
+#prog,#steps,#infoWrap,#hist,#histBar,#hxRow,.card>summary,details.card>summary{background:transparent!important}
+/* the panels inside: sunk in - darker, no frame, a shadow under the upper edge and a little light on the lower one */
+.sub,.gcard,.lora,.hub,.node,.mdl,.tr{background:rgba(0,0,0,.26)!important;border-color:transparent;
+  box-shadow:inset 0 9px 24px -6px rgba(0,0,0,.42),inset 0 2px 6px -1px rgba(0,0,0,.22),inset 0 -4px 8px -5px rgba(255,255,255,.07),inset 0 -1px 0 rgba(255,255,255,.045)}
+.mdl.sel{border-color:var(--acc)}
+/* ordinary buttons: small plates of the same aluminium */
+.btn:not(.go),.fam,.lang,.ib,#nsfwHide,#nsfwOk,#adMark,#badge,#zoomPct,.chip{background-color:#1c1d20;background-image:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.10)),var(--fA);background-size:100% 100%,241px 241px;
+  border:1px solid rgba(255,255,255,.08);border-top-color:rgba(255,255,255,.15);box-shadow:0 1px 2px rgba(0,0,0,.45)}
+.btn:not(.go):not(:disabled):hover,.ib:hover,#nsfwHide:hover,#nsfwOk:hover,#adMark:hover,.chip:not(.off):hover{background-color:#2a2b2f;border-color:rgba(255,255,255,.2)}
+.btn.go:not(:disabled):hover,.fam button.act:hover,.lang button.act:hover{filter:brightness(1.1)}
+.fam button:not(.act):hover,.lang button:not(.act):hover{background-color:rgba(255,255,255,.07);color:var(--text)}
+.ib{color:#cfd0d3}.ib.act{border-color:var(--acc);color:var(--acc)}
+.btn:disabled,.btn:disabled:hover{box-shadow:none!important;filter:none!important;background-color:#1a1b1d!important;border-color:rgba(255,255,255,.05)!important;transition:none!important}
+#steps .uiRl:not(:hover):not(.spin){background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+/* full-width dividers: a sheet bent inwards - a shadowed groove that melts into the panel before its edges */
+#prog,#steps,#infoWrap,#hxRow{position:relative;border-top:0!important}
+#histBar{border-bottom:0!important}
+#prog::before,#steps::before,#infoWrap::before,#hxRow::before{content:"";position:absolute;left:0;right:0;top:0;height:14px;pointer-events:none;z-index:2;
+  background:linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.2) 4px,rgba(0,0,0,.07) 9px,rgba(0,0,0,0) 14px);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)}
+/* thumbnail panel: count beside the open / close triangle, a wider control strip so the icon frames keep away from the corner */
+#histBar{height:22px;padding-left:14px}
+#histBar .hxn{flex:1;text-align:right;padding-right:4px}
+#histBar .hxt{flex:0 0 47px;height:22px}
+#hxSize{flex:0 0 46px!important;gap:3px!important;padding:6px 0 7px!important;background:rgba(0,0,0,.12)!important;border-left-color:rgba(255,255,255,.05)!important}
+#hxSize .hxi{width:24px!important;height:24px!important}
+#hxPop{right:54px}
+/* the resize mark: a double line in the middle of the thumbnail header, yellow when pointed at */
+#histGrip{left:50%!important;right:auto!important;width:160px;margin-left:-80px;top:-13px!important;height:35px!important}
+#histGrip:after{top:20px!important;width:22px!important;height:2px!important;margin-left:-11px!important;border-radius:0!important;background:transparent!important;
+  border-top:1.5px solid #8d95a8;border-bottom:1.5px solid #8d95a8;transition:border-color .12s!important}
+#histGrip:hover:after,body.hxdrag #histGrip:after{border-color:var(--acc)}
+
+/* yellow buttons: sandblasted glass in the original yellow - a fine grain, a thin bright rim at the top, and a darker
+   refraction band along the lower edge and the sides (more dark than light), with a soft glow under it */
+.btn.go,.fam button.act,.lang button.act,.tagr,#modal a.cof{position:relative;background-color:var(--acc);
+  background-image:radial-gradient(40% 2px at 50% 1px,#fff 0,#fff 35%,rgba(255,255,255,.75) 60%,rgba(255,255,255,0) 100%),radial-gradient(120% 90% at 50% 120%,rgba(110,60,0,.30),rgba(110,60,0,0) 60%),linear-gradient(135deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.02) 38%,rgba(90,50,0,0) 58%,rgba(90,50,0,.2) 100%),var(--fY),var(--fYd);
+  background-size:100% 100%,100% 100%,100% 100%,163px 163px,211px 211px;background-position:0 0,0 0,0 0,0 0,0 0;background-repeat:no-repeat,no-repeat,no-repeat,repeat,repeat;border-color:#f7d58e!important;
+  box-shadow:inset 0 0 0 1px rgba(255,240,200,.28),inset 0 2px 2px -1px rgba(255,255,255,.7),inset 0 -5px 9px -3px rgba(110,58,0,.5),inset 4px 0 7px -4px rgba(110,58,0,.38),inset -4px 0 7px -4px rgba(110,58,0,.38),
+    0 5px 14px rgba(0,0,0,.45),0 2px 9px rgba(242,184,75,.14)}
+/* the glass edge of the designer's Photoshop layer (the same 9-part image as on the viewer), scaled to the button's corner */
+.btn.go::after,.fam button.act::after,.lang button.act::after{content:"";position:absolute;inset:0;pointer-events:none;border:11px solid transparent;border-radius:inherit;
+  border-image:url("data:image/png;base64,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") 64 fill / 11px stretch;opacity:.95}
+.lang button{position:relative}
+.fam button{position:relative}
+/* switches: the same glass, pressed in; off they keep the same look in grey */
+.sw span{outline:1px solid rgba(0,0,0,.32);outline-offset:0;background-color:#3a3b3f;background-image:linear-gradient(180deg,rgba(0,0,0,.18),rgba(255,255,255,0) 55%,rgba(255,255,255,.05)),var(--fY),var(--fYd);
+  background-size:100% 100%,163px 163px,211px 211px;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.55),inset 0 1px 1px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.12),0 1px 0 rgba(255,255,255,.04)}
+.sw input:checked+span{outline-color:rgba(90,50,0,.35);background-color:var(--acc);
+  box-shadow:inset 0 2px 4px rgba(100,55,0,.55),inset 0 1px 1px rgba(90,50,0,.45),inset 0 -1px 0 rgba(255,245,215,.45),0 0 8px rgba(242,184,75,.14)}
+.sw span::before{background:#d7d8db;box-shadow:0 1px 2px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7)}
+.sw input:checked+span::before{background:#241a06;box-shadow:0 1px 2px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+/* menus: a lighter grey highlight under the pointer */
+.gmenu .mi:hover{background:rgba(255,255,255,.09)!important}
+/* the about / info window: its header casts a shadow over the text scrolling under it */
+#modal .mh{position:relative;z-index:2;border-bottom:0;box-shadow:0 8px 16px -6px rgba(0,0,0,.65);background:transparent}
+/* buttons that cannot be pressed: darker grey text, no fading of the whole button */
+.btn:disabled{opacity:1!important;color:#5d5f64!important;cursor:default}
+#steps .chip.off{opacity:1!important;color:#5d5f64}
+#steps .chip.off .ph{background:rgba(255,255,255,.05)}
+/* progress bar track: the same grey as the text of the greyed-out buttons */
+#bar{background:rgba(93,95,100,.55)!important}
+/* text fields and lists sink into the surface like the inner panels */
+textarea,input[type=text],input[type=number]{background-color:rgba(0,0,0,.28)!important;border-color:rgba(255,255,255,.06)!important;
+  box-shadow:inset 0 3px 8px -2px rgba(0,0,0,.45),inset 0 -1px 0 rgba(255,255,255,.05)}
+
+/* the viewer's labels and buttons over the image are aluminium plates too; the image drop areas get a lighter dashed edge */
+#nsfwHide,#nsfwOk,#adMark,#badge,#zoomPct{border-color:rgba(255,255,255,.1)!important}
+.chip.act{border-color:var(--acc)!important}
+.drop,.iidrop{border-color:rgba(255,255,255,.16)!important;background:rgba(0,0,0,.26)!important;box-shadow:inset 0 5px 12px -2px rgba(0,0,0,.42)}
+
+/* drop-down lists: the same dark grey as their opened list, and the arrow as far from the right edge as from the top and bottom */
+select{-webkit-appearance:none;appearance:none;background-color:#111214!important;border-color:rgba(255,255,255,.06)!important;padding-right:25px!important;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23a6a8ad' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>")!important;
+  background-repeat:no-repeat!important;background-position:right 11px center!important;background-size:10px 6px!important;
+  box-shadow:inset 0 3px 8px -2px rgba(0,0,0,.45),inset 0 -1px 0 rgba(255,255,255,.05)}
+select option,select optgroup{background-color:#111214;color:var(--text)}
+select:hover{background-color:#17181b!important}
+/* the field you are typing in gets the yellow frame */
+textarea:focus,input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--acc)!important;outline:none;
+  box-shadow:inset 0 3px 8px -2px rgba(0,0,0,.45),0 0 0 1px rgba(242,184,75,.25)!important}
+/* number fields: the browser's own up / down arrows in its dark style (dark grey, light arrows, lighter when pointed at) */
+:root{color-scheme:dark}
+input[type=number]::-webkit-inner-spin-button{opacity:.75;cursor:pointer}
+input[type=number]:hover::-webkit-inner-spin-button{opacity:1}
+/* sliders: the track is pressed-in glass like the switches, the knob is a small yellow glass button */
+input[type=range]{-webkit-appearance:none;appearance:none;height:18px;background:transparent;accent-color:var(--acc);cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:8px;background-color:#3a3b3f;
+  background-image:linear-gradient(180deg,rgba(0,0,0,.18),rgba(255,255,255,0) 55%,rgba(255,255,255,.05)),var(--fY),var(--fYd);background-size:100% 100%,163px 163px,211px 211px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.32),inset 0 2px 4px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.1)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-4px;border-radius:50%;border:1px solid #f7d58e;
+  background-color:var(--acc);background-image:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%,rgba(90,50,0,.2)),var(--fY),var(--fYd);background-size:100% 100%,163px 163px,211px 211px;
+  box-shadow:inset 0 1.5px 0 #fff,inset 0 3px 3px -2px rgba(255,255,255,.6),inset 0 -2px 3px rgba(120,66,0,.4),0 2px 5px rgba(0,0,0,.5)}
+input[type=range]:hover::-webkit-slider-thumb{filter:brightness(1.1)}
+#hxPop .trk:before{height:8px!important;top:4px!important;border-radius:8px;background-color:#3a3b3f!important;
+  background-image:linear-gradient(180deg,rgba(0,0,0,.18),rgba(255,255,255,0) 55%,rgba(255,255,255,.05)),var(--fY),var(--fYd)!important;background-size:100% 100%,163px 163px,211px 211px!important;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.1)}
+#hxPop .trk i{width:16px!important;height:16px!important;top:0!important;border:1px solid #f7d58e;background-color:var(--acc)!important;
+  background-image:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%,rgba(90,50,0,.2)),var(--fY),var(--fYd);background-size:100% 100%,163px 163px,211px 211px;
+  box-shadow:inset 0 1.5px 0 #fff,inset 0 3px 3px -2px rgba(255,255,255,.6),inset 0 -2px 3px rgba(120,66,0,.4),0 2px 5px rgba(0,0,0,.5)!important}
+#hxPop .trk:hover i{filter:brightness(1.1)}
+/* the viewer is a sheet of glass. Behind the picture: soft reflections in the two upper corners. Over the picture: the
+   rounded (chamfered) glass edge - a thin, intense white glint along the top edge that bends into the corners and runs
+   a little way down the sides, about as deep as the gap between the panels */
+#viewCard{position:relative;border-top-color:rgba(255,255,255,.28)!important}
+#stage{background-color:#08090a!important;background-image:radial-gradient(26% 22% at 3% 0%,rgba(255,255,255,.08),rgba(255,255,255,.02) 50%,rgba(255,255,255,0) 75%),
+  radial-gradient(22% 20% at 97% 0%,rgba(255,255,255,.065),rgba(255,255,255,.015) 50%,rgba(255,255,255,0) 75%)!important}
+/* the glass edge itself comes from the designer's Photoshop layer (uveghatas.psd, "hatas, raszterizalva": inner bevel 13 px,
+   soften 16, altitude 30, screen): cut into a 9-part image (assets/glass9.png, drawn at 2x) and laid over the picture */
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;border:32px solid transparent;
+  border-image:url("data:image/png;base64,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") 64 fill / 32px stretch}
+/* the thumbnail header casts the same soft shadow as the menu headers */
+/* the thumbnails slide in under the header's edge: a deeper shadow that falls over them */
+#hxRow::before{height:20px!important;z-index:5!important;background:linear-gradient(180deg,rgba(0,0,0,.62) 0,rgba(0,0,0,.34) 5px,rgba(0,0,0,.12) 12px,rgba(0,0,0,0) 20px)!important}
+
+/* the zoom label on the right uses the same round shape as the step label on the left */
+#zoomPct{border-radius:20px!important;padding-left:10px;padding-right:10px}
+
+/* the round knobs get the same glass edge */
+input[type=range]::-webkit-slider-thumb{clip-path:circle(50%);border:0!important;border-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAHiElEQVR42u2d64/bRBTFzziTzZZShJAAFVEk+AKCCon//59ASDy/gFQhHgIJSpey2cTDB2a609l53Bk/YodzJMtJNtldz/353HvHjq2MMVigdgAeAXgfwLsAHgJ4C8DrdrkEcB9AB0B5a2U/H67HlrGL/9gA6O16D+AZgKcAruzyK4CfAPwI4AcATwBcL23g1UKAuADwEYBP7PoD+5q2y8ZbumDxgz81FEYAhQOjB3D01gf7+MY+vwbwPYBvAHwF4FsL0v8WiJ0N/mcAPgZwD8DWLj4I2gNhE4FBZWCYwiVMZG0aoDjY5caC8BzA1wA+PyUcpwDiTQvBY2v7F3aRwOADgQgUc6QLKRR9AoqjB4cDwkGxt4//AvAlgC8A/HauQDwE8CmA96w7XGRgiKWJjdAZpnSHWNqQuEQfAeLoOYVb773l2i5PLBw/nwsQb9jU8LYFYecBsfVqhRAI3xVUJlVgxnSRAyJc9wIoDgEYziGuAzD+sUXpdwD+mDJYeuJC8ZF1hp3dUBXsUW6QtB0QP1V0iQJSZRxibiBiLoFI1xHWFCYCxNECEHOKva2xPgTwi+1UbtYExGu2TXzFbowLWjg4Lo9uMs6gMkAgE/w5aojc81T6MIn0cSg4xd4D4x0Av9vWdtFAbOw8wYW3QSoYmHDPiBWQXWKOoZQWUhCoCSCQOIZTH3GNmFOkCk0/dVzbn71qx/lP+9nFAXEJ4IENoAnaJt8uXQF5I0wRqCwYp3QGKSSl+iKWQiRQOCB6+7u2tkZ7OtYk11hA3LfpQQUbvw/2goMHRMoVuplrgrnByYHRCwrNWM3ywI7l1RK6jAfWukqV/9brLGIwqMjMY2ovNMK99CRzO4K6JgVFWFsdPSD6wuyoP2V+EiCUzWM6A0Nssig1DR0bQFOo4lM5+1QQxNapMYltZ9iaHgSdjInUaM9ax6MVCGXTxKYwQVSaPVSN+XmM90/lCkPfbwpumIMCHhRXLWOiGzf+nlc8loKkCs+HVvWngkMNeI9qgLzkEv5zF6O/5wDiUghDbMOUEKJScBd5zF4QdNUAhxSKEBAHxfMpgdgFQVWFPVkFrjAUBtOwZ506TZQgqHULU+EYyhby+ymA0AJnSKWIlkBKYTALdwVJ7TRlCulwe2hgNCDcdLI0wKErqMYCao2pQwJF+NgIPm8a3QI2dr03oTUYCN1YC0hShTkjh2gFYoyaotSObyRASNpOHZknkK5jG2kmgOJcaojce80IYLg5jmYgXKqQBl81kl4Dxbl0GWpgoSlNIeF7D7nxKwGhBcGvsb8h7rCUySo1wmdaHEKyMxnha4cWIPwpZclGtAzUkFRhVuwOQ+uIlnEMD8f3tUWlEnYOrYExjS6xBiBMxh2VoBMzlVDUdmuq1iE61B1/GEJ0KxBrmocYK33UjkNpnHupQ0iPP7S6xDmlB+n/qWbcFskYKqlDdANdQDUE1wwAYG0O0Vpn1IyxdIzuuEQMCC34ZWpgsFpcYC0u0QJKzQ6oBu4s4ecPOSDCzmLMoLTMNK4ZglZAxj5XVDIfdEy5QVewI+mBKjPxz9cuI5xjKMWiFYaweI0C4buDyRRCaiLLP3cIasHIwVH6WW1a6lwtoSPuEJtjKFXISz+7ae1gSFylpZ29A4RfL4TnRwLp70KoEQJtCEPTmJgKN1DCxzpMGbliMjajVjovwtARJk8lNZ2L5IBkB6DXgTuU/skUDGMVm1R9KmkBIfYeDWCvvSfSNCA9p5IwzN/G5i6PUPpaxMZPGRshCMA4B7aoeqdQjQ4hBaNzQGyCdrPmVHkl/BzBmc8lgPLXKlNOsdHC+iFFKQO9TBAggCP6NUvfISTukJsbl3Yg1LRQhEFvAiI1i8XOYR1FZA6CHBDZlFHbPYxxXgQ1DzxSp9BhypDAEOuNjeCfIizzBbzkCikouphD1H5VLxV8QrBsUGJdx0YjfRELFApIQHaKODVPIQlBi1m6FLTyv5VV03ayZljefIN03qEIhMbtldAkB1PYXq6nA8ld3DV8X+dqiB1ur3aWqhFyM5I1J9FQ889HIFFA+q+5y0p3Gv9dUMIdy9gjfwpXrjVlGpm/XigFX5Iy/KsDKgeEf7Wzm0ybaQSdBN3h9HVFKn3c6Spwe93QresytBfELW4viYeMEzDgy6oTWsHRARCde0Hh5Ytm9olUIXUJwrOMOQggfdqjf0uKFzWEf+V514Jq1H/tn1r+3ERYQ7hYv3QHgvDWRf6dbGr+KAFZR6Hpy79T0Qso/EsLp25hxICvr64ogeObgPLjn7olQSekjKCsU6k7FXVdpj+lzj+d3Il5h/TZNtR5t6nRsqAbmTpq5Q7SzfFHqHUVFxRFICgCQREIikBQBIIiEBSBoAgERSAoAkERCIpAUASCIhAUgaAIBEUgKAJBEQiKQFAUgaAIBEUgKAJBEQiKQFAEgiIQFIGgCARFICgCQREIikBQBIIiEBSBoAgERSAoikBQBIIiEBSBoAgERSAoAkERCIpAUASCIhAUgaAIBEUgKAJBEQiKQFAEgiIQFIGgKAJBEQiKQFAEgiIQFIGgCARFICgCQREIikBQi9O/Tq4Op2/60V4AAAAASUVORK5CYII=") 64 fill / 8px stretch}
+#hxPop .trk i{overflow:hidden}
+#hxPop .trk i::after{content:"";position:absolute;inset:0;border-radius:50%;clip-path:circle(50%);border:8px solid transparent;border-image:url("data:image/png;base64,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") 64 fill / 8px stretch;pointer-events:none}
+/* scroll bars: they melt into the background and light up only a little under the pointer */
+/* the standard scrollbar-width / scrollbar-color switch the ::-webkit-scrollbar rules off in Chromium (this is why the bars stayed
+   bluish with a track); back to auto, so the rules below apply: no track, a dark handle that lightens under the pointer */
+*{scrollbar-width:auto!important;scrollbar-color:auto!important}
+::-webkit-scrollbar{width:10px;height:10px;background:transparent!important}
+::-webkit-scrollbar-track,::-webkit-scrollbar-track-piece,::-webkit-scrollbar-corner{background:transparent!important;border:0!important;box-shadow:none!important}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+::-webkit-scrollbar-thumb{background:#232426!important;border:2px solid transparent!important;background-clip:padding-box!important}
+::-webkit-scrollbar-thumb:hover{background:#707070!important;background-clip:padding-box!important}
+
+/* the viewer: the thin white glint along its top edge again (over the glass edge), a fainter straight glint a few pixels
+   above its lower edge, and the grey part under it catches a little light on its upper edge (the shadow stays) */
+#viewCard::after{content:"";position:absolute;left:8%;right:8%;top:0;height:3px;pointer-events:none;z-index:7;
+  background:radial-gradient(50% 2px at 50% 1px,#fff 0,#fff 30%,rgba(255,255,255,.7) 60%,rgba(255,255,255,0) 100%)}
+#stage::before{content:"";position:absolute;left:15px;right:15px;bottom:0;height:20px;pointer-events:none;z-index:6;
+  background:url("data:image/png;base64,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") no-repeat 0 0/100% 100%}
+#prog{box-shadow:inset 0 1px 0 rgba(255,255,255,.075)}
+
+/* the eye buttons: the viewer's adult mark is a round plate like the zoom label; the strip's 18+ toggle has no frame */
+#adMark{border-radius:20px!important;bottom:14px!important;right:14px!important}
+#histBar .hxe{background:transparent!important;box-shadow:none!important}
+#steps .stepArr{border-left-color:rgba(255,255,255,.38)!important}
+
+/* the thumbnail strip's scrollbar: a darker handle, so it stands out from the strip's panel */
+#hist::-webkit-scrollbar-thumb{background:#141517!important;background-clip:padding-box!important}
+#hist::-webkit-scrollbar-thumb:hover{background:#707070!important;background-clip:padding-box!important}

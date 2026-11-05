@@ -82,6 +82,39 @@ function checkImg(url) {
       if (j.moved) { const nu = vUrl(j.moved); CK.set(nu, {st: e.st}); renameUrl(url, nu); }
     }).catch(() => { e.st = 'na'; }).finally(applyGuard);
 }
+async function markNotAdult(url) {
+  if (!url || BLOCKED.has(url)) return;
+  const q = qp(url);
+  if (q && q.filename && (q.type === 'output' || q.type === 'temp')) {
+    let j; try { j = await (await fetch(API + '/artflow/not-adult', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(q)})).json(); }
+    catch (err) { j = {error: String(err)}; }
+    if (j.error) { toast(t('nsfwOkErr', j.error), 'err'); return; }
+    CK.set(url, {st: 'ok'});
+    if (j.moved) { const nu = vUrl(j.moved); CK.set(nu, {st: 'ok'}); renameUrl(url, nu); }
+  } else CK.set(url, {st: 'ok'});
+  applyGuard();
+}
+// the user's "adult content" mark (eye button at the bottom right of the viewer): into output\18+, blurred from now on
+async function markAdult(url) {
+  if (!url || BLOCKED.has(url)) return;
+  const q = qp(url);
+  if (q && q.filename && (q.type === 'output' || q.type === 'temp')) {
+    let j; try { j = await (await fetch(API + '/artflow/mark-adult', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(q)})).json(); }
+    catch (err) { j = {error: String(err)}; }
+    if (j.error) { toast(t('adMarkErr', j.error), 'err'); return; }
+    CK.set(url, {st: 'nsfw'}); REVEAL.delete(url);
+    if (j.moved) { const nu = vUrl(j.moved); CK.set(nu, {st: 'nsfw'}); renameUrl(url, nu); }
+  } else CK.set(url, {st: 'nsfw'});
+  applyGuard(); if (typeof hxBar === 'function') renderHistory();
+}
+// an image that is already in the output folder was sorted when it was made: output\18+ holds the adult images, the rest
+// is not adult (or was marked so by the user), so the history strip needs no new check, which spares the CPU
+function ckByFolder(url) {
+  if (!url || CK.has(url)) return; const q = qp(url);
+  if (!q || !q.filename || q.type !== 'output') { checkImg(url); return; }
+  const sub = String(q.subfolder || '').replace(/\\/g, '/');
+  CK.set(url, {st: sub === '18+' || sub.startsWith('18+/') ? 'nsfw' : 'ok'});
+}
 function hiddenUrl(url) {
   if (!url) return false; if (BLOCKED.has(url)) return 'blocked';
   if (/^blob:/.test(url)) return SAFE.filter && R.liveAdult ? 'nsfw' : false;
@@ -95,7 +128,9 @@ function applyGuard() {
   const cov = $('#nsfwCov'); if (cov) { cov.querySelector('b').textContent = t(hid === 'blocked' ? 'blkT' : hid === 'pend' ? 'ckPend' : 'nsfwT');
     cov.querySelector('small').textContent = hid === 'blocked' ? t('blkS') : t('nsfwS'); }
   const hb = $('#nsfwHide'); if (hb) { hb.title = t('nsfwHide'); hb.querySelector('span').textContent = t('nsfwHide'); }
-  document.querySelectorAll('#hist img, #steps .chip img, .iih img').forEach(i => { const hh = hiddenUrl(i.getAttribute('src')); i.classList.toggle('nsfw', hh === 'nsfw' || hh === 'blocked'); i.classList.toggle('ckpend', hh === 'pend'); });
+  const am = $('#adMark'); if (am) { const st = (CK.get(R.shown) || {}).st; am.hidden = v.hidden || !R.shown || /^(blob|data):/.test(R.shown) || !!hid || st === 'nsfw' || st === 'pend' || BLOCKED.has(R.shown); am.title = t('adMarkT'); }
+  const ob = $('#nsfwOk'); if (ob) { ob.title = t('nsfwOkT'); ob.querySelector('span').textContent = t('nsfwOk'); }
+  document.querySelectorAll('#hist img, #steps .chip img, .iih img').forEach(i => { const hh = hiddenUrl(i.dataset.u || i.getAttribute('src')); i.classList.toggle('nsfw', hh === 'nsfw' || hh === 'blocked'); i.classList.toggle('ckpend', hh === 'pend'); });
 }
 const _show = show;
 show = function (url, badgeKey, live) {
@@ -106,7 +141,7 @@ renderSteps = function () { _renderSteps(); for (const id of Object.keys(R.steps
 const _renderHistory = renderHistory;
 renderHistory = function () { _renderHistory(); H.forEach(x => checkImg(x.url)); applyGuard(); };
 const _openInfo = openInfo;
-openInfo = function () { _openInfo(); H.forEach(x => checkImg(x.url)); applyGuard(); };
+openInfo = function () { _openInfo(); H.slice(0, 16).forEach(x => ckByFolder(x.url)); applyGuard(); };
 let INFO_SRC = null;
 document.addEventListener('click', e => { const i = e.target.closest && e.target.closest('.iih img'); if (i) INFO_SRC = i.getAttribute('src'); }, true);
 const _showInfo = showInfo;
@@ -115,7 +150,7 @@ showInfo = function (meta, url) {
   const img = document.querySelector('#iiOut .iiprev img'); if (!img || !SAFE.filter) return;
   const txt = meta ? [meta.parameters, meta.prompt].filter(Boolean).join(' ') : '';
   // a file the user chose or dropped here is shown as it is; only an image picked from the Studio's own history keeps its blur
-  if (src && (hiddenUrl(src) || (txt && verdict(txt).adult))) {
+  if (src && (hiddenUrl(src) || (txt && verdict(txt).adult && (CK.get(src) || {}).st !== 'ok'))) {
     img.classList.add('nsfw'); img.title = t('nsfwShow'); img.style.cursor = 'pointer';
     img.addEventListener('click', () => { img.classList.remove('nsfw'); if (src) REVEAL.add(src); applyGuard(); }, {once: true});
   }
@@ -210,7 +245,17 @@ function initSafety() {
   st.append(cov);
   const hide = h('button', {id: 'nsfwHide', type: 'button', title: t('nsfwHide')}); hide.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-2.6 3.4M6.3 6.4C3.9 8 2.5 12 2.5 12S6 19 12 19c1.8 0 3.3-.5 4.6-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg><span></span>';
   hide.onclick = e => { e.stopPropagation(); REVEAL.delete(R.shown); applyGuard(); };
-  hide.addEventListener('mousedown', e => e.stopPropagation()); st.append(hide);
+  hide.addEventListener('mousedown', e => e.stopPropagation());
+  // "Not adult content": the user's own decision, the image is not checked again
+  const ok = h('button', {id: 'nsfwOk', type: 'button', title: t('nsfwOkT')}); ok.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span></span>';
+  ok.onclick = async e => { e.stopPropagation(); await markNotAdult(R.shown); };
+  ok.addEventListener('mousedown', e => e.stopPropagation());
+  st.append(h('div', {id: 'nsfwBar'}, ok, hide));
+  // any image can be marked as adult content by hand (also one marked "not adult" earlier)
+  const am = h('button', {id: 'adMark', type: 'button', hidden: true}); am.innerHTML = hide.querySelector('svg').outerHTML;
+  am.onclick = async e => { e.stopPropagation(); await markAdult(R.shown); };
+  am.addEventListener('mousedown', e => e.stopPropagation());
+  st.append(am);
   $('#nsfwSw').onchange = async e => { if (!e.target.checked && !SAFE.adult && !(await adultModal('filter'))) { e.target.checked = true; return; } SAFE.filter = e.target.checked; saveSafe(); };
   $('#safeSw').onchange = e => { SAFE.safe = e.target.checked; saveSafe(); };
   syncSafeUi(); loadSafe().then(() => { renderHistory(); });
@@ -227,23 +272,26 @@ let PRUNE_T = null;
 function pruneSoon() { clearTimeout(PRUNE_T); PRUNE_T = setTimeout(pruneMissing, 400); }
 // the history strip follows the output folder itself: the newest 40 images that really exist (output and output\18+), newest first
 async function syncHistory() {
-  let j; try { j = await (await fetch(API + '/artflow/recent?limit=40', {cache: 'no-store'})).json(); } catch (_) { return false; }
+  let j; try { j = await (await fetch(API + '/artflow/recent?limit=' + (typeof histLimit === 'function' ? histLimit() : 40), {cache: 'no-store'})).json(); } catch (_) { return false; }
   if (!j || !Array.isArray(j.files)) return false;
+  if (typeof HX === 'object') HX.total = j.total != null ? j.total : j.files.length;
   const old = new Map(H.map(x => [x.url, x]));
   const nh = j.files.map(f => { const u = vUrl(f); const o = old.get(u); return {url: u, seed: o ? o.seed : null, t: f.mtime}; });
   const same = nh.length === H.length && nh.every((x, i) => x.url === H[i].url);
-  H = nh; try { localStorage.setItem(LS_HIST, JSON.stringify(H)); } catch (_) {}
-  if (!same) renderHistory();
+  H = nh; try { localStorage.setItem(LS_HIST, JSON.stringify(H.slice(0, 120))); } catch (_) {}
+  if (!same) renderHistory(); else if (typeof hxBar === 'function') hxBar();
   return true;
 }
 async function pruneMissing() {
   await syncHistory();
-  const cand = [...H.map(x => x.url), ...Object.values(R.steps).flat(), R.shown, R.cur].filter(u => { if (!u || /^(blob|data):/.test(u)) return false; const q = qp(u); return q && q.filename && q.type === 'output'; });
+  // the strip itself was just re-read from the folder; here only the images on screen are checked (a few files)
+  const cand = [...Object.values(R.steps).flat(), R.shown, R.cur].filter(u => { if (!u || /^(blob|data):/.test(u)) return false; const q = qp(u); return q && q.filename && q.type === 'output'; });
   const urls = [...new Set(cand)]; if (!urls.length) return;
   const ex = await filesExist(urls); const gone = new Set(urls.filter((u, i) => ex[i] === false)); if (!gone.size) return;
   H = H.filter(x => !gone.has(x.url)); try { localStorage.setItem(LS_HIST, JSON.stringify(H)); } catch (_) {}
   for (const k of Object.keys(R.steps)) { R.steps[k] = R.steps[k].filter(u => !gone.has(u)); if (!R.steps[k].length) delete R.steps[k]; }
-  if (gone.has(R.cur)) R.cur = null;
+  // the final image of a generation is gone: its step images (temporary copies of the same picture) go with it
+  if (gone.has(R.cur)) { R.cur = null; R.steps = {}; R.sel = null; }
   if (gone.has(R.shown)) { const v = $('#view'); v.hidden = true; v.removeAttribute('src'); $('#empty').hidden = false; $('#badge').hidden = true; R.shown = null; }
   gone.forEach(u => { CK.delete(u); REVEAL.delete(u); });
   renderHistory(); renderSteps(); applyGuard();
@@ -252,7 +300,7 @@ function initPrune() {
   addEventListener('focus', pruneSoon); document.addEventListener('visibilitychange', () => { if (!document.hidden) pruneSoon(); });
   $('#hist').addEventListener('click', async e => {   // check the file before opening a thumbnail
     const i = e.target.closest && e.target.closest('img'); if (!i) return; e.stopPropagation();
-    const u = i.getAttribute('src'); const [ok] = await filesExist([u]);
+    const u = i.dataset.u || i.getAttribute('src'); const [ok] = await filesExist([u]);
     if (ok === false) { toast(t('fileGone')); pruneMissing(); return; }
     show(u, 'earlier'); renderSteps();
   }, true);

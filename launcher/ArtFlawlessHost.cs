@@ -28,7 +28,7 @@ public class AfHost : Form
 {
     const int GRIP = 2;
     static readonly Color BG = Color.FromArgb(13, 15, 19);      // --bg
-    static readonly Color LINE = Color.FromArgb(39, 44, 56);    // --line
+    static readonly Color LINE = Color.FromArgb(13, 15, 19);    // window frame: the background colour (was 39, 44, 56)
 
     [DllImport("user32.dll")] static extern bool ReleaseCapture();
     [DllImport("user32.dll")] static extern IntPtr SetCapture(IntPtr h);

@@ -70,15 +70,67 @@ if (-not (Test-Path -LiteralPath $Py) -or -not (Test-Path -LiteralPath $Main)) {
     exit 1
 }
 
-# small splash while ComfyUI starts
-$form = New-Object System.Windows.Forms.Form
-$form.Text = 'ArtFlawless Studio'; $form.StartPosition = 'CenterScreen'; $form.FormBorderStyle = 'FixedDialog'
-$form.ControlBox = $false; $form.TopMost = $true; $form.ClientSize = New-Object System.Drawing.Size(360, 90)
-$form.BackColor = [System.Drawing.Color]::FromArgb(21, 24, 31); $form.ForeColor = [System.Drawing.Color]::White
-$lbl = New-Object System.Windows.Forms.Label
-$lbl.Text = 'ArtFlawless Studio is starting...'; $lbl.AutoSize = $false; $lbl.TextAlign = 'MiddleCenter'; $lbl.Dock = 'Fill'
-$lbl.Font = New-Object System.Drawing.Font('Segoe UI', 11)
-$form.Controls.Add($lbl); $form.Show(); [System.Windows.Forms.Application]::DoEvents()
+# start window: the rounded Studio panel with the logo, a turning ring and the list of what is happening (Splash.ps1)
+$Comfy = Join-Path $Portable 'ComfyUI'
+. (Join-Path $PSScriptRoot 'Splash.ps1')
+$Lang = Get-UiLang $Comfy
+$TX = @{
+    en = @{ engine = 'Starting the engine…'; engineOk = 'The engine has started'; gpu = 'Detecting the graphics card…'; gpuOk = 'Graphics card: {0}';
+            gpuMem = '{0}, {1} GB'; nodes = 'Loading components…'; nodesOne = 'Loading components: {0} ({1}/{2})…'; nodesOk = 'Components loaded ({0})';
+            server = 'Starting the server…'; serverOk = 'The server is running'; running = 'The Studio engine is already running';
+            win = 'Opening the workspace…'; winOk = 'The workspace is open'; session = 'Restoring your last session…'; sessionOk = 'Ready';
+            first = 'The first start can take 1–2 minutes.'; fail = 'Could not start – see launcher\comfyui.log'; failExit = 'The engine stopped while starting' }
+    hu = @{ engine = 'A háttérmotor indítása…'; engineOk = 'A háttérmotor elindult'; gpu = 'Videókártya keresése…'; gpuOk = 'Videókártya: {0}';
+            gpuMem = '{0}, {1} GB'; nodes = 'Összetevők betöltése…'; nodesOne = 'Összetevők betöltése: {0} ({1}/{2})…'; nodesOk = 'Összetevők betöltve ({0})';
+            server = 'A kiszolgáló indul…'; serverOk = 'A kiszolgáló elindult'; running = 'A Studio motorja már fut';
+            win = 'A munkafelület megnyitása…'; winOk = 'A munkafelület megnyílt'; session = 'Előző munkamenet betöltése…'; sessionOk = 'Kész';
+            first = 'Az első indítás 1–2 percig is eltarthat.'; fail = 'Nem indult el – a részletek: launcher\comfyui.log'; failExit = 'A háttérmotor indulás közben leállt' }
+}
+function T([string]$k) { $v = $TX[$Lang][$k]; if ($args.Count) { $v = [string]::Format($v, $args) }; return $v }
+
+$form = $null
+if (-not (Start-ArtSplash $true)) {
+    # the old plain window, when the new one cannot be shown
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = 'ArtFlawless Studio'; $form.StartPosition = 'CenterScreen'; $form.FormBorderStyle = 'FixedDialog'
+    $form.ControlBox = $false; $form.TopMost = $true; $form.ClientSize = New-Object System.Drawing.Size(360, 90)
+    $form.BackColor = [System.Drawing.Color]::FromArgb(21, 22, 25); $form.ForeColor = [System.Drawing.Color]::White
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.Text = 'ArtFlawless Studio is starting...'; $lbl.AutoSize = $false; $lbl.TextAlign = 'MiddleCenter'; $lbl.Dock = 'Fill'
+    $lbl.Font = New-Object System.Drawing.Font('Segoe UI', 11)
+    $form.Controls.Add($lbl); $form.Show(); [System.Windows.Forms.Application]::DoEvents()
+}
+function Close-StartWindow { Close-ArtSplash; if ($form) { try { $form.Close() } catch { } } }
+
+# reads what ComfyUI wrote to its log since the last call (the file stays open for writing by ComfyUI)
+$script:LogPos = @{}
+function Read-LogLines([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return @() }
+    try {
+        $fs = [IO.File]::Open($path, 'Open', 'Read', 'ReadWrite')
+        try {
+            $pos = [long]$script:LogPos[$path]; if ($fs.Length -lt $pos) { $pos = 0 }
+            $fs.Seek($pos, 'Begin') | Out-Null
+            $buf = New-Object byte[] ($fs.Length - $pos)
+            $n = $fs.Read($buf, 0, $buf.Length)
+            $txt = [Text.Encoding]::UTF8.GetString($buf, 0, $n)
+            $cut = $txt.LastIndexOf("`n")
+            if ($cut -lt 0) { return @() }
+            $script:LogPos[$path] = $pos + [Text.Encoding]::UTF8.GetByteCount($txt.Substring(0, $cut + 1))
+            return @($txt.Substring(0, $cut).Split("`n") | ForEach-Object { ($_ -replace '\x1b\[[0-9;]*m', '').TrimEnd("`r") })
+        } finally { $fs.Dispose() }
+    } catch { return @() }
+}
+
+# the custom node folders in the order ComfyUI loads them, to say which one is loading
+$NodeDirs = @()
+try {
+    $NodeDirs = @(Get-ChildItem -LiteralPath (Join-Path $Comfy 'custom_nodes') -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne '__pycache__' -and $_.Name -notlike '*.disabled' -and $_.Name -notlike '.*' } | Sort-Object Name | ForEach-Object { $_.Name })
+} catch { }
+function Norm([string]$x) { return ($x.ToLowerInvariant() -replace '[^a-z0-9]', '') }
+$NodeKeys = @($NodeDirs | ForEach-Object { Norm $_ })
+$FirstFlag = Join-Path $Comfy 'user\artflow-started.txt'
 
 $owned = $null
 if (-not (Test-Up)) {
@@ -130,23 +182,58 @@ if (-not (Test-Up)) {
     foreach ($x in @($Log, ($Log + '.err'))) {
         if (Test-Path -LiteralPath $x) { try { Move-Item -LiteralPath $x -Destination ($x -replace 'comfyui\.log', 'comfyui.prev.log') -Force } catch { } }
     }
+    Splash-Step (T 'engine')
     $owned = Start-Process -FilePath $Py -ArgumentList $cmdArgs -WorkingDirectory $Portable -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $Log -RedirectStandardError ($Log + '.err')
+    Start-Sleep -Milliseconds 400
+    Splash-Done (T 'engineOk'); Splash-Step (T 'gpu')
+    if (-not (Test-Path -LiteralPath $FirstFlag)) { Splash-Note (T 'first') }
+    $stage = 'gpu'; $vramMb = 0; $nodeCount = 0; $nodeIdx = 0; $started = Get-Date; $noted = $false
     $deadline = (Get-Date).AddMinutes(6)
-    while (-not (Test-Up)) {
-        [System.Windows.Forms.Application]::DoEvents()
-        Start-Sleep -Milliseconds 700
+    while ($true) {
+        foreach ($ln in @(Read-LogLines ($Log + '.err')) + @(Read-LogLines $Log)) {
+            if ($ln -match 'Total VRAM (\d+) MB') { $vramMb = [int]$Matches[1] }
+            if ($stage -eq 'gpu' -and $ln -match 'Device: \S+ (.+?)( : \S+)?\s*$') {
+                $name = $Matches[1].Trim()
+                if ($vramMb -gt 0) { $name = T 'gpuMem' $name ([math]::Round($vramMb / 1024)) }
+                Splash-Done (T 'gpuOk' $name); Splash-Step (T 'nodes'); $stage = 'nodes'; continue
+            }
+            if ($stage -eq 'nodes') {
+                if ($ln -match 'Import times for custom nodes') { $stage = 'times'; continue }
+                $nl = Norm $ln
+                for ($i = $nodeIdx; $i -lt $NodeKeys.Count; $i++) {
+                    if ($NodeKeys[$i].Length -ge 5 -and $nl.Contains($NodeKeys[$i])) { $nodeIdx = $i + 1; Splash-Update (T 'nodesOne' $NodeDirs[$i] $nodeIdx $NodeDirs.Count); break }
+                }
+                continue
+            }
+            if ($stage -eq 'times') {
+                if ($ln -match 'seconds( \(IMPORT FAILED\))?: .*custom_nodes[\\/](.+)$') { if ($Matches[2] -notmatch '\.py$') { $nodeCount++ }; continue }
+                Splash-Done (T 'nodesOk' $nodeCount); Splash-Step (T 'server'); $stage = 'server'
+            }
+            if ($stage -eq 'server' -and $ln -match 'To see the GUI go to|Starting server') { $stage = 'up' }
+        }
+        if (Test-Up) { break }
+        if (-not $noted -and ((Get-Date) - $started).TotalSeconds -gt 25) { $noted = $true; if (Test-Path -LiteralPath $FirstFlag) { Splash-Note (T 'first') } }
         if ($owned.HasExited -or (Get-Date) -gt $deadline) {
-            $form.Close()
+            if ($owned.HasExited) { Splash-Error (T 'failExit') }
+            Splash-Error (T 'fail')
             $tail = ''
             try { $tail = (Get-Content -LiteralPath ($Log + '.err') -Tail 12 -ErrorAction SilentlyContinue) -join "`n" } catch { }
-            Show-Error ("ComfyUI did not start.`n`nLog: $Log`n`n$tail")
+            if ($script:SplashOk) { [void](Splash-Ask ("ComfyUI did not start.`n`nLog: $Log`n`n$tail")) } else { Show-Error ("ComfyUI did not start.`n`nLog: $Log`n`n$tail") }
+            Close-StartWindow
             if (-not $owned.HasExited) { & taskkill.exe /PID $owned.Id /T /F | Out-Null }
             exit 1
         }
+        if ($form) { [System.Windows.Forms.Application]::DoEvents() }
+        Start-Sleep -Milliseconds 250
     }
+    if ($stage -in @('gpu', 'nodes')) { Splash-Done $null }
+    if ($stage -ne 'server' -and $stage -ne 'up') { Splash-Step (T 'server') }
+    Splash-Done (T 'serverOk')
+    try { [IO.File]::WriteAllText($FirstFlag, (Get-Date -Format 's')) } catch { }
+} else {
+    Splash-Done (T 'running')
 }
-$form.Close()
 
 function Stop-Comfy { if ($owned -and -not $owned.HasExited) { & taskkill.exe /PID $owned.Id /T /F | Out-Null } }
 
@@ -159,12 +246,25 @@ if ((Test-Path -LiteralPath $HostSrc) -and (-not (Test-Path -LiteralPath $HostEx
 }
 if (Test-Path -LiteralPath $HostExe) {
     $data = Join-Path $Root 'studio-window'
+    $readyFile = Join-Path $Comfy 'user\artflow-ready.txt'
+    try { if (Test-Path -LiteralPath $readyFile) { Remove-Item -LiteralPath $readyFile -Force } } catch { }
+    Splash-Step (T 'win')
     $hp = Start-Process -FilePath $HostExe -ArgumentList @($Url, ('"' + $data + '"'), ('"' + (Join-Path $PSScriptRoot 'artflow.ico') + '"')) -PassThru
     $null = $hp.Handle   # keeps the exit code readable after the process ends (Windows PowerShell quirk)
+    # the start window stays until the Studio page has loaded (it writes artflow-ready.txt), at most ~45 s
+    $until = (Get-Date).AddSeconds(45); $winSeen = $false
+    while ((Get-Date) -lt $until -and -not $hp.HasExited) {
+        if (-not $winSeen) { try { $hp.Refresh(); if ($hp.MainWindowHandle -ne [IntPtr]::Zero) { $winSeen = $true; Splash-Done (T 'winOk'); Splash-Step (T 'session') } } catch { } }
+        if (Test-Path -LiteralPath $readyFile) { break }
+        Start-Sleep -Milliseconds 200
+    }
+    if (-not $hp.HasExited) { if (-not $winSeen) { Splash-Done (T 'winOk'); Splash-Step (T 'session') }; Splash-Done (T 'sessionOk'); Start-Sleep -Milliseconds 1850 }   # a moment to read what happened
+    Close-StartWindow
     $hp.WaitForExit()
     if ($hp.ExitCode -ne 3 -and $hp.ExitCode -ne 4) { Stop-Comfy; exit 0 }
 }
 
+Close-StartWindow
 $edge = Find-Edge
 if ($edge) {
     New-Item -ItemType Directory -Force -Path $EdgeProfile | Out-Null

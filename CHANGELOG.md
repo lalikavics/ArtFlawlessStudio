@@ -3,6 +3,29 @@
 All notable changes to ArtFlawless Studio are listed here.
 The version number lives in the `VERSION` file and follows [Semantic Versioning](https://semver.org): MAJOR.MINOR.PATCH.
 
+## [1.5.0] - 2026-11-05
+### Added
+- New look, "frosted aluminium": the panels, the header, the buttons and the pop-ups are fine-grained matt metal with rounded corners (the inner panels are sunk into the surface), the yellow buttons are sandblasted glass with a thin light edge, switches and sliders are pressed into the surface, dividers are soft shadows that fade out at both ends, and the viewer has a glass rim with a light edge at the bottom. The bluish greys of the interface are neutral greys now.
+- New program icon (yellow logo on a dark rounded panel) for the desktop shortcut, the taskbar, the window and the header.
+- Start window: a rounded panel without a Windows frame (smooth corners, soft shadow) with the logo, a turning ring and a list of what is happening - starting the engine, the graphics card found (name and memory), the components loading (with a counter), the server, opening the workspace and restoring the last session. Finished steps slide up with a tick. It speaks the Studio's language (English on the first start), stays until the Studio page has loaded, and shows an error with the log's location when the start fails.
+- Setup: the component download runs without a console window; the same window shows each step, and for every download the size done, the total, the percentage and the speed (for example "Z-Image Turbo: 3.2 / 12.3 GB (26%) · 18 MB/s"). The Civitai LoRA step and the summary are message boxes. The language of the setup is the start window's first language.
+- History strip under the viewer as its own panel: open it into a larger area that shows the whole output folder (continuous scrolling) and resize it by dragging its upper edge; closed, it shows one row of whole thumbnails. The thumbnail size is set with a slider (thumbnails icon), the image count is on the right, a refresh button reloads the folder.
+- An eye button in the strip's header hides or shows the 18+ images of the folder (grey when there are none).
+- An eye button at the bottom right of the viewer marks any image as adult content: it goes into `output\18+` and is blurred from now on - also an image marked "not adult" earlier.
+- The step chips under the viewer (Base image, Refined, ...) are there from the start (inactive until there is an image), with small triangles between them showing the order of the steps.
+- Long explanations fold away behind a small triangle (one-line summary shown); the LoRA details and its trigger words fold away the same way.
+- "output folder" in the texts of the cards opens the output folder.
+### Changed
+- Header subtitle: "Local AI image studio, built on ComfyUI".
+- The output folder opens on the first click and comes in front of the Studio (Explorer is given up to 8 s on its first start, and is asked once more if no window appeared).
+- Thin, frameless scrollbars with a dark handle that lightens under the pointer.
+- Window frame line in the colour of the background.
+### Fixed
+- Image info shows the LoRAs and their strengths: the image saver removed the `<lora:...>` tags from the saved text, so they are written into the image's parameters separately now; for earlier images they are read from the embedded ComfyUI run.
+- SDXL images were marked adult because the check also read the Hungarian source of the negative prompt.
+- The settings drawer's close button could not be clicked in a maximised window.
+- An image removed from the `18+` folder by hand no longer stays blurred in the viewer and the step chips.
+
 ## [1.4.1] - 2026-11-04
 ### Fixed
 - The Studio used processor and graphics card time even when idle, and moving the window stuttered: the GPU/CPU load meters in the header animated their width, which made the whole page lay itself out on every screen frame (about 70 times a second, more on high refresh rate monitors). The bars now move on the graphics card and change only when the value changes; idle work of the page dropped from 0.56 s to 0.04 s per 10 s, the window's own processor use from about 26 % to 0.5 % of a core.

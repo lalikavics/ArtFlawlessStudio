@@ -128,6 +128,15 @@ async def artflow_index(request):
     return web.FileResponse(os.path.join(WEB, "index.html"), headers=NO_CACHE)
 
 
+@routes.get("/artflow/preview")
+async def artflow_preview(request):
+    """A trial version of the page (web/index-preview.html), for looking at a new design in a browser window."""
+    p = os.path.join(WEB, "index-preview.html")
+    if not os.path.isfile(p):
+        raise web.HTTPNotFound()
+    return web.FileResponse(p, headers=NO_CACHE)
+
+
 @routes.get("/artflow/")
 async def artflow_index_slash(request):
     raise web.HTTPFound("/artflow")
@@ -224,38 +233,68 @@ def _explorer_windows():
 
 
 def _bring_front(h):
-    """Windows only lets the foreground app raise windows; a short Alt tap lifts that lock for us."""
+    """Windows only lets the foreground app raise windows. We tap Alt (lifts the lock), join the input queue of the window that is
+    in front now, raise ours, and briefly make it topmost; then check it really came to the front."""
     import ctypes
-    u = ctypes.windll.user32
-    u.keybd_event(0x12, 0, 0, 0)
-    u.keybd_event(0x12, 0, 2, 0)
-    if u.IsIconic(h):
-        u.ShowWindow(h, 9)
-    u.ShowWindow(h, 5)
-    u.BringWindowToTop(h)
-    u.SetForegroundWindow(h)
+    u = ctypes.windll.user32; k = ctypes.windll.kernel32
+    for _ in range(4):
+        try:
+            fg = u.GetForegroundWindow()
+            if fg == h:
+                return True
+            me = k.GetCurrentThreadId(); ft = u.GetWindowThreadProcessId(fg, None) if fg else 0
+            u.keybd_event(0x12, 0, 0, 0); u.keybd_event(0x12, 0, 2, 0)
+            att = bool(ft and ft != me and u.AttachThreadInput(me, ft, True))
+            try:
+                if u.IsIconic(h):
+                    u.ShowWindow(h, 9)
+                u.ShowWindow(h, 5)
+                u.SetWindowPos(h, -1, 0, 0, 0, 0, 0x0003 | 0x0040)   # HWND_TOPMOST, no move/size, show
+                u.SetWindowPos(h, -2, 0, 0, 0, 0, 0x0003 | 0x0040)   # back to normal z-order, still on top
+                u.BringWindowToTop(h); u.SetForegroundWindow(h); u.SetActiveWindow(h)
+            finally:
+                if att:
+                    u.AttachThreadInput(me, ft, False)
+            try:
+                u.SwitchToThisWindow(h, True)
+            except Exception:
+                pass
+        except Exception:
+            pass
+        time.sleep(0.25)
+    return u.GetForegroundWindow() == h
 
 
 def _open_explorer(path, folder):
+    """Opens the folder (with the file selected) and brings the window in front of the Studio. On the first open Explorer can be
+    slow to show the window, so we wait up to ~8 s for it, and if it opens behind or not at all, we try once more."""
     before = set()
     try:
         before = {h for h, _ in _explorer_windows()}
     except Exception:
         pass
-    if os.path.isfile(path):
-        subprocess.Popen(["explorer", "/select," + path])
-    else:
-        subprocess.Popen(["explorer", folder])
-    name = os.path.basename(os.path.normpath(folder)).lower()
+    norm = os.path.normpath(folder).lower(); name = os.path.basename(norm)
+    def launch():
+        if os.path.isfile(path):
+            subprocess.Popen(["explorer", "/select,", os.path.normpath(path)])
+        else:
+            subprocess.Popen(["explorer", os.path.normpath(folder)])
+    launch()
+    relaunched = False
     try:
-        for _ in range(30):                     # up to ~3 s for the window to appear
+        for i in range(80):                     # up to ~8 s for the window to appear
             time.sleep(0.1)
             wins = _explorer_windows()
-            new = [h for h, _ in wins if h not in before]
-            same = [h for h, t in wins if t.lower() == name or t.lower().endswith("\\" + name)]
-            if new or (same and _ > 8):
-                _bring_front((new or same)[0])
-                return
+            new = [h for h, t in wins if h not in before and t]
+            same = [h for h, t in wins if t.lower() in (name, norm) or t.lower().endswith("\\" + name)]
+            if new or (same and i > 8):
+                time.sleep(0.15)                # let Explorer finish showing it, otherwise it can grab the focus back late
+                if _bring_front((new or same)[0]):
+                    return
+                if i > 20:
+                    return
+            if i == 40 and not relaunched and not new and not same:
+                relaunched = True; launch()     # the first call sometimes only starts Explorer without opening a window
     except Exception:
         pass
 
@@ -318,6 +357,35 @@ VIT_FLAG = 0.75
 _DET = {"nn": None, "vit": None, "err": {}}
 _DET_LOCK = threading.Lock()
 _CHECKED = {}   # path -> (mtime, result)
+# images the user marked "not adult content" in the Studio (paths relative to the output folder, "/" separated);
+# they are never blurred or moved into output\18+ again, without running the detectors
+try:
+    _NA_FILE = os.path.join(folder_paths.get_user_directory(), "artflow-not-adult.json")
+except Exception:
+    _NA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "not-adult.json")
+_NA_LOCK = threading.Lock()
+
+
+def _na_load():
+    try:
+        with open(_NA_FILE, encoding="utf-8") as f:
+            return set(json.load(f))
+    except Exception:
+        return set()
+
+
+_NOT_ADULT = _na_load()
+
+
+def _na_save():
+    try:
+        os.makedirs(os.path.dirname(_NA_FILE), exist_ok=True)
+        tmp = _NA_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(sorted(_NOT_ADULT), f, ensure_ascii=False, indent=0)
+        os.replace(tmp, _NA_FILE)
+    except Exception:
+        pass
 
 
 def _nudenet():
@@ -441,6 +509,8 @@ def _check(body):
         os.remove(path)
         _CHECKED.pop(path, None)
         return {"ok": True, "discarded": True}, 200
+    if kind == "output" and os.path.relpath(path, base).replace("\\", "/") in _NOT_ADULT:
+        return {"nsfw": False, "score": 0.0, "reasons": ["user"], "detectors": ["user"]}, 200   # marked "not adult" by the user
     mt = os.path.getmtime(path)
     hit = _CHECKED.get(path)
     if hit and hit[0] == mt and (hit[1].get("nsfw") or not body.get("force")):
@@ -477,6 +547,133 @@ def _check(body):
     return res, 200
 
 
+def _not_adult(body):
+    """The user's "not adult content" mark: the image is shown without blur from now on, and an image of output\18+
+    goes back to the output folder (into the same subfolder it would be in otherwise). Nothing is checked again."""
+    kind = str(body.get("type", "output"))
+    if kind not in ("output", "temp"):
+        return {"error": "unsupported type"}, 400
+    base = os.path.abspath(_media_dir(kind))
+    sub = str(body.get("subfolder", "") or "")
+    path = os.path.abspath(os.path.join(base, sub, os.path.basename(str(body.get("filename", "")))))
+    if not path.startswith(base + os.sep) or not os.path.isfile(path):
+        return {"error": "not found"}, 404
+    res = {"ok": True}
+    if kind == "output":
+        parts = os.path.relpath(os.path.dirname(path), base).replace("\\", "/").split("/")
+        if parts and parts[0] == ADULT_SUB:
+            rest = [x for x in parts[1:] if x and x != "."]
+            dest_dir = os.path.join(base, *rest)
+            os.makedirs(dest_dir, exist_ok=True)
+            name = os.path.basename(path)
+            stem, ext = os.path.splitext(name)
+            i = 1
+            while os.path.exists(os.path.join(dest_dir, name)):
+                name = "%s_%d%s" % (stem, i, ext)
+                i += 1
+            dest = os.path.join(dest_dir, name)
+            _CHECKED.pop(path, None)
+            shutil.move(path, dest)
+            res["moved"] = {"filename": name, "subfolder": "/".join(rest), "type": "output"}
+            path = dest
+        with _NA_LOCK:
+            _NOT_ADULT.add(os.path.relpath(path, base).replace("\\", "/"))
+            _na_save()
+    _CHECKED[path] = (os.path.getmtime(path), {"nsfw": False, "score": 0.0, "reasons": ["user"], "detectors": ["user"]})
+    return res, 200
+
+
+@routes.post("/artflow/not-adult")
+async def artflow_not_adult(request):
+    body = await request.json()
+    try:
+        res, status = await asyncio.get_running_loop().run_in_executor(None, _not_adult, body)
+    except Exception as e:
+        res, status = {"error": str(e)}, 500
+    return web.json_response(res, status=status, headers=NO_CACHE)
+
+
+def _mark_adult(body):
+    """The user's "adult content" mark (the eye button under the viewer): the image goes into output\18+ (same subfolder
+    below it) and is blurred from now on; an earlier "not adult" mark of it is dropped. Nothing is checked."""
+    kind = str(body.get("type", "output"))
+    if kind not in ("output", "temp"):
+        return {"error": "unsupported type"}, 400
+    base = os.path.abspath(_media_dir(kind))
+    sub = str(body.get("subfolder", "") or "")
+    path = os.path.abspath(os.path.join(base, sub, os.path.basename(str(body.get("filename", "")))))
+    if not path.startswith(base + os.sep) or not os.path.isfile(path):
+        return {"error": "not found"}, 404
+    res = {"ok": True}
+    if kind == "output":
+        with _NA_LOCK:
+            rel = os.path.relpath(path, base).replace("\\", "/")
+            if rel in _NOT_ADULT:
+                _NOT_ADULT.discard(rel)
+                _na_save()
+        rel = os.path.relpath(os.path.dirname(path), base)
+        parts = [] if rel == "." else rel.replace("\\", "/").split("/")
+        if not parts or parts[0] != ADULT_SUB:
+            dest_dir = os.path.join(base, ADULT_SUB, *parts)
+            os.makedirs(dest_dir, exist_ok=True)
+            name = os.path.basename(path)
+            stem, ext = os.path.splitext(name)
+            i = 1
+            while os.path.exists(os.path.join(dest_dir, name)):
+                name = "%s_%d%s" % (stem, i, ext)
+                i += 1
+            dest = os.path.join(dest_dir, name)
+            _CHECKED.pop(path, None)
+            shutil.move(path, dest)
+            res["moved"] = {"filename": name, "subfolder": "/".join([ADULT_SUB] + parts), "type": "output"}
+            path = dest
+    _CHECKED[path] = (os.path.getmtime(path), {"nsfw": True, "score": 1.0, "reasons": ["user"], "detectors": ["user"]})
+    return res, 200
+
+
+def _user_file(name):
+    try:
+        d = folder_paths.get_user_directory()
+    except Exception:
+        d = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "user")
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, name)
+
+
+@routes.post("/artflow/ui-lang")
+async def artflow_ui_lang(request):
+    """The Studio's language, so the start window of the launcher speaks it too (user\\artflow-ui-lang.txt)."""
+    try:
+        lang = str((await request.json()).get("lang", "")).lower()
+        if lang in ("hu", "en"):
+            with open(_user_file("artflow-ui-lang.txt"), "w", encoding="ascii") as f:
+                f.write(lang)
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500, headers=NO_CACHE)
+    return web.json_response({"ok": True}, headers=NO_CACHE)
+
+
+@routes.post("/artflow/ready")
+async def artflow_ready(request):
+    """The Studio page has loaded: the launcher closes its start window (user\\artflow-ready.txt)."""
+    try:
+        with open(_user_file("artflow-ready.txt"), "w", encoding="ascii") as f:
+            f.write(str(int(time.time())))
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500, headers=NO_CACHE)
+    return web.json_response({"ok": True}, headers=NO_CACHE)
+
+
+@routes.post("/artflow/mark-adult")
+async def artflow_mark_adult(request):
+    body = await request.json()
+    try:
+        res, status = await asyncio.get_running_loop().run_in_executor(None, _mark_adult, body)
+    except Exception as e:
+        res, status = {"error": str(e)}, 500
+    return web.json_response(res, status=status, headers=NO_CACHE)
+
+
 @routes.post("/artflow/check")
 async def artflow_check(request):
     """Checks one image of the output or temp folder for adult content (see above)."""
@@ -504,23 +701,81 @@ def _recent(limit):
                 except OSError:
                     pass
     found.sort(reverse=True)
+    total = len(found)
     out = []
     for mt, p in found[:limit]:
         rel = os.path.relpath(os.path.dirname(p), base)
         out.append({"filename": os.path.basename(p), "subfolder": "" if rel == "." else rel.replace("\\", "/"),
                     "type": "output", "mtime": int(mt * 1000)})
+    return out, total
+
+
+# small, cached thumbnails for the history strip (a square JPEG of the image's centre, 256 px), kept outside the
+# output folder in ComfyUI\user\artflow-thumbs; a changed or moved image gets a new one (the key holds path, size and time)
+try:
+    THUMB_DIR = os.path.join(folder_paths.get_user_directory(), "artflow-thumbs")
+except Exception:
+    THUMB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "thumbs")
+THUMB_PX = 256
+
+
+def _thumb(q):
+    import hashlib
+    kind = str(q.get("type", "output"))
+    if kind != "output":
+        return None
+    base = os.path.abspath(_media_dir(kind))
+    path = os.path.abspath(os.path.join(base, str(q.get("subfolder", "") or ""), os.path.basename(str(q.get("filename", "")))))
+    if not path.startswith(base + os.sep) or not os.path.isfile(path):
+        return None
+    st = os.stat(path)
+    key = hashlib.sha1(("%s|%d|%d" % (path, st.st_mtime_ns, st.st_size)).encode("utf-8")).hexdigest()
+    out = os.path.join(THUMB_DIR, key + ".jpg")
+    if os.path.isfile(out):
+        return out
+    from PIL import Image
+    os.makedirs(THUMB_DIR, exist_ok=True)
+    with Image.open(path) as im:
+        im.draft("RGB", (THUMB_PX * 2, THUMB_PX * 2))
+        im = im.convert("RGB")
+        w, h = im.size
+        s = min(w, h)
+        im = im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s)).resize((THUMB_PX, THUMB_PX), Image.LANCZOS)
+        tmp = out + ".%d.tmp" % threading.get_ident()
+        im.save(tmp, "JPEG", quality=86)
+    os.replace(tmp, out)
     return out
+
+
+_THUMB_SEM = threading.Semaphore(3)   # at most three thumbnails are made at the same time (the rest wait)
+
+
+def _thumb_limited(q):
+    with _THUMB_SEM:
+        return _thumb(q)
+
+
+@routes.get("/artflow/thumb")
+async def artflow_thumb(request):
+    try:
+        out = await asyncio.get_running_loop().run_in_executor(None, _thumb_limited, dict(request.query))
+    except Exception as e:
+        return web.json_response({"error": str(e)}, status=500)
+    if not out:
+        return web.json_response({"error": "not found"}, status=404)
+    return web.FileResponse(out, headers={"Cache-Control": "private, max-age=31536000, immutable"})
 
 
 @routes.get("/artflow/recent")
 async def artflow_recent(request):
     """The newest images of the output folder (with subfolders such as 18+), newest first - the Studio's history strip."""
     try:
-        limit = max(1, min(200, int(request.query.get("limit", "40"))))
+        limit = int(request.query.get("limit", "40"))
+        limit = None if limit <= 0 else min(200, limit)   # 0: every image of the folder (the open history strip)
     except ValueError:
         limit = 40
-    files = await asyncio.get_running_loop().run_in_executor(None, _recent, limit)
-    return web.json_response({"files": files}, headers=NO_CACHE)
+    files, total = await asyncio.get_running_loop().run_in_executor(None, _recent, limit)
+    return web.json_response({"files": files, "total": total}, headers=NO_CACHE)
 
 
 @routes.post("/artflow/exists")

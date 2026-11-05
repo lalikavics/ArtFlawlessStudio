@@ -109,6 +109,10 @@ def rep(a, b, n=1):
     global h
     assert h.count(a) == n, (a, h.count(a))
     h = h.replace(a, b)
+rep("  const logoUrl = API + '/view?filename=artflow-logo.png&subfolder=&type=input';",
+    "  const logoOld = API + '/view?filename=artflow-logo.png&subfolder=&type=input', logoUrl = API + '/view?filename=artflow-icon.png&subfolder=&type=input';")
+rep("  const logo = $('#logo'); logo.onerror = () => { logo.remove();",
+    "  const logo = $('#logo'); logo.onerror = () => { if (logo.src !== logoOld) { logo.src = logoOld; fav.href = logoOld; return; } logo.remove();")
 rep("#modal a{color:var(--acc)}",
     "#modal a{color:var(--acc)}\n#notifBtn{position:relative}\n#notifBadge{display:inline-block;margin-left:6px;min-width:17px;height:17px;line-height:17px;border-radius:9px;background:var(--err);color:#1a0505;font-size:12px;font-weight:800;text-align:center}\n#notifBadge[hidden]{display:none}\n.nt{border-top:1px solid var(--line);padding:6px 0;font-size:13px;white-space:pre-wrap}.nt small{color:var(--muted);margin-right:8px}.nt.err{color:#ffb4b4}\n.nh{margin:12px 0 4px;font-weight:700}")
 rep('<button class="btn sm" id="aboutBtn"',
@@ -388,6 +392,7 @@ function saverNode(out, seed) {
   const tags = []; const bl = themeLora(); if (bl && out['89']) tags.push('<lora:' + strip(out['89'].inputs.lora_name) + ':' + bl + '>');
   (S.loras || []).forEach(L => { if (L.on && L.lora) tags.push('<lora:' + strip(L.lora) + ':' + (Number(L.strength) || 0) + '>'); });
   const pos = out['3'] && out['3'].inputs.text; const neg = out['4'] && out['4'].inputs.text;
+  const loraTxt = tags.map(x => /^<lora:(.+):([0-9.\-]+)>$/.exec(x)).filter(Boolean).map(m => m[1].replace(/[,;:]/g, ' ') + ' ' + m[2]).join('; ');
   out['130'] = {class_type: 'StringConcatenate', inputs: {string_a: pos || '', string_b: tags.join(' '), delimiter: tags.length ? ' ' : ''}, _meta: {title: 'Metadata prompt (+ LoRA tags)'}};
   const cs = out['120'] ? Number(out['120'].inputs.stop_at_clip_layer) : -1;
   out['35'] = {class_type: 'Image Saver', _meta: sv._meta, inputs: {
@@ -396,7 +401,7 @@ function saverNode(out, seed) {
     positive: ['130', 0], negative: neg || '', seed_value: k.seed, width: lat ? lat.width : 1024, height: lat ? lat.height : 1024,
     lossless_webp: true, quality_jpeg_or_webp: 100, optimize_png: false, counter: 0, denoise: k.denoise, clip_skip: cs <= -2 ? -cs : 0,
     time_format: '%Y-%m-%d-%H%M%S', save_workflow_as_json: false, embed_workflow: true, additional_hashes: '', download_civitai_data: false,
-    easy_remix: true, show_preview: true, custom: ('Studio: ArtFlow Studio ' + VERSION + ', Family: ' + ((famInfo(FAMILY) || {}).label || FAMILY) + ', Theme: ' + String(val('86', 'choice') || '')).replace(/[\u2013\u2014]/g, '-').replace(/[^\x20-\x7e]/g, '')}};
+    easy_remix: true, show_preview: true, custom: ('Studio: ArtFlow Studio ' + VERSION + ', Family: ' + ((famInfo(FAMILY) || {}).label || FAMILY) + ', Theme: ' + String(val('86', 'choice') || '') + (loraTxt ? ', LoRAs: ' + loraTxt : '')).replace(/[\u2013\u2014]/g, '-').replace(/[^\x20-\x7e]/g, '')}};
 }
 function buildPrompt(seed) {""")
 rep("async function loadOI() {\n  const classes = [...new Set([...Object.values(T.prompt).map(n => n.class_type), 'LoraLoaderModelOnly'])];",
@@ -446,6 +451,8 @@ function parseA1111(txt) {
   const re = /\s*([^:,]+):\s*("(?:[^"\\]|\\.)*"|[^,]*)(?:,|$)/g; let m; while ((m = re.exec(tail)) && m[0]) { let v = m[2].trim(); if (v.startsWith('"')) { try { v = JSON.parse(v); } catch (_) {} } r.params[m[1].trim()] = v; }
   const lr = /<lora:([^:>]+):?([0-9.\-]*)[^>]*>/g; while ((m = lr.exec(r.pos))) r.loras.push(m[1] + (m[2] ? ' · ' + m[2] : ''));
   if (r.params['Lora hashes']) String(r.params['Lora hashes']).split(',').forEach(x => { const n = x.split(':')[0].trim(); if (n && !r.loras.some(y => y.startsWith(n))) r.loras.push(n); });
+  if (r.params.Hashes) { try { const hj = typeof r.params.Hashes === 'string' ? JSON.parse(r.params.Hashes) : r.params.Hashes; Object.keys(hj).forEach(k => { const n = /^LORA:(.+)$/i.exec(k); if (n && !r.loras.some(y => y.startsWith(n[1]))) r.loras.push(n[1]); }); } catch (_) {} }
+  if (r.params.LoRAs) r.loras = String(r.params.LoRAs).split(';').map(x => x.trim()).filter(Boolean).map(x => x.replace(/\s+([0-9.\-]+)$/, ' · $1'));
   return r;
 }
 function parseComfy(js) {
@@ -455,7 +462,7 @@ function parseComfy(js) {
   for (const n of Object.values(P)) { const I = n.inputs || {}; const c = n.class_type || '';
     if (/CheckpointLoader|UNETLoader|UnetLoader/i.test(c)) r.model = r.model || I.ckpt_name || I.unet_name || '';
     if (/^KSampler/.test(c) && !r.params.Steps) { Object.assign(r.params, {Steps: I.steps, Sampler: I.sampler_name, Scheduler: I.scheduler, 'CFG scale': I.cfg, Seed: Array.isArray(I.seed) ? '(linked)' : I.seed, Denoise: I.denoise}); r.pos = txt(I.positive && P[I.positive[0]] ? P[I.positive[0]].inputs.text : ''); r.neg = txt(I.negative && P[I.negative[0]] ? P[I.negative[0]].inputs.text : ''); }
-    if (/Lora/i.test(c)) { if (I.lora_name) r.loras.push(I.lora_name + ' · ' + (typeof I.strength_model === 'number' ? I.strength_model : '')); for (const [k, v] of Object.entries(I)) if (/^lora_\d+$/.test(k) && v && v.lora && v.on) r.loras.push(v.lora + ' · ' + v.strength); }
+    if (/Lora/i.test(c)) { if (I.lora_name && typeof I.strength_model === 'number' && I.strength_model) r.loras.push(I.lora_name.replace(/\.(safetensors|ckpt|pt)$/i, '') + ' · ' + I.strength_model); for (const [k, v] of Object.entries(I)) if (/^lora_\d+$/.test(k) && v && v.lora && v.on) r.loras.push(String(v.lora).replace(/\.(safetensors|ckpt|pt)$/i, '') + ' · ' + v.strength); }
     if (/^Empty.*Latent/.test(c) && typeof I.width === 'number') r.params.Size = I.width + 'x' + I.height; }
   for (const k of Object.keys(r.params)) if (r.params[k] == null || Array.isArray(r.params[k])) delete r.params[k];
   return r;
@@ -469,10 +476,10 @@ function showInfo(meta, url) {
   const box = $('#iiOut'); box.replaceChildren(); let r = null, fmt = '';
   if (meta.parameters) { r = parseA1111(meta.parameters); fmt = 'A1111 / Civitai (parameters)'; r.model = r.params.Model || ''; }
   const cf = meta.prompt ? parseComfy(meta.prompt) : null;
-  if (cf) { if (!r) { r = cf; fmt = 'ComfyUI (prompt)'; } else { fmt += ' + ComfyUI'; if (!r.model) r.model = cf.model; } }
+  if (cf) { if (!r) { r = cf; fmt = 'ComfyUI (prompt)'; } else { fmt += ' + ComfyUI'; if (!r.model) r.model = cf.model; if (!r.params.LoRAs && cf.loras.length) { const names = r.loras.slice(); r.loras = cf.loras.slice(); names.forEach(n => { if (!r.loras.some(y => y.startsWith(n))) r.loras.push(n); }); } } }
   if (!r) { box.append(h('p', {class: 'muted', text: t('iiNone')})); return; }
   const rows = [[t('iiFormat'), fmt], [t('iiFam'), guessFamily(r.model)], [t('iiModel'), r.model], [t('iiHash'), r.params['Model hash'] || ''], [t('iiPos'), r.pos], [t('iiNeg'), r.neg], [t('iiLoras'), r.loras.join('\n')],
-    [t('iiParams'), Object.entries(r.params).filter(([k]) => !['Model', 'Model hash', 'Lora hashes', 'Hashes', 'Version'].includes(k)).map(([k, v]) => k + ': ' + v).join('\n')]].filter(x => x[1]);
+    [t('iiParams'), Object.entries(r.params).filter(([k]) => !['Model', 'Model hash', 'Lora hashes', 'Hashes', 'Version', 'LoRAs'].includes(k)).map(([k, v]) => k + ': ' + v).join('\n')]].filter(x => x[1]);
   const tb = h('table', {class: 'iit'}); rows.forEach(([k, v]) => tb.append(h('tr', null, h('td', {text: k}), h('td', null, h('pre', {text: String(v)})))));
   const seed = Number(r.params.Seed);
   box.append(h('div', {class: 'iiprev'}, url ? h('img', {src: url, alt: ''}) : null, h('div', {style: 'flex:1;min-width:0'}, tb)),
@@ -590,7 +597,7 @@ ICON = {
  'help': f'<svg {SV}><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2.2-2.4 3.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>',
 }
 NEW_HEADER = f'''<header>
-  <div class="hbox hbrand"><img id="logo" alt=""><div class="bt"><div class="n">ArtFlawless Studio <span class="pill" id="ver"></span></div><div class="l2">Built on ComfyUI node graphs</div><div class="l3">Created by Lalikavics</div></div></div>
+  <div class="hbox hbrand"><img id="logo" alt=""><div class="bt"><div class="n">ArtFlawless Studio <span class="pill" id="ver"></span></div><div class="l2">Local AI image studio, built on ComfyUI</div><div class="l3">Created by Lalikavics</div></div></div>
   <div class="hbox conn" data-help="h:conn"><div class="cw"><div class="ct"><span class="dot" id="dot"></span><span id="connText"></span></div><div class="ip" id="connIp"></div></div></div>
   <div class="hbox hmid" data-help="h:fam"><div class="fam" id="famTabs"></div></div>
   <div class="hbox icons">
@@ -942,6 +949,8 @@ function initFold() {
 }
 function openNotif() {""")
 rep("initZoom(); initHelp(); initHost();", "initZoom(); initHelp(); initHost(); initFold();")
+# the LoRA list of the old one-family version (Z-Image) is taken over only by the Z-Image tab, not by the other tabs
+rep("  else { try { const old = JSON.parse(localStorage.getItem(LS_OLD) || 'null');", "  else if (!T.family || T.family === 'zimage') { try { const old = JSON.parse(localStorage.getItem(LS_OLD) || 'null');")
 rep("licenseL: 'Licence', ", "licenseL: 'Licence', more: 'More', ")
 rep("licenseL: 'Licenc', ", "licenseL: 'Licenc', more: 'Továbbiak', ")
 # ---- content safety: 18+ check, blur, child protection, safe mode (logic in assets/safety.js) ----
@@ -968,14 +977,17 @@ rep("#modal a{color:var(--acc)}", """#modal a{color:var(--acc)}
 #stage.blocked #nsfwCov .eye{display:none}
 #hist img.nsfw,#steps .chip img.nsfw,.iih img.nsfw{filter:blur(6px) saturate(.6)}
 #hist img.ckpend,#steps .chip img.ckpend,.iih img.ckpend{visibility:hidden}
-#nsfwHide{position:absolute;right:12px;bottom:12px;z-index:5;display:none;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:1px solid var(--line2);background:rgba(21,24,31,.85);color:var(--text);font-size:12.5px;cursor:pointer}
-#nsfwHide:hover{border-color:var(--acc);color:var(--acc)}
+#nsfwBar{position:absolute;right:12px;bottom:12px;z-index:5;display:none;gap:8px}
+#nsfwHide,#nsfwOk{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;border:1px solid var(--line2);background:rgba(21,24,31,.85);color:var(--text);font-size:12.5px;cursor:pointer}
+#nsfwHide:hover,#nsfwOk:hover{border-color:var(--acc);color:var(--acc)}
 .imgpick .nembTag{display:none}
 .imgpick.noemb .drop{border-color:var(--err)}
 .imgpick.noemb .nembTag{display:block;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(20,8,8,.85);color:#ffb4b4;border:1px solid var(--err);border-radius:6px;padding:2px 8px;font-size:11.5px;white-space:nowrap;z-index:2}
 .imgpick.noemb .dropmsg{display:none}
-#nsfwHide svg{width:16px;height:16px}
-#stage.nsfwRev #nsfwHide{display:inline-flex}
+#nsfwHide svg,#nsfwOk svg{width:16px;height:16px}
+#stage.nsfwRev #nsfwBar{display:flex}
+#adMark{position:absolute;right:12px;bottom:12px;z-index:5;width:30px;height:30px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line2);background:rgba(21,24,31,.7);color:var(--muted);cursor:pointer;opacity:.75}#adMark:hover{opacity:1;border-color:var(--acc);color:var(--acc)}#adMark svg{width:16px;height:16px}#adMark[hidden]{display:none}
+#histBar .hxe{flex:0 0 auto;width:20px;height:18px;padding:0;margin:0 0 0 2px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;opacity:.8}#histBar .hxe:hover{color:var(--acc);opacity:1}#histBar .hxe.none{opacity:.35}#histBar .hxe.none:hover{color:var(--muted)}#histBar .hxe svg{width:14px;height:14px}
 .iiprev img.nsfw{filter:blur(18px) saturate(.6)}
 .adck{display:flex;gap:9px;align-items:flex-start;margin:12px 0 14px;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);cursor:pointer;font-weight:600}
 .adck input{margin-top:3px;accent-color:var(--acc)}
@@ -1158,7 +1170,7 @@ rep("#progText{white-space:nowrap;", ".cuinfo{font-size:12px;margin-top:2px}.cui
     ".lorax{display:flex;flex-direction:column;gap:4px;margin:-2px 0 6px 6px;font-size:11.5px}.lorax:empty{display:none}.lorax .lrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}"
     ".lfit{font-weight:600}.lfit.ok{color:#7fd19b}.lfit.part{color:#e8c46a}.lfit.bad{color:#f08b78}.lfit.na{color:var(--muted)}.lora.lbad select{color:var(--muted)}"
     ".ltrig{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.tchip{font:11px inherit;padding:2px 7px;border-radius:10px;border:1px solid var(--line);background:transparent;color:inherit;cursor:pointer}"
-    ".tchip:hover{border-color:var(--acc);color:var(--acc)}.tchip.sub{opacity:.75;font-size:10.5px}.ltags summary{cursor:pointer;font-size:11px;margin:2px 0}.ltags .ltrig{margin-top:3px}\n#progText{white-space:nowrap;")
+    ".tchip:hover{border-color:var(--acc);color:var(--acc)}.tchip.sub{opacity:.75;font-size:10.5px}.tchip.on{border-color:var(--acc);color:var(--acc);background:rgba(242,184,75,.08)}.loras select.lsel{flex:1;min-width:0}.loras select optgroup{font-style:normal;font-weight:600}.loras select optgroup.og-other{color:#c9ced8;background:#2b303b}.loras select optgroup.og-other option{background:#1b1f27}.loras select optgroup.og-fit,.loras select optgroup.og-unk{color:#c9ced8;background:#161a21}.loras select option:disabled{opacity:.75}.ltags summary{cursor:pointer;font-size:11px;margin:2px 0}.ltags .ltrig{margin-top:3px}\n#progText{white-space:nowrap;")
 rep("#progText{white-space:nowrap;", "#eta{white-space:nowrap;font-variant-numeric:tabular-nums;margin-right:6px}\n#progText{white-space:nowrap;")
 rep(".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}",
     ".conn .ip{font:10.5px ui-monospace,Consolas,monospace;color:#5d6475;text-align:center}\n"
@@ -1175,4 +1187,86 @@ rep("      h('div', {class: 'note', id: 'promptHint', hidden: true}),\n      fie
 rep("    ], false)\n  );\n  const pr = (p, n) =>", "    ], false)\n  );\n  huBoxes();\n  const pr = (p, n) =>")
 rep("function renderControls() {\n  const lookId = T.ids && T.ids.look;", "function renderControls() {\n  huLookDefault(); const lookId = T.ids && T.ids.look;")
 rep("function applyLang() {\n  document.documentElement.lang = LANG;", "function applyLang() {\n  document.documentElement.lang = LANG; { const hm = $('#huMi'); if (hm) hm.hidden = LANG !== 'hu'; }")
+# ---- history strip: thin bar (count, open / close triangle, thumbnail size), one row or two rows with the whole folder (assets/hist_strip.js) ----
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'hist_strip.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("initSafety(); initHuPrompt(); initExtras();", "initSafety(); initHuPrompt(); initExtras(); initHist();")
+rep("#prog{flex:0 0 auto;padding:8px 14px;", "#prog{flex:0 0 auto;padding:4px 14px;")
+rep("</style>", """/* ---- history strip ---- */
+#colC{padding:12px 0;gap:12px;margin-left:1px}
+#colL,#colR{scrollbar-gutter:stable}.hbox.hbrand img{filter:drop-shadow(0 3px 5px rgba(0,0,0,.28)) drop-shadow(0 1px 1px rgba(0,0,0,.2))}#colL{padding-right:1px!important}#colR{padding-right:2px!important}
+#colL,#colR{border:0!important}
+#viewCard{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+#histBox{flex:0 0 auto;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+#histBar{border-radius:var(--r) var(--r) 0 0}
+#hxRow{border-radius:0 0 var(--r) var(--r);overflow:hidden}
+#steps .chip.off{opacity:.45;cursor:default}#steps .uiRl{flex:0 0 30px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;padding:0;overflow:hidden;border-radius:6px;color:var(--muted);background:transparent;border-color:transparent}#steps .uiRl svg{width:16px;height:16px;flex:0 0 16px}#steps .uiRl:hover,#steps .uiRl.spin{color:var(--acc);border-color:var(--line2);background:var(--panel)}#steps .uiRl.spin svg{animation:hxspin .9s linear infinite}#colL,#colR,#histBox{transition:opacity .25s ease}body.uiFade #colL,body.uiFade #colR,body.uiFade #histBox{opacity:.55}#steps .chip .ph{display:block;width:34px;height:34px;border-radius:5px;background:var(--line)}
+#histBox:has(#hist:empty){display:none}
+#histBar{position:relative;height:17px;display:flex;align-items:center;padding:0 0 0 14px;border-bottom:1px solid var(--line)}
+#histBar .hxn{flex:1;font:11.5px/1 ui-monospace,Consolas,monospace;color:#6f7689}#steps .stepArr{flex:0 0 auto;width:0;height:0;margin:0 -2px;border-style:solid;border-width:4px 0 4px 6px;border-color:transparent transparent transparent var(--muted);opacity:.7}
+#histBar .hxt{flex:0 0 33px;height:16px;padding:0;border:0;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+#histBar .hxt:hover{color:var(--acc)}
+#histBar .hxt svg{width:10px;height:6px;transition:transform .15s}
+#histBar .hxt.open svg{transform:rotate(180deg)}
+#hxRow{display:flex;min-height:78px}
+#histBox{position:relative}
+#hxSize{flex:0 0 32px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;box-sizing:border-box;border-left:1px solid var(--line);background:var(--panel2);user-select:none}
+#hxSize .hxi{flex:0 0 auto;width:22px;height:22px;padding:2px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+#hxSize .hxi svg{width:16px;height:16px}
+#hxSize .hxi.spin svg{animation:hxspin .5s linear}@keyframes hxspin{to{transform:rotate(360deg)}}
+#hxSize .hxi:hover,#hxSize .hxi.on{color:var(--acc);border-color:var(--line2);background:var(--panel)}
+#hxPop{position:absolute;right:40px;transform:translateY(-50%);z-index:8;display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;background:var(--panel2);box-shadow:0 6px 22px rgba(0,0,0,.45);user-select:none}
+#hxPop[hidden]{display:none}
+#hxPop .hxl{color:var(--muted);font:600 12px/1 ui-monospace,Consolas,monospace}
+#hxPop .hxv{min-width:44px;text-align:right;color:var(--muted);font:11px/1 ui-monospace,Consolas,monospace}
+#hxPop .trk{position:relative;width:150px;height:16px;cursor:pointer}
+#hxPop .trk:before{content:"";position:absolute;left:6px;right:6px;top:7px;height:2px;border-radius:2px;background:var(--line2)}
+#hxPop .trk i{position:absolute;top:2px;width:12px;height:12px;border-radius:50%;background:var(--acc)}
+#hxPop .trk:hover i{box-shadow:0 0 0 3px rgba(242,184,75,.18)}
+#histGrip{position:absolute;left:0;right:0;top:-13px;height:16px;cursor:ns-resize;z-index:6}#histGrip:after{content:\"\";position:absolute;left:50%;top:11px;width:36px;height:4px;margin-left:-18px;border-radius:4px;background:var(--line2);transition:background .12s}#histGrip:hover:after,body.hxdrag #histGrip:after{background:var(--acc)}
+body.hxdrag,body.hxdrag *{cursor:ns-resize!important;user-select:none!important}
+#hist{--hs:54px;flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 10px 6px 14px;overflow:hidden;border-top:0;background:var(--panel)}
+#hist img{width:var(--hs);height:var(--hs)}
+#hist.exp{flex-wrap:wrap;align-content:flex-start;align-items:flex-start;overflow-y:auto}
+#hist.exp::-webkit-scrollbar{width:8px}#hist.exp::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}#hist.exp::-webkit-scrollbar-track{background:transparent}
+</style>""")
+# folded explanations and LoRA details (both designs)
+rep("</style>", ".hint.hfx{display:none}.olink,.gt .olink{color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}.olink:hover,.gt .olink:hover{color:var(--acc)!important;text-decoration-style:solid}"
+    ".hfold{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:0;margin:0 6px 0 0;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit;vertical-align:middle}"
+    ".hfold i{display:inline-block;width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .12s}"
+    ".hfold.open i{transform:rotate(90deg)}.hfold:hover{color:var(--acc)}"
+    ".lorax .lxh{align-items:center}.lorax .lxh .sp{flex:1}.lxt{font-size:11.5px}.lxb{display:flex;flex-direction:column;gap:4px;padding-left:13px}.lxb[hidden]{display:none}\n</style>")
+# shorter Hungarian name of the first theme (the list is narrow)
+rep("'None (own prompt only)': 'Nincs (csak a saját prompt)'", "'None (own prompt only)': 'Nincs (saját prompt)'")
+# pop-up panels are never part of the window's drag area (in the maximised window the header's drag area lay under the
+# settings drawer and swallowed clicks on its close button)
+rep("</style>", "#drawer,#modal,#modal .box,.gmenu,#hxPop,.toast{-webkit-app-region:no-drag;app-region:no-drag}\n</style>")
+# ---- second interface design, "frosted aluminium" (assets/frosted.css), switchable in the settings (assets/ui_theme.js) ----
+# The page gets two complete style sheets: the classic one, and a copy of it with the bluish greys turned into neutral
+# greys plus the frosted rules. Only one of them is active (media="all" / "not all"); a tiny script in the head picks the
+# saved one before the page is drawn, so there is no flash of the other design.
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'ui_theme.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("initSafety(); initHuPrompt(); initExtras(); initHist();", "initSafety(); initHuPrompt(); initExtras(); initHist(); initUiTheme(); afSignalStart();")
+rep("function setLang(l) { LANG = l; try { localStorage.setItem(LS_LANG, l); } catch (_) {} applyLang(); }",
+    "function setLang(l) { LANG = l; try { localStorage.setItem(LS_LANG, l); } catch (_) {} applyLang(); afSaveLang(); }\n"
+    "// the launcher's start window speaks the Studio's language, and closes when the page has loaded\n"
+    "function afSaveLang() { try { fetch(API + '/artflow/ui-lang', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang: LANG})}).catch(() => {}); } catch (_) {} }\n"
+    "function afSignalStart() { afSaveLang(); const go = () => { try { fetch(API + '/artflow/ready', {method: 'POST'}).catch(() => {}); } catch (_) {} }; if (document.readyState === 'complete') setTimeout(go, 250); else addEventListener('load', () => setTimeout(go, 250), {once: true}); }")
+
+rep('        <button class="mi" type="button" id="advBtn" data-t="mAdv"></button>',
+    '        <label class="mi" id="uiMi" hidden><span id="uiMiT"></span><span class="sw"><input type="checkbox" id="uiSw"><span></span></span></label>\n        <button class="mi" type="button" id="advBtn" data-t="mAdv"></button>')
+def _neutral(mo):
+    r, g, b = (int(mo.group(1)[i:i + 2], 16) for i in (0, 2, 4))
+    if max(r, g, b) - min(r, g, b) > 34 or b < r + 4: return mo.group(0)
+    v = round(0.3 * r + 0.59 * g + 0.11 * b); v = min(255, round(v * 1.04 + 1)) if v < 128 else v
+    return '#%02x%02x%02x' % (v, v, v)
+def _neutral_rgb(mo):
+    r, g, b = int(mo.group(1)), int(mo.group(2)), int(mo.group(3))
+    if max(r, g, b) - min(r, g, b) > 34 or b < r + 4: return mo.group(0)
+    v = round(0.3 * r + 0.59 * g + 0.11 * b); return 'rgba(%d,%d,%d,' % (v, v, v)
+assert h.count('<style>') == 1 and h.count('</style>') == 1
+_a = h.index('<style>') + len('<style>'); _b = h.index('</style>'); _css = h[_a:_b]
+_css2 = re.sub(r'rgba\((\d+),\s*(\d+),\s*(\d+),', _neutral_rgb, re.sub(r'#([0-9a-fA-F]{6})\b', _neutral, _css))
+_css2 += '\n' + open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'frosted.css'), encoding='utf-8').read()
+h = h[:_a - len('<style>')] + '<style id="uiA" media="not all">' + _css + '</style>\n<style id="uiB">' + _css2 + '</style>\n' + \
+    "<script>document.documentElement.classList.add('ui2');try{if(localStorage.getItem('artflow.studio.ui')==='classic'){document.getElementById('uiA').media='all';document.getElementById('uiB').media='not all';document.documentElement.classList.remove('ui2');}}catch(e){}</script>" + h[_b + len('</style>'):]
 open(p, 'w', encoding='utf-8', newline='').write(h)

@@ -77,9 +77,13 @@ Source: "launcher\ArtFlow-Launcher.ps1";        DestDir: "{app}\launcher"
 Source: "launcher\Install-Components.ps1";      DestDir: "{app}\launcher"
 Source: "launcher\Build-Host.ps1";              DestDir: "{app}\launcher"
 Source: "launcher\ArtFlawlessHost.cs";          DestDir: "{app}\launcher"
+Source: "launcher\Splash.ps1";                  DestDir: "{app}\launcher"
+Source: "launcher\ArtSplash.cs";                DestDir: "{app}\launcher"
+Source: "launcher\splash-bg.png";               DestDir: "{app}\launcher"
 Source: "launcher\configure.py";                DestDir: "{app}\launcher"
 Source: "assets\artflow.ico";                   DestDir: "{app}\launcher"
 Source: "assets\artflow-logo.png";              DestDir: "{app}\launcher\payload"
+Source: "assets\artflow-icon.png";              DestDir: "{app}\launcher\payload"
 Source: "studio_out\__init__.py";               DestDir: "{app}\launcher\payload\studio"
 Source: "studio_out\catalog.json";              DestDir: "{app}\launcher\payload\studio"
 Source: "studio_out\ArtFlawless-Studio-ZImageTurbo-EN.json"; DestDir: "{app}\launcher\payload\studio"
@@ -462,11 +466,11 @@ var
 begin
   if CurStep = ssPostInstall then
   begin
-    WizardForm.StatusLabel.Caption := 'Downloading the AI components - see the console window (this takes a long time)...';
+    WizardForm.StatusLabel.Caption := 'Downloading the AI components - see the ArtFlawless window (this takes a long time)...';
     Ps := ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe');
     Args := '-NoProfile -ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\launcher\Install-Components.ps1') +
-      '" -InstallDir "' + ExpandConstant('{app}') + '"';
-    if not Exec(Ps, Args, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+      '" -InstallDir "' + ExpandConstant('{app}') + '" -Lang ' + ActiveLanguage;
+    if not Exec(Ps, Args, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
       MsgBox('The component installer could not be started.', mbError, MB_OK)
     else if ResultCode <> 0 then
       MsgBox('The component download did not finish (code ' + IntToStr(ResultCode) + ').' + #13#10 +
