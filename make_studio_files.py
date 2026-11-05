@@ -713,7 +713,7 @@ rep("function card(n, title, kids, open) { return h('details', {class: 'card', o
 rep("function card(n, title, kids, open) { return h('details', {class: 'card', open: open !== false}, h('summary', {'data-help': 'card:' + n}, h('span', {class: 'n', text: n}), title), h('div', {class: 'cbody'}, kids)); }",
     "const LS_CARDS = 'artflow.studio.cards.v1';\n"
     "let CARDS = {}; try { CARDS = JSON.parse(localStorage.getItem(LS_CARDS) || '{}') || {}; } catch (_) {}\n"
-    "if (window.AF_FRESH && !Object.keys(CARDS).length) { CARDS = {'0': false, '1': true, '2': false, '3': false, '4': false, '5': false, '6': true}; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} }\n"
+    "if (window.AF_FRESH && !Object.keys(CARDS).length) { CARDS = {'0': false, '1': true, '2': false, '3': false, '4': false, '5': false, '6': true, info: false}; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} }\n"
     "function card(n, title, kids, open) {\n"
     "  const d = h('details', {class: 'card', open: (n in CARDS) ? !!CARDS[n] : open !== false}, h('summary', {'data-help': 'card:' + n}, h('span', {class: 'n', text: n}), title), h('div', {class: 'cbody'}, kids));\n"
     "  d.addEventListener('toggle', () => { CARDS[n] = d.open; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} });\n"
@@ -1258,10 +1258,12 @@ rep("</style>", "#drawer,#modal,#modal .box,.gmenu,#hxPop,.toast{-webkit-app-reg
 # greys plus the frosted rules. Only one of them is active (media="all" / "not all"); a tiny script in the head picks the
 # saved one before the page is drawn, so there is no flash of the other design.
 rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'ui_theme.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
-rep("initSafety(); initHuPrompt(); initExtras(); initHist();", "initSafety(); initHuPrompt(); initExtras(); initHist(); initUiTheme(); afSignalStart();")
+rep("initSafety(); initHuPrompt(); initExtras(); initHist();", "initSafety(); initHuPrompt(); initExtras(); initHist(); initUiTheme(); initInfoFold(); afSignalStart();")
 rep("function setLang(l) { LANG = l; try { localStorage.setItem(LS_LANG, l); } catch (_) {} applyLang(); }",
     "function setLang(l) { LANG = l; try { localStorage.setItem(LS_LANG, l); } catch (_) {} applyLang(); afSaveLang(); }\n"
     "// the launcher's start window speaks the Studio's language, and closes when the page has loaded\n"
+    "// the 'Applied settings and final prompt' panel under the viewer remembers whether it is open (closed on the first start)\n"
+    "function initInfoFold() { const iw = $('#infoWrap'); if (!iw) return; if ('info' in CARDS) iw.open = !!CARDS.info; iw.addEventListener('toggle', () => { CARDS.info = iw.open; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} }); }\n"
     "function afSaveLang() { try { fetch(API + '/artflow/ui-lang', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({lang: LANG})}).catch(() => {}); } catch (_) {} }\n"
     "function afSignalStart() { afSaveLang(); const go = () => { try { fetch(API + '/artflow/ready', {method: 'POST'}).catch(() => {}); } catch (_) {} }; if (document.readyState === 'complete') setTimeout(go, 250); else addEventListener('load', () => setTimeout(go, 250), {once: true}); }")
 
