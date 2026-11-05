@@ -709,6 +709,15 @@ rep("\n  drop.onclick = () => file.click();\n",
 # ---- help markers ----
 rep("function card(n, title, kids, open) { return h('details', {class: 'card', open: open !== false}, h('summary', null, h('span', {class: 'n', text: n}), title)",
     "function card(n, title, kids, open) { return h('details', {class: 'card', open: open !== false}, h('summary', {'data-help': 'card:' + n}, h('span', {class: 'n', text: n}), title)")
+# open / closed cards are remembered; on the very first start only card 1 (the prompt) and card 6 (generate) are open
+rep("function card(n, title, kids, open) { return h('details', {class: 'card', open: open !== false}, h('summary', {'data-help': 'card:' + n}, h('span', {class: 'n', text: n}), title), h('div', {class: 'cbody'}, kids)); }",
+    "const LS_CARDS = 'artflow.studio.cards.v1';\n"
+    "let CARDS = {}; try { CARDS = JSON.parse(localStorage.getItem(LS_CARDS) || '{}') || {}; } catch (_) {}\n"
+    "if (window.AF_FRESH && !Object.keys(CARDS).length) { CARDS = {'0': false, '1': true, '2': false, '3': false, '4': false, '5': false, '6': true}; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} }\n"
+    "function card(n, title, kids, open) {\n"
+    "  const d = h('details', {class: 'card', open: (n in CARDS) ? !!CARDS[n] : open !== false}, h('summary', {'data-help': 'card:' + n}, h('span', {class: 'n', text: n}), title), h('div', {class: 'cbody'}, kids));\n"
+    "  d.addEventListener('toggle', () => { CARDS[n] = d.open; try { localStorage.setItem(LS_CARDS, JSON.stringify(CARDS)); } catch (_) {} });\n"
+    "  return d; }")
 rep("c.append(h('div', {class: 'ghead'}, sw(", "c.append(h('div', {class: 'ghead', 'data-help': 'group:' + key}, sw(")
 rep("  const row = h('div', {class: 'f'}); const lab = h('label', {class: 'lab', text: label}); let ctl;",
     "  const row = h('div', {class: 'f', 'data-help': id + '.' + name}); const lab = h('label', {class: 'lab', text: label}); let ctl;")
@@ -1272,5 +1281,5 @@ _a = h.index('<style>') + len('<style>'); _b = h.index('</style>'); _css = h[_a:
 _css2 = re.sub(r'rgba\((\d+),\s*(\d+),\s*(\d+),', _neutral_rgb, re.sub(r'#([0-9a-fA-F]{6})\b', _neutral, _css))
 _css2 += '\n' + open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'frosted.css'), encoding='utf-8').read()
 h = h[:_a - len('<style>')] + '<style id="uiA" media="not all">' + _css + '</style>\n<style id="uiB">' + _css2 + '</style>\n' + \
-    "<script>document.documentElement.classList.add('ui2');try{if(localStorage.getItem('artflow.studio.ui')==='classic'){document.getElementById('uiA').media='all';document.getElementById('uiB').media='not all';document.documentElement.classList.remove('ui2');}}catch(e){}</script>" + h[_b + len('</style>'):]
+    "<script>document.documentElement.classList.add('ui2');try{window.AF_FRESH=!Object.keys(localStorage).some(function(k){return k.indexOf('artflow.studio.')===0});}catch(e){}try{if(localStorage.getItem('artflow.studio.ui')==='classic'){document.getElementById('uiA').media='all';document.getElementById('uiB').media='not all';document.documentElement.classList.remove('ui2');}}catch(e){}</script>" + h[_b + len('</style>'):]
 open(p, 'w', encoding='utf-8', newline='').write(h)
