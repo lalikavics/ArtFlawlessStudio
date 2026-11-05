@@ -23,6 +23,10 @@ The version number lives in the `VERSION` file and follows [Semantic Versioning]
 - Thin, frameless scrollbars with a dark handle that lightens under the pointer.
 - Window frame line in the colour of the background.
 ### Fixed
+- A model file that is missing under its saved name is found under another version number ("... v1" -> "... v1.1", the newest is taken); the base LoRA is found under any name with "Hands" and "Feet" in it.
+- When the base LoRA is not there, card 2 says so and offers its download page, the LoRA folder and a new check.
+- "Check again" (missing components, notifications) now says what it found; before it seemed to do nothing.
+- The 18+ confirmation (switching the content filter off) showed "null" under its text, and its accept button was not yellow like the other active buttons.
 - Image info shows the LoRAs and their strengths: the image saver removed the `<lora:...>` tags from the saved text, so they are written into the image's parameters separately now; for earlier images they are read from the embedded ComfyUI run.
 - SDXL images were marked adult because the check also read the Hungarian source of the negative prompt.
 - The settings drawer's close button could not be clicked in a maximised window.

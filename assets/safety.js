@@ -226,13 +226,13 @@ function adultModal(why) {
   return new Promise(res => {
     MODAL_KIND = 'adult'; $('#modalTitle').textContent = t('adT'); let done = false;
     const fin = v => { if (done) return; done = true; obs.disconnect(); $('#modal').classList.remove('open'); res(v); };
-    const cb = h('input', {type: 'checkbox', id: 'adCb'}); const go = h('button', {class: 'btn sm go2', type: 'button', text: t('adGo'), disabled: true});
+    const cb = h('input', {type: 'checkbox', id: 'adCb'}); const go = h('button', {class: 'btn sm go', type: 'button', text: t('adGo'), disabled: true});
     cb.onchange = () => { go.disabled = !cb.checked; };
     go.onclick = () => { SAFE.adult = true; SAFE.adultAt = new Date().toISOString(); saveSafe(); fin(true); };
-    const body = $('#modalBody'); body.replaceChildren(h('p', {text: t(why === 'filter' ? 'adP1f' : 'adP1')}), h('p', {text: t('adP2')}),
+    const body = $('#modalBody'); body.replaceChildren(...[h('p', {text: t(why === 'filter' ? 'adP1f' : 'adP1')}), h('p', {text: t('adP2')}),
       SAFE.safe && why !== 'filter' ? h('p', {class: 'muted', text: t('adSafe')}) : null,
       h('label', {class: 'adck'}, cb, h('span', {text: t('adCb')})),
-      h('div', {class: 'row', style: 'justify-content:flex-end;gap:8px'}, h('button', {class: 'btn sm', type: 'button', text: t('closeNoC'), onclick: () => fin(false)}), go));
+      h('div', {class: 'row', style: 'justify-content:flex-end;gap:8px'}, h('button', {class: 'btn sm', type: 'button', text: t('closeNoC'), onclick: () => fin(false)}), go)].filter(Boolean));
     $('#modal').classList.add('open');
     const obs = new MutationObserver(() => { if (!$('#modal').classList.contains('open')) fin(false); }); obs.observe($('#modal'), {attributes: true, attributeFilter: ['class']});
   });

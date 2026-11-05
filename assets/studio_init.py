@@ -213,6 +213,23 @@ def _media_dir(kind):
     return folder_paths.get_output_directory()
 
 
+@routes.post("/artflow/open-models")
+async def artflow_open_models(request):
+    """Opens a model folder (models\\loras, ...) in Windows Explorer - for putting a hand-downloaded model in place."""
+    kind = str((await request.json()).get("kind", "loras"))
+    if kind not in ("loras", "checkpoints", "diffusion_models", "text_encoders", "vae", "upscale_models"):
+        return web.json_response({"error": "unknown folder"}, status=400)
+    if os.name != "nt":
+        return web.json_response({"error": "only supported on Windows"}, status=400)
+    try:
+        folder = folder_paths.get_folder_paths(kind)[0]
+    except Exception:
+        return web.json_response({"error": "unknown folder"}, status=400)
+    os.makedirs(folder, exist_ok=True)
+    await asyncio.get_running_loop().run_in_executor(None, _open_explorer, folder, folder)
+    return web.json_response({"ok": True})
+
+
 @routes.post("/artflow/open-folder")
 async def artflow_open_folder(request):
     """Opens Windows Explorer on the folder of a generated image and selects the file (local use only)."""

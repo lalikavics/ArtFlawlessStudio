@@ -141,7 +141,7 @@ rep("function applyLang() {",
     "  if (m.length) {\n"
     "    body.append(h('div', {class: 'nh', text: '! ' + t('missTitle')}));\n"
     "    m.forEach(x => body.append(h('div', {class: 'nt err', text: (x.kind === 'node' ? t('missNode', x.what) : t('missModel', x.what, x.folder)) + (x.step ? t('missFor', t(STEP_NAME[x.step] || x.step)) : t('missAlways'))})));\n"
-    "    body.append(h('p', null, h('button', {class: 'btn sm', type: 'button', text: t('recheck'), onclick: async () => { await loadOI(); renderControls(); renderMissing(); openNotif(); }})));\n"
+    "    body.append(h('p', null, h('button', {class: 'btn sm', type: 'button', text: t('recheck'), onclick: e => recheckMissing(e.currentTarget)})));\n"
     "  }\n"
     "  if (NOTES.length) {\n"
     "    body.append(h('div', {class: 'nh', text: t('notifRecent')}));\n"
@@ -1200,6 +1200,9 @@ rep("      h('div', {class: 'note', id: 'promptHint', hidden: true}),\n      fie
 rep("    ], false)\n  );\n  const pr = (p, n) =>", "    ], false)\n  );\n  huBoxes();\n  const pr = (p, n) =>")
 rep("function renderControls() {\n  const lookId = T.ids && T.ids.look;", "function renderControls() {\n  huLookDefault(); const lookId = T.ids && T.ids.look;")
 rep("function applyLang() {\n  document.documentElement.lang = LANG;", "function applyLang() {\n  document.documentElement.lang = LANG; { const hm = $('#huMi'); if (hm) hm.hidden = LANG !== 'hu'; }")
+# ---- model files with another version number, and the base LoRA's download help in card 2 (assets/base_lora.js) ----
+rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'base_lora.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
+rep("text: t('recheck'), onclick: async () => { await loadOI(); renderControls(); }}), ' ',", "text: t('recheck'), onclick: e => recheckMissing(e.currentTarget)}), ' ',")
 # ---- history strip: thin bar (count, open / close triangle, thumbnail size), one row or two rows with the whole folder (assets/hist_strip.js) ----
 rep("const HOST = !!(window.chrome && window.chrome.webview);", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'hist_strip.js'), encoding='utf-8').read() + "\nconst HOST = !!(window.chrome && window.chrome.webview);")
 rep("initSafety(); initHuPrompt(); initExtras();", "initSafety(); initHuPrompt(); initExtras(); initHist();")
